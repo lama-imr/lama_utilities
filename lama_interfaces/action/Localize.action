@@ -1,0 +1,28 @@
+# Action.
+
+uint32 action
+
+uint32 GET_VERTEX_DESCRIPTOR=0
+uint32 GET_EDGES_DESCRIPTORS=1
+uint32 LOCALIZE_IN_VERTEX=2
+uint32 LOCALIZE_EDGE=3
+uint32 GET_SIMILARITY=4
+uint32 INTERRUPT=5
+uint32 CONTINUE=6
+
+LamaDescriptorIdentifier descriptor
+---
+# Result.
+
+uint32 state  # to be deleted, support for this is native
+uint32 DONE=0
+uint32 NOT_SUPPORTED=1
+
+LamaDescriptorIdentifier[] descriptors
+duration completion_time
+---
+# Feedback.
+
+# Completion is -1 if unknown, 0 if just started, 1 if finised
+float32 completion
+duration time_elapsed

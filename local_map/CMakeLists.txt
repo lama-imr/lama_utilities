@@ -83,9 +83,9 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+	INCLUDE_DIRS include
 #  LIBRARIES local_map
-#  CATKIN_DEPENDS other_catkin_pkg
+	CATKIN_DEPENDS roscpp tf message_runtime sensor_msgs nav_msgs geometry_msgs
 #  DEPENDS system_lib
 )
 

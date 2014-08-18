@@ -31,17 +31,15 @@ bool save_map(local_map::SaveMap::Request& req,
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "local_map");
-	ros::NodeHandle n;
+	ros::NodeHandle n("~");
 
 	MapBuilder mapBuilder(200, 200, 0.020);
 	mapBuilderPtr = &mapBuilder;
 
-	ros::Subscriber scanHandler = n.subscribe<sensor_msgs::LaserScan> ("scan", 50, handleLaserScan);
-	mapPub = n.advertise<nav_msgs::OccupancyGrid> ("local_map",50, true);
-	ros::ServiceServer service = n.advertiseService(n.getNamespace() + "/save_map", save_map);
+	ros::Subscriber scanHandler = n.subscribe<sensor_msgs::LaserScan>("scan", 1, handleLaserScan);
+	mapPub = n.advertise<nav_msgs::OccupancyGrid>("local_map", 1, true);
+	ros::ServiceServer service = n.advertiseService("save_map", save_map);
 
-	//ROS_INFO(n.getNamespace() + " started.");
-	ROS_INFO("started.");
 	ros::spin();
 }
 

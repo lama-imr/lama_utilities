@@ -12,8 +12,8 @@ const double p_occupied_when_laser = 0.70;
 const double p_occupied_when_no_laser = 0.05;
 // Large log odds used with probability 0 and 1. The greater, the more inertia.
 const double large_log_odds = 1000;
-// Max log odds used to compute the belief (exp(max_log_odds) should not overflow).
-const double max_log_odds = 20;
+// Max log odds used to compute the belief (exp(max_log_odds_for_belief) should not overflow).
+const double max_log_odds_for_belief = 20;
 
 using std::vector;
 using std::abs;
@@ -38,8 +38,8 @@ std::string getWorldFrame(const tf::Transformer& tfTransformer, const std::strin
 
 /* Return the angle from a quaternion representing a rotation around the z-axis
  *
- * The quaternion in ROS is q = (w, x, y, z), so that
- * q = (cos(a/2), ux * sin(a/2), uy * sin(a/2), uz * sin(a/2)),
+ * The quaternion in ROS is q = (x, y, z, w), so that
+ * q = (ux * sin(a/2), uy * sin(a/2), uz * sin(a/2), cos(a/2)),
  *   where a is the rotation angle and (ux, uy, uz) is the unit vector of the
  *   rotation axis.
  * For a rotation around z, we have q = (cos(a/2), 0, 0, sin(a/2)). Thus
@@ -49,7 +49,9 @@ double angleFromQuaternion(const tf::Quaternion& q)
 {
 	if (std::fabs(q.x()) > 1e-5 || std::fabs(q.y()) > 1e-5)
 	{
-		ROS_WARN("Laser frame rotation is not around the z-axis, just pretending it is");
+		auto axis = q.getAxis();
+		ROS_WARN("Laser frame rotation is not around the z-axis (axis = [%f, %f, %f], just pretending it is",
+				axis.x(), axis.y(), axis.z());
 	}
 	return 2 * std::atan2(q.z(), q.w());
 }
@@ -372,11 +374,11 @@ void updatePointOccupancy(const bool occupied, const size_t idx, vector<int8_t>&
 		log_odds[idx] = large_log_odds;
 	}
 	// Update occupancy.
-	if (log_odds[idx] < -max_log_odds)
+	if (log_odds[idx] < -max_log_odds_for_belief)
 	{
 		occupancy[idx] = 0;
 	}
-	else if (log_odds[idx] > max_log_odds)
+	else if (log_odds[idx] > max_log_odds_for_belief)
 	{
 		occupancy[idx] = 100;
 	}
@@ -399,7 +401,8 @@ inline void updatePointsOccupancy(const bool occupied, const vector<size_t>& ind
 MapBuilder::MapBuilder(const int width, const int height, const double resolution) :
 	m_has_frame_id(false)
 {
-	m_map.header.frame_id = "local_map";
+	m_map_frame_id = ros::this_node::getName() + "/local_map";
+	m_map.header.frame_id = m_map_frame_id;
 	m_map.info.width = width;
 	m_map.info.height = height;
 	m_map.info.resolution = resolution;
@@ -450,7 +453,8 @@ void MapBuilder::grow(const sensor_msgs::LaserScan& scan)
 		tf::Transform map_transform;
 		map_transform.setOrigin(tf::Vector3(0.0, 0.0, 0.0));
 		map_transform.setRotation(tf::Quaternion(1, 0, 0, 0));
-		br.sendTransform(tf::StampedTransform(map_transform, ros::Time::now(), scan.header.frame_id, "local_map"));
+		br.sendTransform(tf::StampedTransform(map_transform,
+					scan.header.stamp, scan.header.frame_id, m_map_frame_id));
 	}
 
 	// Get the displacement.
@@ -458,7 +462,7 @@ void MapBuilder::grow(const sensor_msgs::LaserScan& scan)
 	try
 	{
 		m_tfListener.waitForTransform(m_world_frame_id, scan.header.frame_id,
-				scan.header.stamp, ros::Duration(0.5));
+				scan.header.stamp, ros::Duration(1.0));
 		m_tfListener.lookupTransform(m_world_frame_id, scan.header.frame_id,
 				scan.header.stamp, new_tr);
 	}
@@ -494,7 +498,7 @@ void MapBuilder::grow(const sensor_msgs::LaserScan& scan)
 	tf::Quaternion q;
 	q.setRPY(0, 0, -theta);
 	map_transform.setRotation(q);
-	br.sendTransform(tf::StampedTransform(map_transform, scan.header.stamp, scan.header.frame_id, "local_map"));
+	br.sendTransform(tf::StampedTransform(map_transform, scan.header.stamp, scan.header.frame_id, m_map_frame_id));
 }
 
 bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, const long int dx, const long int dy, const double theta)

@@ -26,6 +26,7 @@ class MapBuilder
 		tf::TransformListener m_tfListener;
 		std::string m_world_frame_id; //!> frame_id of the world frame
 		bool m_has_frame_id;  //!> true if map frame_id was already set
+		std::string m_map_frame_id;  //!> map frame id in tf
 		double m_xinit;  //!> Map x position at initialization
 		double m_yinit;  //!> Map y position at initialization
 		long int m_last_xmap;  //!> Map integer x position at last map move

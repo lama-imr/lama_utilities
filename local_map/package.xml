@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>local_map</name>
-  <version>0.0.0</version>
+  <version>0.1.0</version>
   <description>The local_map package
 	  The local_map package takes as input a LaserScan message and outputs
 	  a local map as OccupancyGrid. The local map orientation is the same
@@ -35,7 +35,7 @@
   <!-- The *_depend tags are used to specify dependencies -->
   <!-- Dependencies can be catkin packages or system dependencies -->
   <buildtool_depend>catkin</buildtool_depend>
-  <buildtool_depend>message_generation</buildtool_depend>
+  <build_depend>message_generation</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>sensor_msgs</build_depend>

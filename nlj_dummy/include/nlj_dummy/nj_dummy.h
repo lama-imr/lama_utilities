@@ -6,7 +6,7 @@
 #include <lama_interfaces/navigating_jockey.h>
 #include <lama_interfaces/lmi_dummy_descriptor_get.h>
 
-class NJDummy : public LaMa::interfaces::NavigatingJockey
+class NJDummy : public lama::interfaces::NavigatingJockey
 {
   public:
 

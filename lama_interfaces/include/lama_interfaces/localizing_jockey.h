@@ -14,7 +14,7 @@
 #include <lama_interfaces/LocalizeGoal.h>
 #include <lama_interfaces/LocalizeFeedback.h>
 
-namespace LaMa
+namespace lama
 {
 namespace interfaces
 {
@@ -56,6 +56,6 @@ class LocalizingJockey : public Jockey
 };
 
 } // namespace interfaces
-} // namespace LaMa
+} // namespace lama
 
 #endif // _LAMA_INTERFACES_LOCALIZING_JOCKEY_H_

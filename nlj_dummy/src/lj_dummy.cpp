@@ -2,7 +2,7 @@
 
 #include <nlj_dummy/lj_dummy.h>
 
-LJDummy::LJDummy(std::string name) : LaMa::interfaces::LocalizingJockey(name),
+LJDummy::LJDummy(std::string name) : lama::interfaces::LocalizingJockey(name),
   rand_generator_(rd_()),
   descriptor_distribution_(0, 360),
   mean_localizing_time_(0.1),

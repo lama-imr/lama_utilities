@@ -14,7 +14,7 @@
 #include <lama_interfaces/LearnGoal.h>
 #include <lama_interfaces/LearnFeedback.h>
 
-namespace LaMa
+namespace lama
 {
 namespace interfaces
 {
@@ -53,6 +53,6 @@ class LearningJockey : public Jockey
 };
 
 } // namespace interfaces
-} // namespace LaMa
+} // namespace lama
 
 #endif // _LAMA_INTERFACES_LEARNING_JOCKEY_H_

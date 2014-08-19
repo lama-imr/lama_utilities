@@ -4,7 +4,7 @@
 
 #include <lama_interfaces/jockey.h>
 
-namespace LaMa
+namespace lama
 {
 namespace interfaces
 {
@@ -66,5 +66,5 @@ void Jockey::onContinue()
 }
 
 } // namespace interfaces
-} // namespace LaMa
+} // namespace lama
 

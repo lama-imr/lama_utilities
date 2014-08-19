@@ -4,7 +4,7 @@
 
 #include <lama_interfaces/localizing_jockey.h>
 
-namespace LaMa
+namespace lama
 {
 namespace interfaces
 {
@@ -87,5 +87,5 @@ void LocalizingJockey::onContinue()
 }
 
 } // namespace interfaces
-} // namespace LaMa
+} // namespace lama
 

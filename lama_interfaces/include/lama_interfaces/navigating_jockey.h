@@ -14,7 +14,7 @@
 #include <lama_interfaces/NavigateGoal.h>
 #include <lama_interfaces/NavigateFeedback.h>
 
-namespace LaMa
+namespace lama
 {
 namespace interfaces
 {
@@ -54,6 +54,6 @@ class NavigatingJockey : public Jockey
 };
 
 } // namespace interfaces
-} // namespace LaMa
+} // namespace lama
 
 #endif // _LAMA_INTERFACES_NAVIGATING_JOCKEY_H_

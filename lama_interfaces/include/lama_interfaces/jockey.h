@@ -8,7 +8,7 @@
 
 #include <ros/ros.h>
 
-namespace LaMa
+namespace lama
 {
 namespace interfaces
 {
@@ -45,6 +45,6 @@ class Jockey
 };
 
 } // namespace interfaces
-} // namespace LaMa
+} // namespace lama
 
 #endif // _LAMA_INTERFACES_JOCKEY_H_

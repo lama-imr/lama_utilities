@@ -5,7 +5,7 @@
 
 #include <lama_interfaces/localizing_jockey.h>
 
-class LJDummy : public LaMa::interfaces::LocalizingJockey
+class LJDummy : public lama::interfaces::LocalizingJockey
 {
   public:
 

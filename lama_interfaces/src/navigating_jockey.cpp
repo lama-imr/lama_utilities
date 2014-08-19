@@ -6,7 +6,7 @@
 #include <lama_interfaces/LamaObjectIdentifier.h>
 #include <lama_interfaces/LamaDescriptorIdentifier.h>
 
-namespace LaMa
+namespace lama
 {
 namespace interfaces
 {
@@ -79,5 +79,5 @@ void NavigatingJockey::onContinue()
 }
 
 } // namespace interfaces
-} // namespace LaMa
+} // namespace lama
 

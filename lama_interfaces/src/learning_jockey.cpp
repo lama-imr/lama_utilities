@@ -4,7 +4,7 @@
 
 #include <lama_interfaces/learning_jockey.h>
 
-namespace LaMa
+namespace lama
 {
 namespace interfaces
 {
@@ -75,5 +75,5 @@ void LearningJockey::onContinue()
 }
 
 } // namespace interfaces
-} // namespace LaMa
+} // namespace lama
 

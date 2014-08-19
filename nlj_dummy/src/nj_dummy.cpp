@@ -1,6 +1,6 @@
 #include <nlj_dummy/nj_dummy.h>
 
-NJDummy::NJDummy(std::string name) : LaMa::interfaces::NavigatingJockey(name),
+NJDummy::NJDummy(std::string name) : lama::interfaces::NavigatingJockey(name),
   rand_generator_(rd_()),
   mean_traversing_time_(2.0),
   traversing_time_distribution_(mean_traversing_time_, 0.1)

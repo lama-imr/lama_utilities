@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="model" default="$(find lama_test)/worlds/stage-270.world" />
+  <arg name="debug" default="false" />
+
+  <param name="use_sim_time" value="true" />
+
+  <node name="stage" pkg="stage_ros" type="stageros"
+    args="$(arg model)" />
+
+	<node name="rviz" pkg="rviz" type="rviz"
+		args="-d $(find lama_test)/worlds/nj_costmap-gmapping.rviz">
+	</node>
+
+	<node name="costmap" pkg="local_map" type="local_map"
+		output="screen">
+		<remap from="scan" to="/base_scan" />
+		<remap from="local_map" to="/map" />
+		<rosparam file="$(find lama_test)/params/nj_costmap-gmapping.yaml" command="load" />
+	</node>
+
+	<!--
+	<node name="nj_costmap" pkg="nj_costmap" type="nj_costmap"
+		output="screen">
+		<remap from="local_costmap" to="/map" />
+	</node>
+	-->
+
+  <node name="teleop" pkg="teleop_twist_keyboard"
+    type="teleop_twist_keyboard.py"
+    output="log"
+    args="base_controller/command:=cmd_vel" />
+
+  <group if="$(arg debug)">
+    <node name="rqt_graph" pkg="rqt_graph" type="rqt_graph" />
+  </group>
+</launch>

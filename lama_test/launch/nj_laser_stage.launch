@@ -1,0 +1,19 @@
+<launch>
+
+  <arg name="model" default="$(find lama_test)/world/stage-270.world" />
+
+  <node name="stage" pkg="stage_ros" type="stageros"
+    args="$(arg model)" />
+
+  <node name="rviz" pkg="rviz" type="rviz"
+    args="-d $(find lama_test)/world/nj_laser.rviz" />
+
+  <node name="nj_laser" pkg="nj_laser" type="nj_laser"
+    output="screen"  />
+
+  <node name="teleop" pkg="teleop_twist_keyboard"
+    type="teleop_twist_keyboard.py"
+    output="screen"
+    args="base_controller/command:=cmd_vel" />
+
+</launch>

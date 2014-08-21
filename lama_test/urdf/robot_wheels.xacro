@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot">
+  <xacro:include filename="$(find lama_test)/urdf/robot.gazebo" />
+
+  <xacro:macro name="link_wheel" params="prefix reflect">
+    <link name="${prefix}_wheel">
+      <visual>
+        <geometry>
+          <cylinder length="0.050" radius="0.1" />
+        </geometry>
+        <material name="grey">
+          <color rgba="0.2 0.2 .2 1"/>
+        </material>
+        <origin xyz="0 0 0" rpy="0 0 ${reflect * 1.5708}" />
+      </visual>
+      <inertial>
+        <mass value="0.5" />
+        <inertia  ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.2" iyz="0.0" izz="0.01" />
+      </inertial>
+    </link>
+  </xacro:macro>
+
+  <xacro:macro name="joint_base_to_wheel" params="prefix reflect">
+    <joint name="base_to_${prefix}_wheel" type="continuous">
+      <parent link="base_link" />
+      <child link="${prefix}_wheel" />
+      <origin xyz="0 ${reflect * 0.25} 0.050" rpy="${reflect * 1.5708} 0 0" />
+      <axis xyz="0 0 1" />
+      <limit effort="100" velocity="1" />
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="trans_wheel" params="prefix">
+    <transmission name="${prefix}_wheel_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <actuator name="${prefix}_wheel_motor">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </actuator>
+      <joint name="base_to_${prefix}_wheel" />
+    </transmission>
+  </xacro:macro>
+
+  <!-- Links -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0.7 0.5 0.3" />
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 .8 1"/>
+      </material>
+      <origin xyz="0 0 0.150" />
+    </visual>
+    <inertial>
+      <mass value="30" />
+      <inertia  ixx="0.5" ixy="0.0" ixz="0.0" iyy="0.5" iyz="0.0" izz="1.0" />
+    </inertial>
+    <collision>
+      <geometry>
+        <box size="0.7 0.5 0.3" />
+      </geometry>
+      <origin xyz="0 0 0.150" />
+    </collision>
+  </link>
+
+  <xacro:link_wheel prefix="right" reflect="1" />
+  <xacro:link_wheel prefix="left" reflect="-1" />
+
+  <link name="hokuyo_link">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.1 0.1 0.1"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rrbot_description/meshes/hokuyo.dae"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+  <!-- Joints -->
+  <xacro:joint_base_to_wheel prefix="right" reflect="1" />
+  <xacro:joint_base_to_wheel prefix="left" reflect="-1" />
+
+  <joint name="hokuyo_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="0 0 0.3" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="hokuyo_link"/>
+  </joint>
+
+  <!-- Transmissions -->
+  <xacro:trans_wheel prefix="right" />
+  <xacro:trans_wheel prefix="left" />
+</robot>

@@ -1,0 +1,19 @@
+costmap:
+  global_frame: /odom
+  robot_base_frame: /base_link
+  transform_tolerance: 10.0 # max = 10.0
+  obstacle_range: 2.5
+  raytrace_range: 2.5
+  inflation_radius: 0.0
+  robot_radius: 0.0
+  observation_sources: base_scan
+  base_scan: {data_type: LaserScan}
+  static_map: false
+  rolling_window: true
+  publish_frequency: 5.0
+  map_type: costmap
+  width: 5.0
+  origin_x: -2.5
+  height: 5.0
+  origin_y: -2.5
+  resolution: 0.020

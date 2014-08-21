@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot">
+  <xacro:include filename="$(find lama_test)/urdf/robot.gazebo" />
+
+  <xacro:macro name="link_dummy" params="name">
+    <link name="${name}">
+      <visual>
+        <geometry>
+          <box size="0.010 0.010 0.010" />
+        </geometry>
+        <material name="black">
+          <color rgba="0 0 0 1"/>
+        </material>
+        <origin xyz="0 0 0" />
+      </visual>
+      <inertial>
+        <mass value="1e-5" />
+        <inertia  ixx="1e-5" ixy="0.0" ixz="0.0" iyy="1e-5" iyz="0.0" izz="1e-5" />
+      </inertial>
+      <collision>
+        <geometry>
+          <box size="0.010 0.010 0.010" />
+        </geometry>
+        <origin xyz="0 0 0" />
+      </collision>
+    </link>
+  </xacro:macro>
+
+  <!-- Links -->
+  <xacro:link_dummy name="base_link" />
+  <xacro:link_dummy name="dummy_x" />
+  <xacro:link_dummy name="dummy_y" />
+
+  <link name="robot">
+    <visual>
+      <geometry>
+        <box size="0.7 0.5 0.3" />
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 .8 1"/>
+      </material>
+      <origin xyz="0 0 0.150" />
+    </visual>
+    <inertial>
+      <mass value="30" />
+      <inertia  ixx="0.5" ixy="0.0" ixz="0.0" iyy="0.5" iyz="0.0" izz="1.0" />
+    </inertial>
+    <collision>
+      <geometry>
+        <box size="0.7 0.5 0.3" />
+      </geometry>
+      <origin xyz="0 0 0.150" />
+    </collision>
+  </link>
+
+  <link name="hokuyo_link">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.1 0.1 0.1"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rrbot_description/meshes/hokuyo.dae"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+  <!-- Joints -->
+  <joint name="x_joint" type="continuous">
+    <axis xyz="1 0 0" />
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="dummy_x"/>
+  </joint>
+
+  <joint name="y_joint" type="continuous">
+    <axis xyz="0 1 0" />
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="dummy_x"/>
+    <child link="dummy_y"/>
+  </joint>
+
+  <joint name="theta_joint" type="continuous">
+    <axis rpy="0 0 1" />
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="dummy_y"/>
+    <child link="robot"/>
+  </joint>
+
+  <joint name="hokuyo_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="0 0 0.3" rpy="0 0 0"/>
+    <parent link="robot"/>
+    <child link="hokuyo_link"/>
+  </joint>
+
+</robot>

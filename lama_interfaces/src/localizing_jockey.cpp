@@ -61,9 +61,11 @@ void LocalizingJockey::goalCallback()
       onGetSimilarity();
       break;
     case lama_interfaces::LocalizeGoal::INTERRUPT:
+      interrupt();
       onInterrupt();
       break;
     case lama_interfaces::LocalizeGoal::CONTINUE:
+      resume();
       onContinue();
       break;
   }

@@ -5,9 +5,12 @@
 #define _LAMA_INTERFACES_NAVIGATING_JOCKEY_H_
 
 #include <string>
+#include <cmath>
 
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
+#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/Point.h>
 
 #include <lama_interfaces/jockey.h>
 #include <lama_interfaces/NavigateAction.h>
@@ -34,6 +37,30 @@ class NavigatingJockey : public Jockey
     virtual void onInterrupt();
     virtual void onContinue();
 
+    virtual geometry_msgs::Twist goToGoal(const geometry_msgs::Point& goal);
+
+    double get_max_goal_distance() {return max_goal_distance_;}
+    void set_max_goal_distance(double d) {max_goal_distance_ = (d > 0) ? d : 0;}
+
+    double get_max_goal_dtheta() {return max_goal_dtheta_;}
+    void set_max_goal_dtheta(double d) {max_goal_dtheta_ =  (d > 0) ? d : 0;}
+
+    double get_kp_v() {return kp_v_;}
+    void set_kp_v(double val) {kp_v_ = (val > 0) ? val : 0;}
+
+    double get_kp_w() {return kp_w_;}
+    void set_kp_w(double val) {kp_w_ = (val > 0) ? val : 0;}
+
+    double get_min_velocity() {return min_velocity_;}
+    void set_min_velocity(double val) {min_velocity_ = val;}
+
+    double get_reach_distance() {return reach_distance_;}
+    void set_reach_distance(double d) {reach_distance_ = (d > 0) ? d : 0;}
+
+    double setGoalReached() {goal_reached_ = true;}
+    double unsetGoalReached() {goal_reached_ = false;}
+    double isGoalReached() {return goal_reached_;}
+
   protected:
 
     // NodeHandle instance must be created before this line. Otherwise strange
@@ -51,6 +78,19 @@ class NavigatingJockey : public Jockey
 
     void goalCallback();
     void preemptCallback();
+
+    // Change the visibility to avoid double calls.
+    using Jockey::initAction;
+    using Jockey::interrupt;
+    using Jockey::resume;
+
+    bool goal_reached_;
+    double max_goal_distance_;  //!> If the goal is farther than this distance, stop the robot.
+    double max_goal_dtheta_;  //!> The goal angular distance will be limited to this.
+    double kp_v_;  //!> Proportional gain for the linear velocity (s^-1).
+    double kp_w_;  //!> Proportional gain for the angular velocity (s^-1).
+    double min_velocity_;  //!> Minimum set velocity (m.s^-1)
+    double reach_distance_;  //!> Goal is reached if closer than this (m).
 };
 
 } // namespace interfaces

@@ -37,21 +37,17 @@ void LearningJockey::goalCallback()
   {
     case lama_interfaces::LearnGoal::START_LEARN:
       initAction();
-
       onStartLearn();
       break;
     case lama_interfaces::LearnGoal::STOP_LEARN:
-
       onStopLearn();
       break;
     case lama_interfaces::LearnGoal::INTERRUPT:
       interrupt();
-
       onInterrupt();
       break;
     case lama_interfaces::LearnGoal::CONTINUE:
       resume();
-
       onContinue();
       break;
   }

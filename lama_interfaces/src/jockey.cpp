@@ -14,28 +14,9 @@ Jockey::Jockey(std::string name) :
 {
 }
 
-bool Jockey::isInterrupted()
-{
-  return interrupted_;
-}
-
-ros::Time Jockey::getInterruptionTime()
-{
-  return interruption_time_;
-}
-
-ros::Time Jockey::getResumeTime()
-{
-  return resume_time_;
-}
-
-ros::Duration Jockey::getInterruptionsDuration()
-{
-  return interruptions_duration_;
-}
-
 void Jockey::initAction()
 {
+  start_time_ = ros::Time::now();
   interrupted_ = false;
   interruption_time_ = ros::Time(0);
   resume_time_ = ros::Time(0);
@@ -44,15 +25,21 @@ void Jockey::initAction()
 
 void Jockey::interrupt()
 {
-  interrupted_ = true;
-  interruption_time_ = ros::Time::now();
+  if (!interrupted_)
+  {
+    interrupted_ = true;
+    interruption_time_ = ros::Time::now();
+  }
 }
 
 void Jockey::resume()
 {
-  interrupted_ = false;
-  resume_time_ = ros::Time::now();
-  interruptions_duration_ += resume_time_ - interruption_time_;
+  if (interrupted_)
+  {
+    interrupted_ = false;
+    resume_time_ = ros::Time::now();
+    interruptions_duration_ += resume_time_ - interruption_time_;
+  }
 }
 
 void Jockey::onInterrupt()

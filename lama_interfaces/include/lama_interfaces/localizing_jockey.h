@@ -53,6 +53,11 @@ class LocalizingJockey : public Jockey
 
     void goalCallback();
     void preemptCallback();
+
+    // Change the visibility to avoid double calls.
+    using Jockey::initAction;
+    using Jockey::interrupt;
+    using Jockey::resume;
 };
 
 } // namespace interfaces

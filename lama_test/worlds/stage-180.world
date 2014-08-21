@@ -2,8 +2,8 @@ define topurg ranger
 (
   sensor( 			
     range [ 0.0  10.0 ]
-    fov 270.25
-    samples 540
+    fov 180
+    samples 360
   )
 
   # generic model properties
@@ -11,7 +11,7 @@ define topurg ranger
   size [ 0.05 0.05 0.1 ]
 )
 
-define robot position
+define erratic position
 (
   #size [0.415 0.392 0.25]
   size [0.35 0.35 0.25]
@@ -61,7 +61,4 @@ floorplan
 )
 
 # throw in a robot
-# West of down-left crossing
-robot( pose [ -4.5 -2.5 0 0 ] name "era" color "blue")
-# North of down-left crossing, pointing North
-#robot( pose [ -2.0 -1.0 0 90 ] name "era" color "blue")
+erratic( pose [ -4.5 -2.5 0 0 ] name "era" color "blue")

@@ -7,19 +7,17 @@ import unittest
 import rospy
 import roslib.message
 from sensor_msgs.msg import LaserScan
-from lama_interfaces.msg import Dummy
 from geometry_msgs.msg import Pose
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Polygon
 from geometry_msgs.msg import Point32
 
 from lama_interfaces.interface_factory import interface_factory
-from lama_interfaces.srv._lmi_vector_double_get import lmi_vector_double_getRequest
-from lama_interfaces.srv._lmi_laser_descriptor_get import lmi_laser_descriptor_getRequest
-from lama_interfaces.srv._lmi_dummy_descriptor_get import lmi_dummy_descriptor_getRequest
-from lama_interfaces.srv._lmi_vector_pose_get import lmi_vector_pose_getRequest
-from lama_interfaces.srv._lmi_vector_odometry_get import lmi_vector_odometry_getRequest
-from lama_interfaces.srv._lmi_polygon_get import lmi_polygon_getRequest
+from lama_interfaces.srv import lmi_vector_double_getRequest
+from lama_interfaces.srv import lmi_laser_descriptor_getRequest
+from lama_interfaces.srv import lmi_vector_pose_getRequest
+from lama_interfaces.srv import lmi_vector_odometry_getRequest
+from lama_interfaces.srv import lmi_polygon_getRequest
 
 
 class RosTestCase(unittest.TestCase):
@@ -54,16 +52,17 @@ class TestDbMessagePassing(RosTestCase):
     """test setting and getting several descriptors"""
     def test_vector_double(self):
         """Test for a message as a list or tuple"""
-        srv_name = 'vector_double_descriptor'
-        srv_type = 'lama_interfaces/lmi_vector_double'
+        interface_name = 'vector_double_descriptor'
+        getter_service = 'lama_interfaces/lmi_vector_double_get'
+        setter_service = 'lama_interfaces/lmi_vector_double_set'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
-        iface = interface_factory(srv_name, srv_type)
-        get_srv = rospy.ServiceProxy('lmi_' + srv_name + '_getter',
-                                     iface._getter_class)
-        set_srv = rospy.ServiceProxy('lmi_' + srv_name + '_setter',
-                                     iface._setter_class)
+        iface = interface_factory(interface_name, getter_service, setter_service)
+        get_srv = rospy.ServiceProxy(iface.getter_service_name,
+                                     iface.getter_service_class)
+        set_srv = rospy.ServiceProxy(iface.setter_service_name,
+                                     iface.setter_service_class)
 
         msg = (1.45, 5.9)
 
@@ -91,16 +90,17 @@ class TestDbMessagePassing(RosTestCase):
 
     def test_laser_scan(self):
         """Test passing and getting a LaserScan[] message"""
-        srv_name = 'laser_descriptor'
-        srv_type = 'lama_interfaces/lmi_laser_descriptor'
+        interface_name = 'laser_descriptor'
+        getter_service = 'lama_interfaces/lmi_laser_descriptor_get'
+        setter_service = 'lama_interfaces/lmi_laser_descriptor_set'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
-        iface = interface_factory(srv_name, srv_type)
-        get_srv = rospy.ServiceProxy('lmi_' + srv_name + '_getter',
-                                     iface._getter_class)
-        set_srv = rospy.ServiceProxy('lmi_' + srv_name + '_setter',
-                                     iface._setter_class)
+        iface = interface_factory(interface_name, getter_service, setter_service)
+        get_srv = rospy.ServiceProxy(iface.getter_service_name,
+                                     iface.getter_service_class)
+        set_srv = rospy.ServiceProxy(iface.setter_service_name,
+                                     iface.setter_service_class)
 
         scan0 = LaserScan()
         scan0.header.seq = 1
@@ -135,56 +135,19 @@ class TestDbMessagePassing(RosTestCase):
         for scan_out, scan_in in zip(out_scans, response.descriptor):
             self.assertMsgEqual(scan_out, scan_in)
 
-    def test_dummy(self):
-        """Test passing and getting a Dummy message"""
-        srv_name = 'dummy_descriptor'
-        srv_type = 'lama_interfaces/lmi_dummy_descriptor'
-
-        # Set up node as well as getter and setter services.
-        rospy.init_node('lama_interfaces', anonymous=True)
-        iface = interface_factory(srv_name, srv_type)
-        get_srv = rospy.ServiceProxy('lmi_' + srv_name + '_getter',
-                                     iface._getter_class)
-        set_srv = rospy.ServiceProxy('lmi_' + srv_name + '_setter',
-                                     iface._setter_class)
-
-        dummy0 = Dummy()
-        dummy0.value = 354
-        dummy1 = Dummy()
-        dummy1.value = 5649
-
-        descriptor_from_setter0 = set_srv(dummy0)
-        # descriptor_from_setter cannot be passed to get_srv because of
-        # type incompatibility, "transform" it to a ..._getRequest()
-        descriptor_to_getter0 = lmi_dummy_descriptor_getRequest()
-        descriptor_to_getter0.id = descriptor_from_setter0.id
-        response0 = get_srv(descriptor_to_getter0)
-
-        descriptor_from_setter1 = set_srv(dummy1)
-        # descriptor_from_setter cannot be passed to get_srv because of
-        # type incompatibility, "transform" it to a ..._getRequest()
-        descriptor_to_getter1 = lmi_dummy_descriptor_getRequest()
-        descriptor_to_getter1.id = descriptor_from_setter1.id
-        response1 = get_srv(descriptor_to_getter1)
-
-        self.assertIsNot(dummy0, response0.descriptor)
-        self.assertIsNot(dummy0.value, response0.descriptor.value)
-        self.assertIsNot(dummy1, response1.descriptor)
-        self.assertEqual(dummy0.value, response0.descriptor.value)
-        self.assertEqual(dummy1.value, response1.descriptor.value)
-
     def test_pose(self):
         """Test passing and getting a Pose[] message"""
-        srv_name = 'pose_descriptor'
-        srv_type = 'lama_interfaces/lmi_vector_pose'
+        interface_name = 'pose_descriptor'
+        getter_service = 'lama_interfaces/lmi_vector_pose_get'
+        setter_service = 'lama_interfaces/lmi_vector_pose_set'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
-        iface = interface_factory(srv_name, srv_type)
-        get_srv = rospy.ServiceProxy('lmi_' + srv_name + '_getter',
-                                     iface._getter_class)
-        set_srv = rospy.ServiceProxy('lmi_' + srv_name + '_setter',
-                                     iface._setter_class)
+        iface = interface_factory(interface_name, getter_service, setter_service)
+        get_srv = rospy.ServiceProxy(iface.getter_service_name,
+                                     iface.getter_service_class)
+        set_srv = rospy.ServiceProxy(iface.setter_service_name,
+                                     iface.setter_service_class)
 
         pose0 = Pose()
         pose0.position.x = 34.5
@@ -214,16 +177,17 @@ class TestDbMessagePassing(RosTestCase):
 
     def test_odometry(self):
         """Test passing and getting a Odometry[] message"""
-        srv_name = 'odometry_descriptor'
-        srv_type = 'lama_interfaces/lmi_vector_odometry'
+        interface_name = 'odometry_descriptor'
+        getter_service = 'lama_interfaces/lmi_vector_odometry_get'
+        setter_service = 'lama_interfaces/lmi_vector_odometry_set'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
-        iface = interface_factory(srv_name, srv_type)
-        get_srv = rospy.ServiceProxy('lmi_' + srv_name + '_getter',
-                                     iface._getter_class)
-        set_srv = rospy.ServiceProxy('lmi_' + srv_name + '_setter',
-                                     iface._setter_class)
+        iface = interface_factory(interface_name, getter_service, setter_service)
+        get_srv = rospy.ServiceProxy(iface.getter_service_name,
+                                     iface.getter_service_class)
+        set_srv = rospy.ServiceProxy(iface.setter_service_name,
+                                     iface.setter_service_class)
 
         odom = Odometry()
         odom.header.seq = 1
@@ -286,16 +250,17 @@ class TestDbMessagePassing(RosTestCase):
 
     def test_polygon(self):
         """Test passing and getting a Polygon message"""
-        srv_name = 'poly'
-        srv_type = 'lama_interfaces/lmi_polygon'
+        interface_name = 'poly'
+        getter_service = 'lama_interfaces/lmi_polygon_get'
+        setter_service = 'lama_interfaces/lmi_polygon_set'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
-        iface = interface_factory(srv_name, srv_type)
-        get_srv = rospy.ServiceProxy('lmi_' + srv_name + '_getter',
-                                     iface._getter_class)
-        set_srv = rospy.ServiceProxy('lmi_' + srv_name + '_setter',
-                                     iface._setter_class)
+        iface = interface_factory(interface_name, getter_service, setter_service)
+        get_srv = rospy.ServiceProxy(iface.getter_service_name,
+                                     iface.getter_service_class)
+        set_srv = rospy.ServiceProxy(iface.setter_service_name,
+                                     iface.setter_service_class)
 
         polygon = Polygon()
 
@@ -334,7 +299,6 @@ class TestDbMessagePassing(RosTestCase):
             self.assertAlmostEqual(point_out.x, point_in.x, places=5)
             self.assertAlmostEqual(point_out.y, point_in.y, places=5)
             self.assertAlmostEqual(point_out.z, point_in.z, places=5)
-
 
 if __name__ == '__main__':
     import rostest

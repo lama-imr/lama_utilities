@@ -63,6 +63,7 @@ add_message_files(
 ## Generate services in the 'srv' folder
 add_service_files(
 	FILES
+	AddInterface.srv
 	lmi_core.srv
 	lmi_core_get.srv
 	lmi_core_set.srv

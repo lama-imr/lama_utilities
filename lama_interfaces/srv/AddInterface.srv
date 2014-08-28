@@ -1,0 +1,7 @@
+string service_name
+string message_type
+---
+bool success
+string get_service_name
+string set_service_name 
+ 

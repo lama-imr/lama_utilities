@@ -18,13 +18,14 @@ def navigateFeedbackCallback(feedback):
     rospy.loginfo('Time elapsed: {:.3f} s'.format(feedback.time_elapsed.to_sec()))
     rospy.loginfo('Completion: {:.2f} %'.format(feedback.completion * 100))
 
-# Example of call.
 if __name__ == '__main__':
     rospy.init_node('random_walker')
+
     navigate = actionlib.SimpleActionClient('navigating_jockey', NavigateAction)
     navigate.wait_for_server()
     localize = actionlib.SimpleActionClient('localizing_jockey', LocalizeAction)
     localize.wait_for_server()
+
     nav_goal = NavigateGoal()
     try:
         while True:

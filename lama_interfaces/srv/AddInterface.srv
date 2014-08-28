@@ -1,5 +1,6 @@
-string service_name
-string message_type
+string interface_name
+string get_service_message
+string set_service_message
 ---
 bool success
 string get_service_name

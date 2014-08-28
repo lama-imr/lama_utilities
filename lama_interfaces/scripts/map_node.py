@@ -11,12 +11,14 @@ from lama_interfaces.srv import AddInterfaceResponse
 def handle_add_interface(req):
     response = AddInterfaceResponse()
     try:
-        iface = interface_factory(req.service_name, req.message_type)
+        iface = interface_factory(req.interface_name,
+                                  req.get_service_message,
+                                  req.set_service_message)
     except ValueError:
         response.success = False
     response.success = True
-    response.get_service_name = iface.srv_name + '_getter'
-    response.set_service_name = iface.srv_name + '_setter'
+    response.get_service_name = iface.getter_service_name
+    response.set_service_name = iface.setter_service_name
     return response
 
 

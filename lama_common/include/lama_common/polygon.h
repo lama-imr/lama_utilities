@@ -5,13 +5,20 @@
 #include <numeric>
 
 #include <geometry_msgs/Point32.h>
+#include <geometry_msgs/Polygon.h>
+#include <sensor_msgs/LaserScan.h>
+
 #include <lama_common/point.h>
 
 namespace lama {
 
+using std::vector;
+
+typedef geometry_msgs::Point32 GPoint;
+
 // Return the length of a given polygon.
 template<typename T> 
-double getLength(const std::vector<T> &pts)
+double getLength(const vector<T> &pts)
 {
   double length = 0;
   for(size_t i = 0; i < pts.size() - 1; i++)
@@ -30,9 +37,9 @@ double getLength(const std::vector<T> &pts)
 /// result:  l0, l1,.., ln
 /// l0 = lenght of (p0, p1), l1 = length(p1,p2), ... , ln = length(pn, p0)
 template<typename T>
-std::vector<double> getLengths(const std::vector<T> &pts)
+vector<double> getLengths(const vector<T> &pts)
 {
-  std::vector<double> result;
+  vector<double> result;
   result.reserve(pts.size());
 
   for (size_t i = 0; i < pts.size(); i++)
@@ -49,17 +56,18 @@ std::vector<double> getLengths(const std::vector<T> &pts)
  * Resample the given polygon
  *
  * Resample the given polygon of 2D or 3D points. The third coordinate of 3D points is ignored.
+ * T must have a constructor T(double, double).
  * numOfSamples > 0
  */
 template<typename T>
-std::vector<T> resamplePolygon(const std::vector<T>& polygon, const int numOfSamples, double& delta)
+vector<T> resamplePolygon(const vector<T>& polygon, const int numOfSamples, double& delta)
 {
-  std::vector<double> lengths(getLengths(polygon));
+  vector<double> lengths(getLengths(polygon));
   const double polygonLength = std::accumulate(lengths.begin(), lengths.end(), 0.0);
   const double dl = polygonLength / (double)numOfSamples;
   delta = dl;
 
-  std::vector<T> result;
+  vector<T> result;
   result.reserve(numOfSamples);
 
   int last = 0;
@@ -88,31 +96,76 @@ std::vector<T> resamplePolygon(const std::vector<T>& polygon, const int numOfSam
   return result;
 }
 
-/**
- * Resample the given polygon
+/* Resample the given polygon.
+ *
+ * Specialization for geometry_msgs::Point32 that doesn't have a constructor T(double, double).
+ *
  * numOfSamples > 0
  */
-std::vector<geometry_msgs::Point32> resamplePolygon(const std::vector<geometry_msgs::Point32>& polygon, const int numOfSamples, double& delta)
+// inline is necessary here because of linker error for multiple definition.
+template <>
+inline vector<GPoint> resamplePolygon<GPoint>(const vector<GPoint>& polygon, const int numOfSamples, double& delta)
 {
-  std::vector<lama::Point2> points;
-  for (auto gpoint : polygon)
+  vector<Point2> points;
+  points.reserve(polygon.size());
+  for (size_t i = 0; i < polygon.size(); ++i)
   {
-    points.push_back(lama::Point2(gpoint));
+    points.push_back(Point2(polygon[i]));
   }
 
-  auto resampledPoints = resamplePolygon(points, numOfSamples, delta);
+  vector<Point2> resampledPoints = resamplePolygon(points, numOfSamples, delta);
 
-  std::vector<geometry_msgs::Point32> resampledGPoints;
+  vector<GPoint> resampledGPoints;
+  vector<GPoint>::iterator it_gpoint;
   resampledGPoints.reserve(resampledPoints.size());
-  for (auto point : resampledPoints)
+  for (size_t i = 0; i < resampledPoints.size(); ++i)
   {
-    geometry_msgs::Point32 gpoint;
-    gpoint.x = point.x;
-    gpoint.y = point.y;
+    GPoint gpoint;
+    gpoint.x = resampledPoints[i].x;
+    gpoint.y = resampledPoints[i].y;
     resampledGPoints.push_back(gpoint);
   }
 
   return resampledGPoints;
+}
+
+/* Return a list of points from a LaserScan.
+ *
+ * T must have a constructor T(double, double).
+ */
+template <typename T>
+vector<T> scanToPolygon(const sensor_msgs::LaserScan& scan)
+{
+  vector<T> polygon;
+  polygon.reserve(scan.ranges.size());
+  double angle = scan.angle_min;
+  for (size_t i = 0; i <  scan.ranges.size(); ++i)
+  {
+    const double r = scan.ranges[i];
+    polygon.push_back(T(r * std::cos(angle), r * std::sin(angle)));
+    angle += scan.angle_increment;
+  }
+  return polygon;
+}
+
+/* Return a geometry_msgs::Polygon from a LaserScan.
+ *
+ */
+inline geometry_msgs::Polygon scanToPolygon(const sensor_msgs::LaserScan& scan)
+{
+  geometry_msgs::Polygon polygon;
+  polygon.points.reserve(scan.ranges.size());
+  double angle = scan.angle_min;
+  for (size_t i = 0; i <  scan.ranges.size(); ++i)
+  {
+    const double r = scan.ranges[i];
+    GPoint point;
+    point.x = r * std::cos(angle);
+    point.y = r * std::sin(angle);
+    polygon.points.push_back(point);
+    angle += scan.angle_increment;
+  }
+  return polygon;
 }
 
 } // namespace lama

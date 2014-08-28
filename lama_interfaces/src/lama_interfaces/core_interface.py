@@ -201,7 +201,7 @@ class CoreDBInterface(object):
 
         Parameters
         ----------
-        - object_id: int.
+        - object_id: int, lama object id in the database.
         """
         lama_object = LamaObjectIdentifier()
         lama_object.object_id = object_id
@@ -235,6 +235,15 @@ class CoreDBInterface(object):
 
         return lama_object
 
+    def _get_lama_object_descriptor_ids(self, object_id):
+        """Retrieve descriptor identifiers associated with a Lama object
+
+        Parameters
+        ----------
+        - object_id: int, lama object id in the database.
+        """
+        pass
+
     def push_lama_object(self, msg):
         """Add a LaMa object to the database)
 
@@ -254,7 +263,11 @@ class CoreDBInterface(object):
         ----------
         - msg: an instance of lmi_core.srv request.
         """
-        return self._get_lama_object(msg.object.object_id)
+        response = self._action_class._response_class()
+        id_ = msg.object.object_id
+        response.objects.append(self._get_lama_object(id_))
+        response.descriptors += self._get_lama_object_descriptors(id_)
+        return response
 
     def assign_descriptor_to_lama_object(self, msg):
         """Add a descriptor to a vertex

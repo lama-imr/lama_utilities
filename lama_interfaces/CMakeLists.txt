@@ -111,7 +111,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 	INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${SQLITE_INCLUDE}
-	LIBRARIES lama_core
+	LIBRARIES lama_core jockey localizing_jockey navigating_jockey learning_jockey
 	CATKIN_DEPENDS roscpp rospy actionlib_msgs geometry_msgs sensor_msgs nav_msgs
 	DEPENDS SQLITE
 )

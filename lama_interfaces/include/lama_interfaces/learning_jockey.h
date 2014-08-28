@@ -36,7 +36,7 @@ class LearningJockey : public Jockey
   protected:
 
     // NodeHandle instance must be created before this line. Otherwise strange
-    // error may occur.
+    // error may occur (this is done in Jockey).
     LearnServer server_;
     lama_interfaces::LearnResult result_;
     lama_interfaces::LearnFeedback feedback_;

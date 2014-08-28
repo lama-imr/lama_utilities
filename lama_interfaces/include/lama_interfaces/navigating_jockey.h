@@ -64,7 +64,7 @@ class NavigatingJockey : public Jockey
   protected:
 
     // NodeHandle instance must be created before this line. Otherwise strange
-    // error may occur.
+    // error may occur (this is done in Jockey).
     NavigateServer server_;
     lama_interfaces::NavigateResult result_;
     lama_interfaces::NavigateFeedback feedback_;

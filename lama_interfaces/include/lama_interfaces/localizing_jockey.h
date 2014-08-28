@@ -36,10 +36,12 @@ class LocalizingJockey : public Jockey
     virtual void onInterrupt();
     virtual void onContinue();
 
+    void initAction();
+
   protected:
 
     // NodeHandle instance must be created before this line. Otherwise strange
-    // error may occur.
+    // error may occur (this is done in Jockey).
     LocalizeServer server_;
     lama_interfaces::LocalizeResult result_;
     lama_interfaces::LocalizeFeedback feedback_;

@@ -14,11 +14,15 @@ LamaDescriptorIdentifier descriptor
 ---
 # Result.
 
-uint32 state  # to be deleted, support for this is native
+uint32 state
 uint32 DONE=0
 uint32 NOT_SUPPORTED=1
 
 LamaDescriptorIdentifier[] descriptors
+# Data output, dependent on action.
+int32[] idata
+float32[] fdata
+ 
 duration completion_time
 ---
 # Feedback.

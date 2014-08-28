@@ -78,6 +78,14 @@ void LocalizingJockey::preemptCallback()
   server_.setPreempted();
 }
 
+void LocalizingJockey::initAction()
+{
+  Jockey::initAction();
+  result_.descriptors.clear();
+  result_.idata.clear();
+  result_.fdata.clear();
+}
+
 void LocalizingJockey::onInterrupt()
 {
   ROS_DEBUG("%s: localizing goal %d interrupted", action_name_.c_str(), goal_.descriptor.object_id);

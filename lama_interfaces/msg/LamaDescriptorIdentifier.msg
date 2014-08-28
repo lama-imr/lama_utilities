@@ -1,5 +1,8 @@
-# Id of the Lama object associated with the descriptor (outside the database).
+# Id of the Lama object associated with the descriptor (in the database).
 int32 object_id
-string object_type
+
+# Id of the associated descriptor (in the database).
 int32 descriptor_id 
+
+# Interface name which also identifies the descriptor type.
 string interface_name

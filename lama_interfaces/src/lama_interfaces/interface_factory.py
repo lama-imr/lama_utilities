@@ -14,17 +14,29 @@ _types_table_name = 'message_types'
 # TODO according the rosparam server
 _engine = sqlalchemy.create_engine('sqlite:///created.sql')
 
-_used_srv_names = []
+_used_interface_names = []
 
 
 class DBInterface(object):
-    def __init__(self, srv_name, g_cls, s_cls):
+    def __init__(self, interface_name, getter_srv_msg, setter_srv_msg):
+        get_srv_class = roslib.message.get_service_class(getter_srv_msg)
+        set_srv_class = roslib.message.get_service_class(setter_srv_msg)
+
+        rospy.logdebug('Getter class {}'.format(get_srv_class))
+        rospy.logdebug('Getter request slots: {}'.format(get_srv_class._request_class.__slots__))
+        rospy.logdebug('Getter response slots: {}'.format(get_srv_class._response_class.__slots__))
+        rospy.logdebug('Setter class {}'.format(set_srv_class))
+        rospy.logdebug('Setter request slots: {}'.format(set_srv_class._request_class.__slots__))
+        rospy.logdebug('Setter response slots: {}'.format(set_srv_class._response_class.__slots__))
+
         # getter class
-        self._getter_class = g_cls
+        self.getter_service_name = interface_name + '_getter'
+        self.getter_service_class = get_srv_class
         # setter class
-        self._setter_class = s_cls
-        # service name
-        self.srv_name = srv_name
+        self.setter_service_name = interface_name + '_setter'
+        self.setter_service_class = set_srv_class
+        # interface name
+        self.interface_name = interface_name
         # sqlalchemy metadata holds the table definition
         self.metadata = sqlalchemy.MetaData(_engine)
         self._generateSchema()
@@ -32,7 +44,7 @@ class DBInterface(object):
     def getter(self, msg):
         """Execute the getter service and return the response"""
         # Create an instance of response.
-        response = self._getter_class._response_class()
+        response = self.getter_service_class._response_class()
 
         # Make the transaction.
         connection = _engine.connect()
@@ -66,9 +78,9 @@ class DBInterface(object):
         connection.close()
 
         # Return a setter response instance with the descriptor identifier.
-        response = self._setter_class._response_class()
+        response = self.setter_service_class._response_class()
         response.id.descriptor_id = return_id
-        response.id.interface_name = self.srv_name
+        response.id.interface_name = self.interface_name
         return response
 
     def _generateSchema(self):
@@ -81,7 +93,7 @@ class DBInterface(object):
                                       primary_key=True,
                                       nullable=False)
         column_content = sqlalchemy.Column('serialized_content', Binary)
-        self.table = sqlalchemy.Table(self.srv_name,
+        self.table = sqlalchemy.Table(self.interface_name,
                                       self.metadata,
                                       column_id,
                                       column_content)
@@ -101,49 +113,59 @@ class DBInterface(object):
         connection = _engine.connect()
         transaction = connection.begin()
         insert_args = {
-            'table_name': self.srv_name,
-            'message_type': self._getter_class._response_class._slot_types[0]
+            'table_name': self.interface_name,
+            'message_type': self.getter_service_class._response_class._slot_types[0]
         }
         connection.execute(table.insert(), insert_args)
         transaction.commit()
         connection.close()
 
 
-def interface_factory(service_name, srv_type):
+def interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
     """generate the interface class and run the getter and setter services
 
-    service definition must be in form of *_get and *_set where
-        *_get:
-            LamaDescriptorIdentifier id
-            ---
-            * descriptor
+    Example of call: interface_factory('laser_descriptor',
+      'lama_interface/lmi_laser_descriptor_get',
+      'lama_interface/lmi_laser_descriptor_set').
 
-        and
-        *_set
+    Parameters
+    ----------
+    - interface_name: str, uniquely identifies an interface between jockeys
+      and the database.
+    - getter_srv_msg: str, identifies the service message used when retrieving
+      a descriptor from the database. For example
+      'lama_interfaces/lmi_laser_descriptor_get'.
+      Service definition must be in form:
+            lama_interfaces/LamaDescriptorIdentifier id
+            ---
+            * descriptor
+    - setter_srv_msg: str, identifies the service message used when adding
+      a descriptor to the database. For example
+      'lama_interfaces/lmi_laser_descriptor_set.srv'.
+      Service definition must be in form:
             * descriptor
             ---
-            LamaDescriptorIdentifier id
+            lama_interfaces/LamaDescriptorIdentifier id
     """
-    if '@' in service_name:
-        rospy.logerr('@ not allowd in service name')
-        raise ValueError('@ not allowd in service name')
-    if service_name in _used_srv_names:
-        rospy.logfatal('Service "{}" already in use'.format(service_name))
-        raise ValueError('Service "{}" already in use'.format(service_name))
+    if '@' in interface_name:
+        rospy.logerr('@ not allowd in interface name')
+        raise ValueError('@ not allowd in interface name')
+    if interface_name in _used_interface_names:
+        rospy.logfatal('Interface "{}" already in use'.format(interface_name))
+        raise ValueError('Interface "{}" already in use'.format(interface_name))
 
-    srv_get_class = roslib.message.get_service_class(srv_type + '_get')
-    srv_set_class = roslib.message.get_service_class(srv_type + '_set')
+    if getter_srv_msg.endswith('.srv'):
+        getter_srv_msg = getter_srv_msg[:-4]
+    if setter_srv_msg.endswith('.srv'):
+        setter_srv_msg = setter_srv_msg[:-4]
+    iface = DBInterface(interface_name, getter_srv_msg, setter_srv_msg)
 
-    rospy.logdebug('Getter class {}'.format(srv_get_class))
-    rospy.logdebug('Getter request slots: {}'.format(srv_get_class._request_class.__slots__))
-    rospy.logdebug('Getter response slots: {}'.format(srv_get_class._response_class.__slots__))
-    rospy.logdebug('Setter class {}'.format(srv_set_class))
-    rospy.logdebug('Setter request slots: {}'.format(srv_set_class._request_class.__slots__))
-    rospy.logdebug('Setter response slots: {}'.format(srv_set_class._response_class.__slots__))
-
-    iface = DBInterface(service_name, srv_get_class, srv_set_class)
-    sub_name = 'lmi_' + service_name
-    rospy.logdebug('starting interface', sub_name)
-    rospy.Service(sub_name + '_setter', srv_set_class, iface.setter)
-    rospy.Service(sub_name + '_getter', srv_get_class, iface.getter)
+    rospy.Service(iface.getter_service_name,
+                  iface.getter_service_class,
+                  iface.getter)
+    rospy.Service(iface.setter_service_name,
+                  iface.setter_service_class,
+                  iface.setter)
+    rospy.loginfo('Services %s and %s started',
+                  iface.getter_service_name, iface.setter_service_name)
     return iface

@@ -13,7 +13,7 @@ import roslib.msgs
 import roslib.message
 
 from lama_interfaces.msg import LamaMapAction
-from lama_interfaces.msg import LamaObjectIdentifier
+from lama_interfaces.msg import LamaObject
 
 g_default_core_table_name = 'core'
 g_default_descriptor_table_name = 'lama_descriptors'
@@ -49,7 +49,7 @@ class CoreDBInterface(object):
         self.metadata.create_all(_engine)
 
     def _generate_core_table(self):
-        """Create the SQL tables for LamaObjectIdentifier messages"""
+        """Create the SQL tables for LamaObject messages"""
         # The table format is hard-coded.
         table = Table(self.service_name,
                       self.metadata,
@@ -58,11 +58,11 @@ class CoreDBInterface(object):
                                    types.Integer,
                                    ForeignKey(self.service_name + '.id'),
                                    unique=True))
-        table.append_column(Column('object_name', types.String))
-        table.append_column(Column('object_type', types.String))
+        table.append_column(Column('name', types.String))
+        table.append_column(Column('type', types.Integer))
         self.core_table = table
 
-        table = Table(self.service_name + '@object_references@_data_',
+        table = Table(self.service_name + '@references@_data_',
                       self.metadata)
         table.append_column(Column('id', types.Integer, primary_key=True))
         table.append_column(Column('seq_num', types.Integer))
@@ -85,10 +85,10 @@ class CoreDBInterface(object):
         self.descriptor_table = table
 
     def getter(self, msg):
-        """Get a LamaObjectIdentifier from the database
+        """Get a LamaObject from the database
 
-        Get a LamaObjectIdentifier from the database, from its
-        database-specific id.
+        Get a LamaObject from the database, from its
+        database-specific id. Return an instance of lmi_core_get.srv response.
 
         Parameters
         ----------
@@ -109,27 +109,29 @@ class CoreDBInterface(object):
                 id_, self.core_table.name)
             rospy.logerr(err)
             raise ValueError(err)
-        response.object_id = result['object_id']
-        response.object_name = result['object_name']
-        response.object_type = result['object_type']
+        response.object.id = result['object_id']
+        response.object.name = result['name']
+        response.object.type = result['type']
 
-        # Make the transaction for the array 'object_references'.
-        if response.object_type == 'edge':
+        # Make the transaction for the array 'references'.
+        if response.type == LamaObject.EDGE:
             connection = _engine.connect()
             query = self.core_obj_ref_table.select(
                 whereclause=(self.core_obj_ref_table.parent_id == id_))
             results = connection.execute(query).fetchall()
             connection.close()
-            response.object_references = [0] * 2
+            response.references = [0] * 2
             for result in results:
                 index = result['seq_num']
                 val = result['_value_']
-                response.object_references[index] = val
+                response.references[index] = val
 
         return response
 
     def setter(self, msg):
-        """Add a LamaObjectIdentifier message to the database
+        """Add a LamaObject message to the database
+
+        Return an instance of lmi_core_set.srv response.
 
         Parameters
         ----------
@@ -142,20 +144,20 @@ class CoreDBInterface(object):
         connection = _engine.connect()
         transaction = connection.begin()
         insert_args = {
-            'object_id': msg.object_id,
-            'object_name': msg.object_name,
-            'object_type': msg.object_type,
+            'object_id': msg.id,
+            'name': msg.name,
+            'type': msg.type,
         }
         result = connection.execute(self.core_table.insert(), insert_args)
         return_id = result.inserted_primary_key[0]
         transaction.commit()
         connection.close()
 
-        # Make the transaction for the 'object_references' array.
-        if msg.object_type == 'edge':
+        # Make the transaction for the 'references' array.
+        if msg.type == LamaObject.EDGE:
             connection = _engine.connect()
             transaction = connection.begin()
-            for i, v in enumerate(msg.object_references):
+            for i, v in enumerate(msg.references):
                 insert_args = {
                     'seq_num': i,
                     'parent_id': return_id,
@@ -201,9 +203,9 @@ class CoreDBInterface(object):
 
         Parameters
         ----------
-        - object_id: int, lama object id in the database.
+        - object_id: int, lama object_id (not id in the database).
         """
-        lama_object = LamaObjectIdentifier()
+        lama_object = LamaObject()
         lama_object.object_id = object_id
 
         # Make the transaction for the core table.
@@ -217,20 +219,20 @@ class CoreDBInterface(object):
                 object_id, self.core_table.name)
             rospy.logerr(err)
             raise ValueError(err)
-        lama_object.object_name = result['object_name']
-        lama_object.object_type = result['object_type']
+        lama_object.name = result['name']
+        lama_object.type = result['type']
 
-        # Make the transaction for the array 'object_references'.
-        if lama_object.object_type == 'edge':
+        # Make the transaction for the array 'references'.
+        if lama_object.type == LamaObject.EDGE:
             connection = _engine.connect()
             query = self.core_obj_ref_table.select(
                 whereclause=(self.core_obj_ref_table.parent_id == result['id']))
             results = connection.execute(query).fetchall()
-            lama_object.object_references = [0] * 2
+            lama_object.references = [0] * 2
             for result in results:
                 index = result['seq_num']
                 val = result['_value_']
-                lama_object.object_references[index] = val
+                lama_object.references[index] = val
             connection.close()
 
         return lama_object
@@ -240,7 +242,7 @@ class CoreDBInterface(object):
 
         Parameters
         ----------
-        - object_id: int, lama object id in the database.
+        - object_id: int, lama object_id (not id in the database).
         """
         pass
 
@@ -264,7 +266,7 @@ class CoreDBInterface(object):
         - msg: an instance of lmi_core.srv request.
         """
         response = self._action_class._response_class()
-        id_ = msg.object.object_id
+        id_ = msg.object.id
         response.objects.append(self._get_lama_object(id_))
         response.descriptors += self._get_lama_object_descriptors(id_)
         return response
@@ -279,12 +281,12 @@ class CoreDBInterface(object):
         # Make the query from the core table.
         connection = _engine.connect()
         query = self.core_table.select(
-            whereclause=(self.core_table.c.object_id == msg.object.object_id))
+            whereclause=(self.core_table.c.object_id == msg.object.id))
         result = connection.execute(query).fetchone()
         connection.close()
         if not result:
             err = 'No element with object_id {} in database table {}'.format(
-                msg.object.object_id, self.core_table.name)
+                msg.object.id, self.core_table.name)
             rospy.logerr(err)
             raise ValueError(err)
         id_ = result['id']
@@ -307,12 +309,12 @@ class CoreDBInterface(object):
         Parameters
         ----------
         - msg: an instance of lmi_core.srv request.
-        - object_type: 'vertex' or 'edge'.
+        - object_type: LamaObject.VERTEX or LamaObject.EDGE.
         """
         # Make the transaction for the core table.
         connection = _engine.connect()
         query = self.core_table.select(
-            whereclause=(self.core_table.c.object_type == object_type))
+            whereclause=(self.core_table.c.type == object_type))
         results = connection.execute(query).fetchall()
         connection.close()
 
@@ -349,8 +351,7 @@ class CoreDBInterface(object):
         """Return a core reponse message with edges starting at a vertex
 
         Return an instance or lmi_core.srv response containing edges (instances
-        of LamaObjectIdentifier) starting
-        at the given vertex.
+        of LamaObject) starting at the given vertex.
 
         Parameters
         ----------
@@ -359,7 +360,7 @@ class CoreDBInterface(object):
         coretable = self.core_table
         reftable = self.core_obj_ref_table
         query = select([coretable.c.id], from_obj=[coretable, reftable])
-        query = query.where(reftable.c['_value_'] == msg.object.object_id)
+        query = query.where(reftable.c['_value_'] == msg.object.id)
         query = query.where(reftable.c['seq_num'] == 0)
         query = query.where(coretable.c['id'] == reftable.c['parent_id'])
 
@@ -369,7 +370,7 @@ class CoreDBInterface(object):
         response = self._action_class._response_class()
         if not results:
             err = 'No element with object_id {} in database table {}'.format(
-                msg.object.object_id, self.core_table.name)
+                msg.object.id, self.core_table.name)
             rospy.logerr(err)
             raise ValueError(err)
         for result in results:
@@ -383,16 +384,16 @@ def core_interface():
 
     Generate an interface class and run the getter, setter, and action services.
     Service definition must be in the form *_get and *_set where
-    *_get
-      lama_object_identifier id
+    lmi_core_get.srv:
+      int32 id
       ---
-      * object
+      LamaObject object
 
     and
-    *_set
-      * object
+    lmi_core_set.srv:
+      LamaObject object
       ---
-      lama_object_identifier id
+      int32 id
     """
     service_name = g_default_core_table_name
     iface = CoreDBInterface()

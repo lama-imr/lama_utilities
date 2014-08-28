@@ -13,6 +13,8 @@
 #include <geometry_msgs/Point.h>
 
 #include <lama_interfaces/jockey.h>
+#include <lama_interfaces/LamaObject.h>
+#include <lama_interfaces/LamaDescriptorIdentifier.h>
 #include <lama_interfaces/NavigateAction.h>
 #include <lama_interfaces/NavigateGoal.h>
 #include <lama_interfaces/NavigateFeedback.h>

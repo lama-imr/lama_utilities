@@ -55,7 +55,7 @@ add_message_files(
   FILES
   LamaDescriptorIdentifier.msg
   LamaMapAction.msg
-  LamaObjectIdentifier.msg
+  LamaObject.msg
   Dummy.msg
   complex.msg
 )

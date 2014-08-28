@@ -1,4 +1,4 @@
-# Action.
+# Action (goal).
 
 uint32 action
 uint32 TRAVERSE=0
@@ -6,7 +6,7 @@ uint32 STOP=1
 uint32 INTERRUPT=2
 uint32 CONTINUE=3
 
-LamaObjectIdentifier edge
+LamaObject edge
 LamaDescriptorIdentifier descriptor
 ---
 # Result.

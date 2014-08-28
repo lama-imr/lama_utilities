@@ -3,8 +3,6 @@
  */
 
 #include <lama_interfaces/navigating_jockey.h>
-#include <lama_interfaces/LamaObjectIdentifier.h>
-#include <lama_interfaces/LamaDescriptorIdentifier.h>
 
 namespace lama
 {
@@ -55,7 +53,7 @@ void NavigatingJockey::goalCallback()
     case lama_interfaces::NavigateGoal::STOP:
       initAction();
       // Reset the goal, just in case.
-      goal_.edge = lama_interfaces::LamaObjectIdentifier();
+      goal_.edge = lama_interfaces::LamaObject();
       goal_.descriptor = lama_interfaces::LamaDescriptorIdentifier();
       onStop();
       break;
@@ -85,12 +83,12 @@ void NavigatingJockey::preemptCallback()
 
 void NavigatingJockey::onInterrupt()
 {
-  ROS_DEBUG("%s: navigating goal %d interrupted", action_name_.c_str(), goal_.edge.object_id);
+  ROS_DEBUG("%s: navigating goal %d interrupted", action_name_.c_str(), goal_.edge.id);
 }
 
 void NavigatingJockey::onContinue()
 {
-  ROS_DEBUG("%s: navigating goal %d resumed", action_name_.c_str(), goal_.edge.object_id);
+  ROS_DEBUG("%s: navigating goal %d resumed", action_name_.c_str(), goal_.edge.id);
 }
 
 /* Return the twist to reach the given goal pose

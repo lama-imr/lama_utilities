@@ -93,13 +93,13 @@ catkin_package(
 ## Build ##
 ###########
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
 	include
 	${catkin_INCLUDE_DIRS})
-
-list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
 
 ## Declare a cpp library
 add_library(map_builder

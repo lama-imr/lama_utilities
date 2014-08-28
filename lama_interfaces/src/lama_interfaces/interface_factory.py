@@ -52,13 +52,13 @@ class DBInterface(object):
         id_ = msg.id.descriptor_id
         query = self.table.select(whereclause=(self.table.c.id == id_))
         result = connection.execute(query).fetchone()
+        transaction.commit()
+        connection.close()
         if not result:
             err = 'No element with id {} in database table {}'.format(
                 id_, self.table.name)
             rospy.logerr(err)
             raise ValueError(err)
-        transaction.commit()
-        connection.close()
 
         response.deserialize(result['serialized_content'])
         return response
@@ -110,15 +110,44 @@ class DBInterface(object):
         self.metadata.create_all()
 
         # Add the type description.
+        self._addTypeDescription(table)
+
+    def _addTypeDescription(self, table):
+        """Add the type description if not already existing
+
+        An error is raised if a table with the same name but a different type
+        exists.
+        """
+        # Check for an existing table.
         connection = _engine.connect()
         transaction = connection.begin()
-        insert_args = {
-            'table_name': self.interface_name,
-            'message_type': self.getter_service_class._response_class._slot_types[0]
-        }
-        connection.execute(table.insert(), insert_args)
+        name = self.interface_name
+        msg_type = self.getter_service_class._response_class._slot_types[0]
+        query = table.select(whereclause=(table.c.table_name == name))
+        result = connection.execute(query).fetchone()
         transaction.commit()
         connection.close()
+        table_exists = False
+        if result:
+            table_exists = True
+            if result['message_type'] != msg_type:
+                err = ('A table "{}" with type "{}" already exists' +
+                       ', cannot change to type "{}"'.format(
+                           name, result['message_type'], msg_type))
+                rospy.logfatal(err)
+                raise ValueError(err)
+
+        # Add the table description if necessary.
+        if not table_exists:
+            connection = _engine.connect()
+            transaction = connection.begin()
+            insert_args = {
+                'table_name': name,
+                'message_type': msg_type,
+            }
+            connection.execute(table.insert(), insert_args)
+            transaction.commit()
+            connection.close()
 
 
 def interface_factory(interface_name, getter_srv_msg, setter_srv_msg):

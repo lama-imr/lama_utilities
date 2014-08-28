@@ -52,12 +52,11 @@ catkin_python_setup()
 
 ## Generate messages in the 'msg' folder
 add_message_files(
-  FILES
-  LamaDescriptorIdentifier.msg
-  LamaMapAction.msg
-  LamaObject.msg
-  Dummy.msg
-  complex.msg
+	FILES
+	LamaDescriptorIdentifier.msg
+	LamaMapAction.msg
+	LamaObject.msg
+	complex.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -75,8 +74,6 @@ add_service_files(
 	lmi_vector_double_set.srv
 	lmi_zernike_moments_get.srv
 	lmi_zernike_moments_set.srv
-	lmi_dummy_descriptor_get.srv
-	lmi_dummy_descriptor_set.srv
 	lmi_vector_pose_get.srv
 	lmi_vector_pose_set.srv
 	lmi_vector_odometry_get.srv

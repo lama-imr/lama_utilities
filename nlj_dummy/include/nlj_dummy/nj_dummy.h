@@ -4,18 +4,23 @@
 #include <random>
 
 #include <lama_interfaces/navigating_jockey.h>
-#include <lama_interfaces/lmi_dummy_descriptor_get.h>
+
+#include <nlj_dummy/GetDummyDescriptor.h>
+
 
 class NJDummy : public lama::interfaces::NavigatingJockey
 {
   public:
 
-    NJDummy(std::string name);
+    NJDummy(std::string name, std::string get_service_name);
 
     virtual void onTraverse();
     virtual void onStop();
 
   private:
+
+    // Name of the getter service as interface to Lama.
+    std::string get_service_name_;
 
     // Random seed.
     std::random_device rd_;

@@ -16,11 +16,26 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
 
   // Create the getter and setter services for Dummy descriptors.
-  ros::ServiceClient client = n.serviceClient<lama_interfaces::AddInterface>("dummy_descriptor",
-      "nlj_dummy/dummy_descriptor");
+  ros::ServiceClient client = n.serviceClient<lama_interfaces::AddInterface>("interface_factory");
+  client.waitForExistence();
+  lama_interfaces::AddInterface srv;
+  srv.request.interface_name = "dummy_descriptor";
+  srv.request.get_service_message = "nlj_dummy/GetDummyDescriptor";
+  srv.request.set_service_message = "nlj_dummy/SetDummyDescriptor";
+  if (!client.call(srv))
+  {
+    ROS_ERROR("Failed to call service AddInterface");
+    return 1;
+  }
+  if (!srv.response.success)
+  {
+    ROS_ERROR("Failed to create the Lama interface");
+    return 1;
+  }
+
   // Run the jockeys.
-  LJDummy loc_jockey("localizing_jockey");
-  NJDummy nav_jockey("navigating_jockey");
+  LJDummy loc_jockey("localizing_jockey", srv.response.set_service_name);
+  NJDummy nav_jockey("navigating_jockey", srv.response.get_service_name);
 
   ROS_DEBUG("dummy_jockey started");
   ros::spin();

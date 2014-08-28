@@ -1,6 +1,7 @@
 #include <nlj_dummy/nj_dummy.h>
 
-NJDummy::NJDummy(std::string name) : lama::interfaces::NavigatingJockey(name),
+NJDummy::NJDummy(std::string name, std::string get_service_name) : lama::interfaces::NavigatingJockey(name),
+  get_service_name_(get_service_name),
   rand_generator_(rd_()),
   mean_traversing_time_(2.0),
   traversing_time_distribution_(mean_traversing_time_, 0.1)
@@ -22,11 +23,11 @@ void NJDummy::onTraverse()
 
   auto start_time = ros::Time::now();
   auto traversing_duration = traversing_time_distribution_(rand_generator_);
-  lama_interfaces::lmi_dummy_descriptor_get dg;
+  nlj_dummy::GetDummyDescriptor dg;
 
   dg.request.id = goal_.descriptor;
   ROS_INFO("goal.descriptor: %d", goal_.descriptor.descriptor_id);
-  ros::service::call("lmi_dummy_descriptor_getter", dg);
+  ros::service::call(get_service_name_, dg);
   ROS_INFO("dummy descriptor is %i", dg.response.descriptor.value);
 
   // start navigating.

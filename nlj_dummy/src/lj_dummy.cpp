@@ -1,8 +1,7 @@
-#include <lama_interfaces/lmi_dummy_descriptor_set.h>
-
 #include <nlj_dummy/lj_dummy.h>
 
-LJDummy::LJDummy(std::string name) : lama::interfaces::LocalizingJockey(name),
+LJDummy::LJDummy(std::string name, std::string set_service_name) : lama::interfaces::LocalizingJockey(name),
+  set_service_name_(set_service_name),
   rand_generator_(rd_()),
   descriptor_distribution_(0, 360),
   mean_localizing_time_(0.1),
@@ -24,7 +23,7 @@ void LJDummy::onGetEdgesDescriptors()
 
   auto start_time = ros::Time::now();
   auto localizing_duration = localizing_time_distribution_(rand_generator_);
-  lama_interfaces::lmi_dummy_descriptor_set ds;
+  nlj_dummy::SetDummyDescriptor ds;
 
   // Start the computer intensive localizing (uninterruptable).
   double last_feedback_update = 0.0;
@@ -49,7 +48,7 @@ void LJDummy::onGetEdgesDescriptors()
       for (int i = 0 ; i < 4 ; i++)
       {
         ds.request.descriptor.value = descriptor_distribution_(rand_generator_);
-        ros::service::call("lmi_dummy_descriptor_setter", ds);
+        ros::service::call(set_service_name_, ds);
         result_.descriptors.push_back(ds.response.id);
         ROS_INFO("outgoing descriptor_id %i", ds.response.id.descriptor_id);
         ROS_INFO("outgoing edge %i", ds.request.descriptor.value);

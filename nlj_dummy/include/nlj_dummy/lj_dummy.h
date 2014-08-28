@@ -5,11 +5,13 @@
 
 #include <lama_interfaces/localizing_jockey.h>
 
+#include <nlj_dummy/SetDummyDescriptor.h>
+
 class LJDummy : public lama::interfaces::LocalizingJockey
 {
   public:
 
-    LJDummy(std::string name);
+    LJDummy(std::string name, std::string set_service_name);
 
     void onGetVertexDescriptor();
     void onGetEdgesDescriptors();
@@ -18,6 +20,9 @@ class LJDummy : public lama::interfaces::LocalizingJockey
     void onGetSimilarity();
 
   private:
+
+    // Name of the setter service as interface to Lama.
+    std::string set_service_name_;
 
     // Random seed.
     std::random_device rd_;

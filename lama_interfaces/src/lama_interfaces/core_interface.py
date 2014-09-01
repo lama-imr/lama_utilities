@@ -32,9 +32,10 @@ class CoreDBInterface(object):
             descriptor_table_name = g_default_descriptor_table_name
         get_srv_type = 'lama_interfaces/GetLamaObject'
         set_srv_type = 'lama_interfaces/SetLamaObject'
+        action_srv_type = 'lama_interfaces/ActOnMap'
         get_srv_class = roslib.message.get_service_class(get_srv_type)
         set_srv_class = roslib.message.get_service_class(set_srv_type)
-        srv_action_class = roslib.message.get_service_class(srv_type)
+        srv_action_class = roslib.message.get_service_class(action_srv_type)
 
         # getter class.
         self.getter_service_name = 'lama_object_getter'
@@ -43,7 +44,8 @@ class CoreDBInterface(object):
         self.setter_service_name = 'lama_object_setter'
         self.setter_service_class = set_srv_class
         # Action class.
-        self.action_class = srv_action_class
+        self.action_service_name = 'lama_map_agent'
+        self.action_service_class = srv_action_class
 
         self.interface_name = interface_name
         self.descriptor_table_name = descriptor_table_name
@@ -128,13 +130,13 @@ class CoreDBInterface(object):
         return response
 
     def action_callback(self, msg):
-        """Callback of lmi_core service
+        """Callback of ActOnMap service
 
-        Return an instance of lmi_core.srv response.
+        Return an instance of ActOnMap response.
 
         Parameters
         ----------
-        - msg: an instance of lmi_core.srv request.
+        - msg: an instance of ActOnMap request.
         """
         action = msg.action.action
         if action == LamaMapAction.PUSH_VERTEX:
@@ -158,8 +160,9 @@ class CoreDBInterface(object):
         elif action == LamaMapAction.GET_OUTGOING_EDGES:
             r = self.get_outgoing_edges(msg)
         else:
+            # TODO: find a mechanism for non-implemented actions.
             rospy.logerr('Action {} not implemented'.format(msg.action))
-            r = None
+            r = self.action_service_class._response_class()
         return r
 
     def _get_lama_object(self, id_):
@@ -330,26 +333,26 @@ class CoreDBInterface(object):
     def push_lama_object(self, msg):
         """Add a LaMa object to the database
 
-        Return an instance of lmi_core.srv response.
+        Return an instance of ActOnMap response.
 
         Parameters
         ----------
-        - msg: an instance of lmi_core.srv request.
+        - msg: an instance of ActOnMap request.
         """
-        response = self.action_class._response_class()
+        response = self.action_service_class._response_class()
         response.id = self._set_lama_object(msg.object)
         return response
 
     def pull_lama_object(self, msg):
         """Retrieve a LaMa object from the database
 
-        Return an instance of lmi_core.srv response.
+        Return an instance of ActOnMap response.
 
         Parameters
         ----------
-        - msg: an instance of lmi_core.srv request.
+        - msg: an instance of ActOnMap request.
         """
-        response = self.action_class._response_class()
+        response = self.action_service_class._response_class()
         id_ = msg.object.id
         response.objects.append(self._get_lama_object(id_))
         response.descriptors = self._get_lama_object_descriptor_ids(id_)
@@ -358,11 +361,11 @@ class CoreDBInterface(object):
     def assign_descriptor_to_lama_object(self, msg):
         """Add a descriptor to a vertex
 
-        Return an instance of lmi_core.srv response.
+        Return an instance of ActOnMap response.
 
         Parameters
         ----------
-        - msg: an instance of lmi_core.srv request. All information must be in
+        - msg: an instance of ActOnMap request. All information must be in
             msg.descriptor (msg.object is ignored).
         """
         # Ensure that the lama object exists in the core table.
@@ -414,17 +417,17 @@ class CoreDBInterface(object):
         transaction.commit()
         connection.close()
 
-        response = self.action_class._response_class()
+        response = self.action_service_class._response_class()
         return response
 
     def get_lama_object_list(self, msg, object_type):
         """Retrieve all elements of a given type from the database
 
-        Return an instance of lmi_core.srv response.
+        Return an instance of ActOnMap response.
 
         Parameters
         ----------
-        - msg: an instance of lmi_core.srv request.
+        - msg: an instance of ActOnMap request.
         - object_type: LamaObject.VERTEX or LamaObject.EDGE.
         """
         # Make the transaction for the core table.
@@ -436,7 +439,7 @@ class CoreDBInterface(object):
         transaction.commit()
         connection.close()
 
-        response = self.action_class._response_class()
+        response = self.action_service_class._response_class()
         if results:
             for result in results:
                 lama_object = self._get_lama_objects(result['id'])
@@ -446,48 +449,48 @@ class CoreDBInterface(object):
     def get_vertex_list(self, msg):
         """Retrieve all vertices from the database
 
-        Return an instance of lmi_core.srv response.
+        Return an instance of ActOnMap response.
 
         Parameters
         ----------
-        - msg: an instance of lmi_core.srv request.
+        - msg: an instance of ActOnMap request.
         """
         return self.get_lama_object_list(msg, LamaObject.VERTEX)
 
     def get_edge_list(self, msg):
         """Retrieve all edges from the database
 
-        Return an instance of lmi_core.srv response.
+        Return an instance of ActOnMap response.
 
         Parameters
         ----------
-        - msg: an instance of lmi_core.srv request.
+        - msg: an instance of ActOnMap request.
         """
         return self.get_lama_object_list(msg, LamaObject.EDGE)
 
     def get_neighbor_vertices(self, msg):
         """Retrieve all neighbor vertices from the database
 
-        Return an instance of lmi_core.srv response.
+        Return an instance of ActOnMap response.
 
         Parameters
         ----------
-        - msg: an instance of lmi_core.srv request.
+        - msg: an instance of ActOnMap request.
         """
         # TODO: Discuss with Karel what this action does.
         rospy.logerr('GET_NEIGHTBOR_VERTICES not implemented')
-        response = self.action_class._response_class()
+        response = self.action_service_class._response_class()
         return response
 
     def get_outgoing_edges(self, msg):
         """Return a core reponse message with edges starting at a vertex
 
-        Return an instance or lmi_core.srv response containing edges (instances
+        Return an instance of ActOnMap response containing edges (instances
         of LamaObject) starting at the given vertex.
 
         Parameters
         ----------
-        - msg: an instance of lmi_core.srv request.
+        - msg: an instance of ActOnMap request.
         """
         coretable = self.core_table
         reftable = self.core_obj_ref_table
@@ -506,7 +509,7 @@ class CoreDBInterface(object):
                 msg.object.id, self.core_table.name)
             rospy.logerr(err)
             raise ValueError(err)
-        response = self.action_class._response_class()
+        response = self.action_service_class._response_class()
         for result in results:
             edge = self._get_lama_objects(result['id'])
             response.objects.append(edge)
@@ -536,5 +539,7 @@ def core_interface():
     rospy.Service(iface.setter_service_name,
                   iface.setter_service_class,
                   iface.setter_callback)
-    rospy.Service('act_on_map', iface.action_class, iface.action_callback)
+    rospy.Service(iface.action_service_name,
+                  iface.action_service_class,
+                  iface.action_callback)
     return iface

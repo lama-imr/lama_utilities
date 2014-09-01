@@ -63,7 +63,7 @@ add_message_files(
 add_service_files(
 	FILES
 	AddInterface.srv
-	lmi_core.srv
+	ActOnMap.srv
 	GetLamaObject.srv
 	SetLamaObject.srv
 	lmi_laser_descriptor_get.srv

@@ -115,8 +115,8 @@ class DBInterface(object):
     def _addTypeDescription(self, table):
         """Add the type description if not already existing
 
-        An error is raised if a table with the same name but a different type
-        exists.
+        An error is raised if a table with the same name (i.e. same
+        interface_name) but a different type already exists.
         """
         # Check for an existing table.
         connection = _engine.connect()

@@ -64,8 +64,8 @@ add_service_files(
 	FILES
 	AddInterface.srv
 	lmi_core.srv
-	lmi_core_get.srv
-	lmi_core_set.srv
+	GetLamaObject.srv
+	SetLamaObject.srv
 	lmi_laser_descriptor_get.srv
 	lmi_laser_descriptor_set.srv
 	lmi_polygon_get.srv

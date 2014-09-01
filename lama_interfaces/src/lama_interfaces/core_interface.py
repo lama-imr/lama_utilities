@@ -16,8 +16,8 @@ from lama_interfaces.msg import LamaMapAction
 from lama_interfaces.msg import LamaObject
 from lama_interfaces.msg import LamaDescriptorIdentifier
 
-g_default_core_table_name = 'core'
-g_default_descriptor_table_name = 'lama_descriptors'
+g_default_core_table_name = 'lama_objects'
+g_default_descriptor_table_name = 'lama_descriptor_ids'
 
 # create engine
 # TODO according  the rosparam server
@@ -25,21 +25,30 @@ _engine = create_engine('sqlite:///created.sql')
 
 
 class CoreDBInterface(object):
-    def __init__(self, service_name=None, descriptor_table_name=None):
-        if not service_name:
-            service_name = g_default_core_table_name
+    def __init__(self, interface_name=None, descriptor_table_name=None):
+        if not interface_name:
+            interface_name = g_default_core_table_name
         if not descriptor_table_name:
             descriptor_table_name = g_default_descriptor_table_name
-        srv_type = 'lama_interfaces/lmi_core'
-        srv_get_class = roslib.message.get_service_class(srv_type + '_get')
-        srv_set_class = roslib.message.get_service_class(srv_type + '_set')
+        get_srv_type = 'lama_interfaces/GetLamaObject'
+        set_srv_type = 'lama_interfaces/SetLamaObject'
+        get_srv_class = roslib.message.get_service_class(get_srv_type)
+        set_srv_class = roslib.message.get_service_class(set_srv_type)
         srv_action_class = roslib.message.get_service_class(srv_type)
 
-        self.getter_class = srv_get_class
-        self.setter_class = srv_set_class
+        # getter class.
+        self.getter_service_name = 'lama_object_getter'
+        self.getter_service_class = get_srv_class
+        # setter class.
+        self.setter_service_name = 'lama_object_setter'
+        self.setter_service_class = set_srv_class
+        # Action class.
         self.action_class = srv_action_class
-        self.service_name = service_name
+
+        self.interface_name = interface_name
         self.descriptor_table_name = descriptor_table_name
+
+        # Database related attributes.
         self.engine = _engine
         self.metadata = MetaData()
         self.metadata.bind = self.engine
@@ -56,7 +65,7 @@ class CoreDBInterface(object):
     def _generate_core_table(self):
         """Create the SQL tables for LamaObject messages"""
         # The table format is hard-coded.
-        table = Table(self.service_name,
+        table = Table(self.interface_name,
                       self.metadata,
                       Column('id', types.Integer, primary_key=True))
         table.append_column(Column('id_in_world',
@@ -65,12 +74,12 @@ class CoreDBInterface(object):
         table.append_column(Column('type', types.Integer))
         self.core_table = table
 
-        table = Table(self.service_name + '@references@_data_',
+        table = Table(self.interface_name + '@references@_data_',
                       self.metadata)
         table.append_column(Column('id', types.Integer, primary_key=True))
         table.append_column(Column('seq_num', types.Integer))
         table.append_column(Column('parent_id', types.Integer,
-                                   ForeignKey(self.service_name + '.id')))
+                                   ForeignKey(self.interface_name + '.id')))
         table.append_column(Column('_value_', types.Integer))
         self.core_obj_ref_table = table
 
@@ -81,40 +90,40 @@ class CoreDBInterface(object):
                       Column('id', types.Integer, primary_key=True))
         table.append_column(Column('object_id',
                                    types.Integer,
-                                   ForeignKey(self.service_name + '.id')))
+                                   ForeignKey(self.interface_name + '.id')))
         table.append_column(Column('descriptor_id', types.Integer,
                                    unique=True))
         table.append_column(Column('interface_name', types.String))
         self.descriptor_table = table
 
-    def getter(self, msg):
+    def getter_callback(self, msg):
         """Get a LamaObject from the database
 
         Get a LamaObject from the database, from its id.
-        Return an instance of lmi_core_get.srv response.
+        Return an instance of GetLamaObject.srv response.
 
         Parameters
         ----------
-        - msg: an instance of lmi_core_get.srv request.
+        - msg: an instance of GetLamaObject.srv request.
         """
         id_ = msg.id
         lama_object = self._get_lama_object(id_)
         # Create an instance of getter response.
-        response = self.getter_class._response_class()
+        response = self.getter_service_class._response_class()
         response.object = lama_object
         return response
 
-    def setter(self, msg):
+    def setter_callback(self, msg):
         """Add a LamaObject message to the database
 
-        Return an instance of lmi_core_set.srv response.
+        Return an instance of SetLamaObject.srv response.
 
         Parameters
         ----------
-        - msg: an instance of lmi_core_set.srv request.
+        - msg: an instance of SetLamaObject.srv request.
         """
         # Create an instance of setter response.
-        response = self.setter_class._response_class()
+        response = self.setter_service_class._response_class()
         response.id = self._set_lama_object(msg.object)
         return response
 
@@ -327,10 +336,8 @@ class CoreDBInterface(object):
         ----------
         - msg: an instance of lmi_core.srv request.
         """
-        request = self.setter_class._request_class()
-        request.object = msg.object
-        self.setter(request)
         response = self.action_class._response_class()
+        response.id = self._set_lama_object(msg.object)
         return response
 
     def pull_lama_object(self, msg):
@@ -510,24 +517,24 @@ def core_interface():
     """Return an interface class and run its associated services
 
     Generate an interface class and run the getter, setter, and action services.
-    Service definition must be in the form *_get and *_set where
-    lmi_core_get.srv:
+    Service definition must be in the form
+    GetLamaObject.srv:
       int32 id
       ---
       LamaObject object
 
     and
-    lmi_core_set.srv:
+    SetLamaObject.srv:
       LamaObject object
       ---
       int32 id
     """
-    service_name = g_default_core_table_name
     iface = CoreDBInterface()
-    sub_name = 'lmi_' + service_name
-    # print "starting interface", sub_name
-    rospy.Service(sub_name + '_getter', iface.getter_class, iface.getter)
-    rospy.Service(sub_name + '_setter', iface.setter_class, iface.setter)
-    rospy.Service(sub_name + '_action', iface.action_class,
-                  iface.action_callback)
+    rospy.Service(iface.getter_service_name,
+                  iface.getter_service_class,
+                  iface.getter_callback)
+    rospy.Service(iface.setter_service_name,
+                  iface.setter_service_class,
+                  iface.setter_callback)
+    rospy.Service('act_on_map', iface.action_class, iface.action_callback)
     return iface

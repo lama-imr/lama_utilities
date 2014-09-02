@@ -25,7 +25,7 @@ int LamaCore::pushVertex(std::string vertex_name)
 {
   int id;
   lama_interfaces::lmi_core core;
-  core.request.action.action = lama_interfaces::LamaMapAction::PUSH_VERTEX;
+  core.request.action.action = lama_interfaces::MapAction::PUSH_VERTEX;
   core.request.object.name = vertex_name;
   core.request.object.type = lama_interfaces::LamaObject::VERTEX;
   if (ros::service::call("lama_map_core_service", core))
@@ -43,7 +43,7 @@ std::string LamaCore::getVertexName(int vertex_id)
 {
   std::string name;
   lama_interfaces::lmi_core core;
-  core.request.action.action = lama_interfaces::LamaMapAction::PULL_VERTEX;
+  core.request.action.action = lama_interfaces::MapAction::PULL_VERTEX;
   core.request.object.id = vertex_id;
   core.request.object.type = lama_interfaces::LamaObject::VERTEX;
   if (ros::service::call("lama_map_core_service", core))

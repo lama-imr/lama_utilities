@@ -12,7 +12,7 @@ import rospy
 import roslib.msgs
 import roslib.message
 
-from lama_interfaces.msg import LamaMapAction
+from lama_interfaces.msg import MapAction
 from lama_interfaces.msg import LamaObject
 from lama_interfaces.msg import LamaDescriptorIdentifier
 
@@ -139,25 +139,25 @@ class CoreDBInterface(object):
         - msg: an instance of ActOnMap request.
         """
         action = msg.action.action
-        if action == LamaMapAction.PUSH_VERTEX:
+        if action == MapAction.PUSH_VERTEX:
             r = self.push_lama_object(msg)
-        elif action == LamaMapAction.PULL_VERTEX:
+        elif action == MapAction.PULL_VERTEX:
             r = self.pull_lama_object(msg)
-        elif action == LamaMapAction.ASSIGN_DESCRIPTOR_VERTEX:
+        elif action == MapAction.ASSIGN_DESCRIPTOR_VERTEX:
             r = self.assign_descriptor_to_lama_object(msg)
-        elif action == LamaMapAction.PUSH_EDGE:
+        elif action == MapAction.PUSH_EDGE:
             r = self.push_lama_object(msg)
-        elif action == LamaMapAction.PULL_EDGE:
+        elif action == MapAction.PULL_EDGE:
             r = self.pull_lama_object(msg)
-        elif action == LamaMapAction.ASSIGN_DESCRIPTOR_EDGE:
+        elif action == MapAction.ASSIGN_DESCRIPTOR_EDGE:
             r = self.assign_descriptor_to_lama_object(msg)
-        elif action == LamaMapAction.GET_VERTEX_LIST:
+        elif action == MapAction.GET_VERTEX_LIST:
             r = self.get_vertex_list(msg)
-        elif action == LamaMapAction.GET_EDGE_LIST:
+        elif action == MapAction.GET_EDGE_LIST:
             r = self.get_edge_list(msg)
-        elif action == LamaMapAction.GET_NEIGHBOR_VERTICES:
+        elif action == MapAction.GET_NEIGHBOR_VERTICES:
             r = self.get_neighbor_vertices(msg)
-        elif action == LamaMapAction.GET_OUTGOING_EDGES:
+        elif action == MapAction.GET_OUTGOING_EDGES:
             r = self.get_outgoing_edges(msg)
         else:
             # TODO: find a mechanism for non-implemented actions.
@@ -385,7 +385,7 @@ class CoreDBInterface(object):
 
         # Ensure that the descriptor exists in the database.
         table_name = msg.desciptor.interface_name
-        if not table_name in self.metadata.tables:
+        if table_name not in self.metadata.tables:
             err = 'No interface {} in the database'.format(
                 msg.desciptor.interface_name)
             rospy.logerr(err)

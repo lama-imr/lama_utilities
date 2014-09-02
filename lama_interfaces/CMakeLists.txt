@@ -54,7 +54,7 @@ catkin_python_setup()
 add_message_files(
 	FILES
 	LamaDescriptorIdentifier.msg
-	LamaMapAction.msg
+	MapAction.msg
 	LamaObject.msg
 	complex.msg
 )

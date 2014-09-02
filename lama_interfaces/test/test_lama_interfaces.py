@@ -13,7 +13,7 @@ from geometry_msgs.msg import Polygon
 from geometry_msgs.msg import Point32
 
 from lama_interfaces.interface_factory import interface_factory
-from lama_interfaces.srv import lmi_vector_double_getRequest
+from lama_interfaces.srv import GetVectorDoubleRequest
 from lama_interfaces.srv import GetVectorLaserScanRequest
 from lama_interfaces.srv import lmi_vector_pose_getRequest
 from lama_interfaces.srv import lmi_vector_odometry_getRequest
@@ -53,8 +53,8 @@ class TestDbMessagePassing(RosTestCase):
     def test_vector_double(self):
         """Test for a message as a list or tuple"""
         interface_name = 'vector_double_descriptor'
-        getter_service = 'lama_interfaces/lmi_vector_double_get'
-        setter_service = 'lama_interfaces/lmi_vector_double_set'
+        getter_service = 'lama_interfaces/GetVectorDouble'
+        setter_service = 'lama_interfaces/SetVectorDouble'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
@@ -69,7 +69,7 @@ class TestDbMessagePassing(RosTestCase):
         descriptor_from_setter = set_srv(msg)
         # descriptor_from_setter cannot be passed to get_srv because of
         # type incompatibility, "transform" it to a ..._getRequest()
-        descriptor_to_getter = lmi_vector_double_getRequest()
+        descriptor_to_getter = GetVectorDoubleRequest()
         descriptor_to_getter.id = descriptor_from_setter.id
         response = get_srv(descriptor_to_getter)
 
@@ -81,7 +81,7 @@ class TestDbMessagePassing(RosTestCase):
         descriptor_from_setter = set_srv(msg)
         # descriptor_from_setter cannot be passed to get_srv because of
         # type incompatibility, "transform" it to a ..._getRequest()
-        descriptor_to_getter = lmi_vector_double_getRequest()
+        descriptor_to_getter = GetVectorDoubleRequest()
         descriptor_to_getter.id = descriptor_from_setter.id
         response = get_srv(descriptor_to_getter)
 

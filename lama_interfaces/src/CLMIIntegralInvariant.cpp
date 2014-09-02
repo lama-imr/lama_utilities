@@ -10,7 +10,7 @@ CLMIIntegralInvariant::CLMIIntegralInvariant(std::string map_file)
   map = map_file;
 }
 
-bool CLMIIntegralInvariant::getter(lama_interfaces::lmi_vector_double_get::Request& req, lama_interfaces::lmi_vector_double_get::Response& res)
+bool CLMIIntegralInvariant::getter(lama_interfaces::GetVectorDouble::Request& req, lama_interfaces::GetVectorDouble::Response& res)
 {
   bool ret = false;
   sqlite3_stmt *statement;
@@ -42,7 +42,7 @@ bool CLMIIntegralInvariant::getter(lama_interfaces::lmi_vector_double_get::Reque
   return ret;
 };
 
-bool CLMIIntegralInvariant::setter(lama_interfaces::lmi_vector_double_set::Request& req, lama_interfaces::lmi_vector_double_set::Response& res)
+bool CLMIIntegralInvariant::setter(lama_interfaces::SetVectorDouble::Request& req, lama_interfaces::SetVectorDouble::Response& res)
 {
   bool ret = false;
   sqlite3_stmt *statement;

@@ -5,8 +5,8 @@
 
 #include <sqlite3.h>
 
-#include <lama_interfaces/lmi_vector_double_get.h>
-#include <lama_interfaces/lmi_vector_double_set.h>
+#include <lama_interfaces/GetVectorDouble.h>
+#include <lama_interfaces/SetVectorDouble.h>
 
 class CLMIIntegralInvariant
 {
@@ -16,8 +16,8 @@ class CLMIIntegralInvariant
   public:
 
   CLMIIntegralInvariant(std::string map_file); 
-  bool getter(lama_interfaces::lmi_vector_double_get::Request& req, lama_interfaces::lmi_vector_double_get::Response& res);
-  bool setter(lama_interfaces::lmi_vector_double_set::Request& req, lama_interfaces::lmi_vector_double_set::Response& res);
+  bool getter(lama_interfaces::GetVectorDouble::Request& req, lama_interfaces::GetVectorDouble::Response& res);
+  bool setter(lama_interfaces::SetVectorDouble::Request& req, lama_interfaces::SetVectorDouble::Response& res);
   bool connect();
 };
 

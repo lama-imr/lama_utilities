@@ -31,17 +31,19 @@ if __name__ == '__main__':
     # Add the server for AddInterface.
     s = rospy.Service('interface_factory', AddInterface, handle_add_interface)
 
-    # interface_factory('double_descriptor', 'lama_interfaces/lmi_vector_double')
-    # interface_factory('polygon_descriptor',
-    #   'lama_interfaces/GetPolygon',
-    #   'lama_interfaces/SetPolygon')
-    # interface_factory('laser_descriptor',
+    # interface_factory('vector_double',
+    #                   'lama_interfaces/GetVectorDouble',
+    #                   'lama_interfaces/GetVectorDouble')
+    # interface_factory('polygon',
+    #                   'lama_interfaces/GetPolygon',
+    #                   'lama_interfaces/SetPolygon')
+    # interface_factory('laser',
     #                   'lama_interfaces/GetVectorLaserScan',
     #                   'lama_interfaces/SetVectorLaserScan')
-    # interface_factory('dummy_descriptor',
+    # interface_factory('dummy',
     #                   'lama_interfaces/lmi_dummy_descriptor')
-    # interface_factory('pose_descriptor',
+    # interface_factory('pose',
     #                   'lama_interfaces/lmi_vector_pose')
-    # interface_factory('odometry_descriptor',
+    # interface_factory('odometry',
     #                   'lama_interfaces/lmi_vector_odometry')
     rospy.spin()

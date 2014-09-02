@@ -37,13 +37,14 @@ if __name__ == '__main__':
     # interface_factory('polygon',
     #                   'lama_interfaces/GetPolygon',
     #                   'lama_interfaces/SetPolygon')
-    # interface_factory('laser',
+    # interface_factory('vector_laser',
     #                   'lama_interfaces/GetVectorLaserScan',
     #                   'lama_interfaces/SetVectorLaserScan')
     # interface_factory('dummy',
     #                   'lama_interfaces/lmi_dummy_descriptor')
-    # interface_factory('pose',
-    #                   'lama_interfaces/lmi_vector_pose')
+    # interface_factory('vector_pose',
+    #                   'lama_interfaces/GetVectorPose')
+    #                   'lama_interfaces/SetVectorPose')
     # interface_factory('vector_odometry',
     #                   'lama_interfaces/GetVectorOdometry',
     #                   'lama_interfaces/SetVectorOdometry')

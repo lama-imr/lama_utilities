@@ -74,10 +74,10 @@ add_service_files(
 	SetVectorLaserScan.srv
 	GetVectorOdometry.srv
 	SetVectorOdometry.srv
+	GetVectorPose.srv
+	SetVectorPose.srv
 	lmi_zernike_moments_get.srv
 	lmi_zernike_moments_set.srv
-	lmi_vector_pose_get.srv
-	lmi_vector_pose_set.srv
 	test.srv
 )
 

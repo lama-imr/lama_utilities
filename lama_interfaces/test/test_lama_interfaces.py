@@ -15,7 +15,7 @@ from geometry_msgs.msg import Point32
 from lama_interfaces.interface_factory import interface_factory
 from lama_interfaces.srv import GetVectorDoubleRequest
 from lama_interfaces.srv import GetVectorLaserScanRequest
-from lama_interfaces.srv import lmi_vector_pose_getRequest
+from lama_interfaces.srv import GetVectorPoseRequest
 from lama_interfaces.srv import GetVectorOdometryRequest
 from lama_interfaces.srv import GetPolygonRequest
 
@@ -138,8 +138,8 @@ class TestDbMessagePassing(RosTestCase):
     def test_pose(self):
         """Test passing and getting a Pose[] message"""
         interface_name = 'pose_descriptor'
-        getter_service = 'lama_interfaces/lmi_vector_pose_get'
-        setter_service = 'lama_interfaces/lmi_vector_pose_set'
+        getter_service = 'lama_interfaces/GetVectorPose'
+        setter_service = 'lama_interfaces/SetVectorPose'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
@@ -165,7 +165,7 @@ class TestDbMessagePassing(RosTestCase):
         descriptor_from_setter = set_srv(poses)
         # descriptor_from_setter cannot be passed to get_srv because of
         # type incompatibility, "transform" it to a ..._getRequest()
-        descriptor_to_getter = lmi_vector_pose_getRequest()
+        descriptor_to_getter = GetVectorPoseRequest()
         descriptor_to_getter.id = descriptor_from_setter.id
         response = get_srv(descriptor_to_getter)
 

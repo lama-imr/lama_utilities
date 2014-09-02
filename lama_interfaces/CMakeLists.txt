@@ -56,7 +56,6 @@ add_message_files(
 	DescriptorIdentifier.msg
 	MapAction.msg
 	LamaObject.msg
-	complex.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -76,9 +75,6 @@ add_service_files(
 	SetVectorOdometry.srv
 	GetVectorPose.srv
 	SetVectorPose.srv
-	lmi_zernike_moments_get.srv
-	lmi_zernike_moments_set.srv
-	test.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -111,7 +107,7 @@ catkin_package(
 	INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${SQLITE_INCLUDE}
 	LIBRARIES jockey learning_jockey localizing_jockey navigating_jockey
 	CATKIN_DEPENDS roscpp rospy actionlib_msgs geometry_msgs sensor_msgs nav_msgs
-	DEPENDS SQLITE
+	DEPENDS python-sqlalchemy
 )
 
 ###########
@@ -135,17 +131,11 @@ add_library(localizing_jockey src/localizing_jockey.cpp)
 add_library(navigating_jockey src/navigating_jockey.cpp)
 
 ## Declare a cpp executable
-# set(SRC ${SRC} src/CLMIIntegralInvariant.cpp)
-# set(SRC ${SRC} src/CLMIPolygon.cpp)
-# set(SRC ${SRC} src/CLMIZernikeMoments.cpp)
-# set(SRC ${SRC} src/lama_utils.cpp)
-# set(SRC ${SRC} src/lmi_defaults.cpp)
+# set(SRC ${SRC} src/lama_interfaces.cpp)
 # add_executable(lama_interfaces ${SRC})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(lama_core lama_interfaces_generate_messages_cpp)
-# add_dependencies(lama_interfaces lama_interfaces_generate_messages_cpp)
 add_dependencies(jockey lama_interfaces_generate_messages_cpp)
 add_dependencies(learning_jockey lama_interfaces_generate_messages_cpp)
 add_dependencies(localizing_jockey lama_interfaces_generate_messages_cpp)
@@ -154,7 +144,6 @@ add_dependencies(navigating_jockey lama_interfaces_generate_messages_cpp)
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(lama_interfaces
 # ${catkin_LIBRARIES}
-# ${Boost_LIBRARIES}
 # ${SQLITE_LIBRARIES}
 # )
 

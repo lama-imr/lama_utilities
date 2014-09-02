@@ -12,6 +12,8 @@ namespace interfaces
 Jockey::Jockey(std::string name) :
   jockey_name_(name)
 {
+  map_agent_ = nh_.serviceClient<lama_interfaces::ActOnMap>("lama_map_agent");
+  map_agent_.waitForExistence();
 }
 
 void Jockey::initAction()

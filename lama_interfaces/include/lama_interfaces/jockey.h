@@ -8,6 +8,8 @@
 
 #include <ros/ros.h>
 
+#include <lama_interfaces/ActOnMap.h>
+
 namespace lama
 {
 namespace interfaces
@@ -32,6 +34,7 @@ class Jockey
 
     ros::NodeHandle nh_;
     std::string jockey_name_;
+    ros::ServiceClient map_agent_;
 
     void initAction();
     void interrupt();

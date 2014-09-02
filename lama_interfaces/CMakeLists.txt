@@ -66,18 +66,18 @@ add_service_files(
 	ActOnMap.srv
 	GetLamaObject.srv
 	SetLamaObject.srv
-	GetVectorLaserScan.srv
-	SetVectorLaserScan.srv
 	GetPolygon.srv
 	SetPolygon.srv
 	GetVectorDouble.srv
 	SetVectorDouble.srv
+	GetVectorLaserScan.srv
+	SetVectorLaserScan.srv
+	GetVectorOdometry.srv
+	SetVectorOdometry.srv
 	lmi_zernike_moments_get.srv
 	lmi_zernike_moments_set.srv
 	lmi_vector_pose_get.srv
 	lmi_vector_pose_set.srv
-	lmi_vector_odometry_get.srv
-	lmi_vector_odometry_set.srv
 	test.srv
 )
 

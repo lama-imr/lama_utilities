@@ -44,6 +44,7 @@ if __name__ == '__main__':
     #                   'lama_interfaces/lmi_dummy_descriptor')
     # interface_factory('pose',
     #                   'lama_interfaces/lmi_vector_pose')
-    # interface_factory('odometry',
-    #                   'lama_interfaces/lmi_vector_odometry')
+    # interface_factory('vector_odometry',
+    #                   'lama_interfaces/GetVectorOdometry',
+    #                   'lama_interfaces/SetVectorOdometry')
     rospy.spin()

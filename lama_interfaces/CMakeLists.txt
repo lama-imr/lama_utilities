@@ -66,8 +66,8 @@ add_service_files(
 	ActOnMap.srv
 	GetLamaObject.srv
 	SetLamaObject.srv
-	lmi_laser_descriptor_get.srv
-	lmi_laser_descriptor_set.srv
+	GetVectorLaserScan.srv
+	SetVectorLaserScan.srv
 	lmi_polygon_get.srv
 	lmi_polygon_set.srv
 	lmi_vector_double_get.srv
@@ -109,7 +109,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 	INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${SQLITE_INCLUDE}
-	LIBRARIES lama_core jockey localizing_jockey navigating_jockey learning_jockey
+	LIBRARIES jockey learning_jockey localizing_jockey navigating_jockey
 	CATKIN_DEPENDS roscpp rospy actionlib_msgs geometry_msgs sensor_msgs nav_msgs
 	DEPENDS SQLITE
 )
@@ -128,34 +128,35 @@ include_directories(
 )
 
 ## Declare a cpp library
-add_library(lama_core src/lama_core.cpp)
+#add_library(lama_core src/lama_core.cpp)
 add_library(jockey src/jockey.cpp)
-add_library(navigating_jockey src/navigating_jockey.cpp)
-add_library(localizing_jockey src/localizing_jockey.cpp)
 add_library(learning_jockey src/learning_jockey.cpp)
+add_library(localizing_jockey src/localizing_jockey.cpp)
+add_library(navigating_jockey src/navigating_jockey.cpp)
 
 ## Declare a cpp executable
-set(SRC ${SRC} src/CLMIIntegralInvariant.cpp)
-set(SRC ${SRC} src/CLMIPolygon.cpp)
-set(SRC ${SRC} src/CLMIZernikeMoments.cpp)
-set(SRC ${SRC} src/lama_utils.cpp)
-set(SRC ${SRC} src/lmi_defaults.cpp)
-add_executable(lama_interfaces ${SRC})
+# set(SRC ${SRC} src/CLMIIntegralInvariant.cpp)
+# set(SRC ${SRC} src/CLMIPolygon.cpp)
+# set(SRC ${SRC} src/CLMIZernikeMoments.cpp)
+# set(SRC ${SRC} src/lama_utils.cpp)
+# set(SRC ${SRC} src/lmi_defaults.cpp)
+# add_executable(lama_interfaces ${SRC})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-add_dependencies(lama_core lama_interfaces_generate_messages_cpp)
-add_dependencies(lama_interfaces lama_interfaces_generate_messages_cpp)
-add_dependencies(navigating_jockey lama_interfaces_generate_messages_cpp)
-add_dependencies(localizing_jockey lama_interfaces_generate_messages_cpp)
+# add_dependencies(lama_core lama_interfaces_generate_messages_cpp)
+# add_dependencies(lama_interfaces lama_interfaces_generate_messages_cpp)
+add_dependencies(jockey lama_interfaces_generate_messages_cpp)
 add_dependencies(learning_jockey lama_interfaces_generate_messages_cpp)
+add_dependencies(localizing_jockey lama_interfaces_generate_messages_cpp)
+add_dependencies(navigating_jockey lama_interfaces_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(lama_interfaces
-  ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${SQLITE_LIBRARIES}
-)
+# target_link_libraries(lama_interfaces
+# ${catkin_LIBRARIES}
+# ${Boost_LIBRARIES}
+# ${SQLITE_LIBRARIES}
+# )
 
 #############
 ## Install ##

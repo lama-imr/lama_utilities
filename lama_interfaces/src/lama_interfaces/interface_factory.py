@@ -154,8 +154,8 @@ def interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
     """generate the interface class and run the getter and setter services
 
     Example of call: interface_factory('laser_descriptor',
-      'lama_interface/lmi_laser_descriptor_get',
-      'lama_interface/lmi_laser_descriptor_set').
+      'lama_interface/get_laser_descriptor',
+      'lama_interface/set_laser_descriptor').
 
     Parameters
     ----------
@@ -163,14 +163,14 @@ def interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
       and the database.
     - getter_srv_msg: str, identifies the service message used when retrieving
       a descriptor from the database. For example
-      'lama_interfaces/lmi_laser_descriptor_get'.
+      'lama_interfaces/GetVectorLaserScan'.
       Service definition must be in form:
             lama_interfaces/LamaDescriptorIdentifier id
             ---
             * descriptor
     - setter_srv_msg: str, identifies the service message used when adding
       a descriptor to the database. For example
-      'lama_interfaces/lmi_laser_descriptor_set.srv'.
+      'lama_interfaces/SetVectorLaserScan'.
       Service definition must be in form:
             * descriptor
             ---

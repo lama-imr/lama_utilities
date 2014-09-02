@@ -14,7 +14,7 @@ from geometry_msgs.msg import Point32
 
 from lama_interfaces.interface_factory import interface_factory
 from lama_interfaces.srv import lmi_vector_double_getRequest
-from lama_interfaces.srv import lmi_laser_descriptor_getRequest
+from lama_interfaces.srv import GetVectorLaserScanRequest
 from lama_interfaces.srv import lmi_vector_pose_getRequest
 from lama_interfaces.srv import lmi_vector_odometry_getRequest
 from lama_interfaces.srv import lmi_polygon_getRequest
@@ -88,11 +88,11 @@ class TestDbMessagePassing(RosTestCase):
         self.assertIsNot(msg, response.descriptor)
         self.assertAlmostEquals(msg, list(response.descriptor), places=6)
 
-    def test_laser_scan(self):
+    def test_vector_laser_scan(self):
         """Test passing and getting a LaserScan[] message"""
         interface_name = 'laser_descriptor'
-        getter_service = 'lama_interfaces/lmi_laser_descriptor_get'
-        setter_service = 'lama_interfaces/lmi_laser_descriptor_set'
+        getter_service = 'lama_interfaces/GetVectorLaserScan'
+        setter_service = 'lama_interfaces/SetVectorLaserScan'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
@@ -123,7 +123,7 @@ class TestDbMessagePassing(RosTestCase):
         descriptor_from_setter = set_srv(out_scans)
         # descriptor_from_setter cannot be passed to get_srv because of
         # type incompatibility, "transform" it to a ..._getRequest()
-        descriptor_to_getter = lmi_laser_descriptor_getRequest()
+        descriptor_to_getter = GetVectorLaserScanRequest()
         descriptor_to_getter.id = descriptor_from_setter.id
         response = get_srv(descriptor_to_getter)
 

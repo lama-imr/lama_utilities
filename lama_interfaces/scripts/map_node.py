@@ -34,7 +34,8 @@ if __name__ == '__main__':
     # interface_factory('double_descriptor', 'lama_interfaces/lmi_vector_double')
     # interface_factory('polygon_descriptor', 'lama_interfaces/lmi_polygon')
     # interface_factory('laser_descriptor',
-    #                   'lama_interfaces/lmi_laser_descriptor')
+    #                   'lama_interfaces/GetVectorLaserScan',
+    #                   'lama_interfaces/SetVectorLaserScan')
     # interface_factory('dummy_descriptor',
     #                   'lama_interfaces/lmi_dummy_descriptor')
     # interface_factory('pose_descriptor',

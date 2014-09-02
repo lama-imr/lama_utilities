@@ -10,7 +10,7 @@ uint32 GET_SIMILARITY=4
 uint32 INTERRUPT=5
 uint32 CONTINUE=6
 
-LamaDescriptorIdentifier descriptor
+DescriptorIdentifier descriptor
 ---
 # Result.
 
@@ -18,7 +18,7 @@ uint32 state
 uint32 DONE=0
 uint32 NOT_SUPPORTED=1
 
-LamaDescriptorIdentifier[] descriptors
+DescriptorIdentifier[] descriptors
 # Data output, dependent on action.
 int32[] idata
 float32[] fdata

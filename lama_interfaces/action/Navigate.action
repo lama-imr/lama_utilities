@@ -7,7 +7,7 @@ uint32 INTERRUPT=2
 uint32 CONTINUE=3
 
 LamaObject edge
-LamaDescriptorIdentifier descriptor
+DescriptorIdentifier descriptor
 ---
 # Result.
 

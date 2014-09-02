@@ -165,7 +165,7 @@ def interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
       a descriptor from the database. For example
       'lama_interfaces/GetVectorLaserScan'.
       Service definition must be in form:
-            lama_interfaces/LamaDescriptorIdentifier id
+            lama_interfaces/DescriptorIdentifier id
             ---
             * descriptor
     - setter_srv_msg: str, identifies the service message used when adding
@@ -174,7 +174,7 @@ def interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
       Service definition must be in form:
             * descriptor
             ---
-            lama_interfaces/LamaDescriptorIdentifier id
+            lama_interfaces/DescriptorIdentifier id
     """
     if '@' in interface_name:
         rospy.logerr('@ not allowd in interface name')

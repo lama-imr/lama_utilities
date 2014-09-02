@@ -1,4 +1,4 @@
-LamaDescriptorIdentifier id 
+DescriptorIdentifier id 
 ---
 nav_msgs/Odometry[] descriptor 
 

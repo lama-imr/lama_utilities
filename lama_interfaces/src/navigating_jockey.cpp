@@ -54,7 +54,7 @@ void NavigatingJockey::goalCallback()
       initAction();
       // Reset the goal, just in case.
       goal_.edge = lama_interfaces::LamaObject();
-      goal_.descriptor = lama_interfaces::LamaDescriptorIdentifier();
+      goal_.descriptor = lama_interfaces::DescriptorIdentifier();
       onStop();
       break;
     case lama_interfaces::NavigateGoal::TRAVERSE:

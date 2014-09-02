@@ -14,7 +14,7 @@ import roslib.message
 
 from lama_interfaces.msg import MapAction
 from lama_interfaces.msg import LamaObject
-from lama_interfaces.msg import LamaDescriptorIdentifier
+from lama_interfaces.msg import DescriptorIdentifier
 
 g_default_core_table_name = 'lama_objects'
 g_default_descriptor_table_name = 'lama_descriptor_ids'
@@ -263,7 +263,7 @@ class CoreDBInterface(object):
     def _get_lama_object_descriptor_ids(self, id_):
         """Retrieve descriptor identifiers associated with a Lama object
 
-        Return a list of LamaDescriptorIdentifier.
+        Return a list of DescriptorIdentifier.
 
         Parameters
         ----------
@@ -284,7 +284,7 @@ class CoreDBInterface(object):
             rospy.logerr(err)
             raise ValueError(err)
         for result in results:
-            desc_id = LamaDescriptorIdentifier()
+            desc_id = DescriptorIdentifier()
             desc_id.object_id = id_
             desc_id.deserialize = result['descriptor_id']
             desc_id.interface_name = result['interface_name']

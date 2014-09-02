@@ -2,10 +2,10 @@
 #define _LAMA_INTERFACES_CPOLYGONDESCRIPTOR_H_
 
 #include <lama_interfaces/CDescriptor.h>
-#include <lama_interfaces/lmi_polygon_get.h>
-#include <lama_interfaces/lmi_polygon_set.h>
+#include <lama_interfaces/GetPolygon.h>
+#include <lama_interfaces/SetPolygon.h>
 
-class PolygonDescriptor : public Descriptor<geometry_msgs::Polygon, lama_interfaces::lmi_polygon_get, lama_interfaces::lmi_polygon_set>
+class PolygonDescriptor : public Descriptor<geometry_msgs::Polygon, lama_interfaces::GetPolygon, lama_interfaces::SetPolygon>
 {
   public:
 

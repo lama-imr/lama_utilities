@@ -68,8 +68,8 @@ add_service_files(
 	SetLamaObject.srv
 	GetVectorLaserScan.srv
 	SetVectorLaserScan.srv
-	lmi_polygon_get.srv
-	lmi_polygon_set.srv
+	GetPolygon.srv
+	SetPolygon.srv
 	lmi_vector_double_get.srv
 	lmi_vector_double_set.srv
 	lmi_zernike_moments_get.srv

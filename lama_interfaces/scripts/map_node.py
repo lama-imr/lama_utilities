@@ -32,7 +32,9 @@ if __name__ == '__main__':
     s = rospy.Service('interface_factory', AddInterface, handle_add_interface)
 
     # interface_factory('double_descriptor', 'lama_interfaces/lmi_vector_double')
-    # interface_factory('polygon_descriptor', 'lama_interfaces/lmi_polygon')
+    # interface_factory('polygon_descriptor',
+    #   'lama_interfaces/GetPolygon',
+    #   'lama_interfaces/SetPolygon')
     # interface_factory('laser_descriptor',
     #                   'lama_interfaces/GetVectorLaserScan',
     #                   'lama_interfaces/SetVectorLaserScan')

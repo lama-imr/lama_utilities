@@ -5,8 +5,8 @@
 
 #include <sqlite3.h>
 
-#include <lama_interfaces/lmi_polygon_get.h>
-#include <lama_interfaces/lmi_polygon_set.h>
+#include <lama_interfaces/GetPolygon.h>
+#include <lama_interfaces/SetPolygon.h>
 
 class CLMIPolygon
 {
@@ -16,8 +16,8 @@ class CLMIPolygon
   public:
 
   CLMIPolygon(std::string map_file); 
-  bool getter(lama_interfaces::lmi_polygon_get::Request& req, lama_interfaces::lmi_polygon_get::Response& res);
-  bool setter(lama_interfaces::lmi_polygon_set::Request& req, lama_interfaces::lmi_polygon_set::Response& res);
+  bool getter(lama_interfaces::GetPolygon::Request& req, lama_interfaces::GetPolygon::Response& res);
+  bool setter(lama_interfaces::SetPolygon::Request& req, lama_interfaces::SetPolygon::Response& res);
   bool connect();
 };
 

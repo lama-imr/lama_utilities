@@ -17,7 +17,7 @@ from lama_interfaces.srv import lmi_vector_double_getRequest
 from lama_interfaces.srv import GetVectorLaserScanRequest
 from lama_interfaces.srv import lmi_vector_pose_getRequest
 from lama_interfaces.srv import lmi_vector_odometry_getRequest
-from lama_interfaces.srv import lmi_polygon_getRequest
+from lama_interfaces.srv import GetPolygonRequest
 
 
 class RosTestCase(unittest.TestCase):
@@ -251,12 +251,14 @@ class TestDbMessagePassing(RosTestCase):
     def test_polygon(self):
         """Test passing and getting a Polygon message"""
         interface_name = 'poly'
-        getter_service = 'lama_interfaces/lmi_polygon_get'
-        setter_service = 'lama_interfaces/lmi_polygon_set'
+        getter_service = 'lama_interfaces/GetPolygon'
+        setter_service = 'lama_interfaces/SetPolygon'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
-        iface = interface_factory(interface_name, getter_service, setter_service)
+        iface = interface_factory(interface_name,
+                                  getter_service,
+                                  setter_service)
         get_srv = rospy.ServiceProxy(iface.getter_service_name,
                                      iface.getter_service_class)
         set_srv = rospy.ServiceProxy(iface.setter_service_name,
@@ -267,7 +269,7 @@ class TestDbMessagePassing(RosTestCase):
         descriptor_from_setter = set_srv(polygon)
         # descriptor_from_setter cannot be passed to get_srv because of
         # type incompatibility, "transform" it to a ..._getRequest()
-        descriptor_to_getter = lmi_polygon_getRequest()
+        descriptor_to_getter = GetPolygonRequest()
         descriptor_to_getter.id = descriptor_from_setter.id
         response = get_srv(descriptor_to_getter)
 
@@ -290,7 +292,7 @@ class TestDbMessagePassing(RosTestCase):
         descriptor_from_setter = set_srv(polygon)
         # descriptor_from_setter cannot be passed to get_srv because of
         # type incompatibility, "transform" it to a ..._getRequest()
-        descriptor_to_getter = lmi_polygon_getRequest()
+        descriptor_to_getter = GetPolygonRequest()
         descriptor_to_getter.id = descriptor_from_setter.id
         response = get_srv(descriptor_to_getter)
 

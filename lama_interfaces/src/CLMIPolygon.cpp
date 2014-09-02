@@ -11,7 +11,7 @@ CLMIPolygon::CLMIPolygon(std::string map_file)
   map = map_file;
 }
 
-bool CLMIPolygon::getter(lama_interfaces::lmi_polygon_get::Request& req, lama_interfaces::lmi_polygon_get::Response& res)
+bool CLMIPolygon::getter(lama_interfaces::GetPolygon::Request& req, lama_interfaces::GetPolygon::Response& res)
 {
   bool ret = false;
   sqlite3_stmt *statement;
@@ -48,7 +48,7 @@ bool CLMIPolygon::getter(lama_interfaces::lmi_polygon_get::Request& req, lama_in
   return ret;
 };
 
-bool CLMIPolygon::setter(lama_interfaces::lmi_polygon_set::Request& req, lama_interfaces::lmi_polygon_set::Response& res)
+bool CLMIPolygon::setter(lama_interfaces::SetPolygon::Request& req, lama_interfaces::SetPolygon::Response& res)
 {
   bool ret = false;
   sqlite3_stmt *statement;

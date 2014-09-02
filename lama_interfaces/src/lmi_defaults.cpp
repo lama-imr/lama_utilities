@@ -28,8 +28,8 @@ int main(int argc, char **argv)
   ros::ServiceServer zmsetter = n.advertiseService("lmi_zernike_moments_set", &CLMIZernikeMoments::setter, &zm);
   ros::ServiceServer iigetter = n.advertiseService("lmi_integral_invariant_get", &CLMIIntegralInvariant::getter, &ii);
   ros::ServiceServer iisetter = n.advertiseService("lmi_integral_invariant_set", &CLMIIntegralInvariant::setter, &ii);
-  ros::ServiceServer getterPoly = n.advertiseService("lmi_polygon_get", &CLMIPolygon::getter, &poly);
-  ros::ServiceServer setterPoly = n.advertiseService("lmi_polygon_set", &CLMIPolygon::setter, &poly);
+  ros::ServiceServer getterPoly = n.advertiseService("get_polygon", &CLMIPolygon::getter, &poly);
+  ros::ServiceServer setterPoly = n.advertiseService("set_polygon", &CLMIPolygon::setter, &poly);
   ROS_INFO("map interface %s is ready with file %s", ros::this_node::getName().c_str(), map_file.c_str());
 
   ros::spin();

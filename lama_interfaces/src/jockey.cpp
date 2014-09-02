@@ -10,7 +10,7 @@ namespace interfaces
 {
 
 Jockey::Jockey(std::string name) :
-  action_name_(name)
+  jockey_name_(name)
 {
 }
 
@@ -44,12 +44,12 @@ void Jockey::resume()
 
 void Jockey::onInterrupt()
 {
-  ROS_DEBUG("%s: action interrupted", action_name_.c_str());
+  ROS_DEBUG("%s: action interrupted", jockey_name_.c_str());
 }
 
 void Jockey::onContinue()
 {
-  ROS_DEBUG("%s: action resumed", action_name_.c_str());
+  ROS_DEBUG("%s: action resumed", jockey_name_.c_str());
 }
 
 } // namespace interfaces

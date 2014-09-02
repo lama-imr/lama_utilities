@@ -27,7 +27,7 @@ void LearningJockey::goalCallback()
   // Check that preempt has not been requested by the client.
   if (server_.isPreemptRequested() || !ros::ok())
   {
-    ROS_INFO("%s: Preempted", action_name_.c_str());
+    ROS_INFO("%s: Preempted", jockey_name_.c_str());
     // set the action state to preempted
     server_.setPreempted();
     return;
@@ -55,19 +55,19 @@ void LearningJockey::goalCallback()
 
 void LearningJockey::preemptCallback()
 {
-  ROS_INFO("%s: Preempted", action_name_.c_str());
+  ROS_INFO("%s: Preempted", jockey_name_.c_str());
   // set the action state to preempted
   server_.setPreempted();
 }
 
 void LearningJockey::onInterrupt()
 {
-  ROS_DEBUG("%s: learning interrupted", action_name_.c_str());
+  ROS_DEBUG("%s: learning interrupted", jockey_name_.c_str());
 }
 
 void LearningJockey::onContinue()
 {
-  ROS_DEBUG("%s: learning resumed", action_name_.c_str());
+  ROS_DEBUG("%s: learning resumed", jockey_name_.c_str());
 }
 
 } // namespace interfaces

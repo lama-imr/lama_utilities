@@ -27,7 +27,7 @@ void LocalizingJockey::goalCallback()
   // Check that preempt has not been requested by the client.
   if (server_.isPreemptRequested() || !ros::ok())
   {
-    ROS_INFO("%s: Preempted", action_name_.c_str());
+    ROS_INFO("%s: Preempted", jockey_name_.c_str());
     // set the action state to preempted
     server_.setPreempted();
     return;
@@ -73,7 +73,7 @@ void LocalizingJockey::goalCallback()
 
 void LocalizingJockey::preemptCallback()
 {
-  ROS_INFO("%s: Preempted", action_name_.c_str());
+  ROS_INFO("%s: Preempted", jockey_name_.c_str());
   // set the action state to preempted
   server_.setPreempted();
 }
@@ -88,12 +88,12 @@ void LocalizingJockey::initAction()
 
 void LocalizingJockey::onInterrupt()
 {
-  ROS_DEBUG("%s: localizing goal %d interrupted", action_name_.c_str(), goal_.descriptor.object_id);
+  ROS_DEBUG("%s: localizing goal %d interrupted", jockey_name_.c_str(), goal_.descriptor.object_id);
 }
 
 void LocalizingJockey::onContinue()
 {
-  ROS_DEBUG("%s: localizing goal %d resumed", action_name_.c_str(), goal_.descriptor.object_id);
+  ROS_DEBUG("%s: localizing goal %d resumed", jockey_name_.c_str(), goal_.descriptor.object_id);
 }
 
 } // namespace interfaces

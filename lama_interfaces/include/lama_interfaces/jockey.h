@@ -31,7 +31,7 @@ class Jockey
   protected:
 
     ros::NodeHandle nh_;
-    std::string action_name_;
+    std::string jockey_name_;
 
     void initAction();
     void interrupt();

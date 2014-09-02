@@ -42,7 +42,7 @@ void NavigatingJockey::goalCallback()
   // Check that preempt has not been requested by the client.
   if (server_.isPreemptRequested() || !ros::ok())
   {
-    ROS_INFO("%s: Preempted", action_name_.c_str());
+    ROS_INFO("%s: Preempted", jockey_name_.c_str());
     // set the action state to preempted
     server_.setPreempted();
     return;
@@ -76,19 +76,19 @@ void NavigatingJockey::goalCallback()
 
 void NavigatingJockey::preemptCallback()
 {
-  ROS_INFO("%s: Preempted", action_name_.c_str());
+  ROS_INFO("%s: Preempted", jockey_name_.c_str());
   // set the action state to preempted
   server_.setPreempted();
 }
 
 void NavigatingJockey::onInterrupt()
 {
-  ROS_DEBUG("%s: navigating goal %d interrupted", action_name_.c_str(), goal_.edge.id);
+  ROS_DEBUG("%s: navigating goal %d interrupted", jockey_name_.c_str(), goal_.edge.id);
 }
 
 void NavigatingJockey::onContinue()
 {
-  ROS_DEBUG("%s: navigating goal %d resumed", action_name_.c_str(), goal_.edge.id);
+  ROS_DEBUG("%s: navigating goal %d resumed", jockey_name_.c_str(), goal_.edge.id);
 }
 
 /* Return the twist to reach the given goal pose

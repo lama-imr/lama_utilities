@@ -41,6 +41,16 @@ class DBInterface(object):
         self.metadata = sqlalchemy.MetaData(_engine)
         self._generateSchema()
 
+        # Start the services.
+        self.getter_service_proxy = rospy.Service(self.getter_service_name,
+                                                  self.getter_service_class,
+                                                  self.getter)
+        self.setter_service_proxy = rospy.Service(self.setter_service_name,
+                                                  self.setter_service_class,
+                                                  self.setter)
+        rospy.loginfo('Services %s and %s started',
+                      self.getter_service_name, self.setter_service_name)
+
     def getter(self, msg):
         """Execute the getter service and return the response"""
         # Create an instance of response.
@@ -188,13 +198,4 @@ def interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
     if setter_srv_msg.endswith('.srv'):
         setter_srv_msg = setter_srv_msg[:-4]
     iface = DBInterface(interface_name, getter_srv_msg, setter_srv_msg)
-
-    rospy.Service(iface.getter_service_name,
-                  iface.getter_service_class,
-                  iface.getter)
-    rospy.Service(iface.setter_service_name,
-                  iface.setter_service_class,
-                  iface.setter)
-    rospy.loginfo('Services %s and %s started',
-                  iface.getter_service_name, iface.setter_service_name)
     return iface

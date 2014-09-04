@@ -34,7 +34,7 @@ if __name__ == '__main__':
             localize.send_goal_and_wait(loc_goal, rospy.Duration(0.1))
             loc_result = localize.get_result()
             if not loc_result:
-                rospy.logerr('Did not received vertex descriptor within 0.1 s exiting')
+                rospy.logerr('Did not receive vertex descriptor within 0.1 s exiting')
                 break
             rospy.loginfo('Received vertex descriptor')
 
@@ -42,7 +42,7 @@ if __name__ == '__main__':
             localize.send_goal_and_wait(loc_goal, rospy.Duration(0.1))
             loc_result = localize.get_result()
             if not loc_result:
-                rospy.logerr('Did not received edge descriptors within 0.1 s exiting')
+                rospy.logerr('Did not receive edge descriptors within 0.1 s exiting')
                 break
             rospy.loginfo('Received {} descriptors in {:.3f} s'.format(
                 len(loc_result.descriptors),

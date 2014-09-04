@@ -1,31 +1,32 @@
 <?xml version="1.0"?>
 <package>
-  <name>lama_msgs</name>
+  <name>goto_crossing</name>
   <version>0.0.0</version>
   <description>
-	  lama_msgs provides messages for the lama framework such as
-	  Frontier, Crossing.
-  </description>
+	  The goto_crossing package provides a goToGoal behavior
+	  to a crossing center if the crossing has at least three
+	  frontiers and some kind of move forward behavior if it
+	  has two or less frontiers.</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <maintainer email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
+  <!-- Commonly used license strings: -->
+  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
   <license>MIT</license>
 
 
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/lama_msgs</url> -->
+  <!-- <url type="website">http://wiki.ros.org/goto_crossing</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
   <!-- Authors do not have to be maintianers, but could be -->
   <author email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</author>
-  <author email="kosnar@labe.felk.cvut.cz">Karel Košnar</author>
-  <author email="vonasek@labe.felk.cvut.cz">Vojtěch Vonásek</author>
 
 
   <!-- The *_depend tags are used to specify dependencies -->
@@ -41,9 +42,13 @@
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>geometry_msgs</build_depend>
-  <build_depend>message_generation</build_depend>
+  <build_depend>lama_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <run_depend>lama_msgs</run_depend>
+  <run_depend>roscpp</run_depend>
   <run_depend>geometry_msgs</run_depend>
-  <run_depend>message_runtime</run_depend>
+  <run_depend>std_msgs</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

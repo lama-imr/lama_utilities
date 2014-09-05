@@ -17,8 +17,8 @@ find_package(catkin REQUIRED
 	)
 
 ## System dependencies are found with CMake's conventions
-find_package(PkgConfig)
-pkg_check_modules(SQLITE REQUIRED sqlite3)
+#find_package(PkgConfig)
+#pkg_check_modules(SQLITE REQUIRED sqlite3)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -104,9 +104,9 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-	INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${SQLITE_INCLUDE}
+	INCLUDE_DIRS include ${catkin_INCLUDE_DIRS}
 	LIBRARIES jockey learning_jockey localizing_jockey navigating_jockey
-	CATKIN_DEPENDS roscpp rospy actionlib_msgs geometry_msgs sensor_msgs nav_msgs
+	CATKIN_DEPENDS roscpp rospy actionlib actionlib_msgs geometry_msgs sensor_msgs nav_msgs
 	DEPENDS python-sqlalchemy
 )
 
@@ -120,7 +120,6 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${SQLITE_INCLUDE}
 )
 
 ## Declare a cpp library
@@ -142,10 +141,10 @@ add_dependencies(localizing_jockey lama_interfaces_generate_messages_cpp)
 add_dependencies(navigating_jockey lama_interfaces_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(lama_interfaces
-# ${catkin_LIBRARIES}
-# ${SQLITE_LIBRARIES}
-# )
+target_link_libraries(jockey ${catkin_LIBRARIES})
+target_link_libraries(learning_jockey ${catkin_LIBRARIES})
+target_link_libraries(localizing_jockey ${catkin_LIBRARIES})
+target_link_libraries(navigating_jockey ${catkin_LIBRARIES})
 
 #############
 ## Install ##

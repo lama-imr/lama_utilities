@@ -5,10 +5,14 @@ project(nj_escape_crossing)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
-  lama_msgs
-  roscpp
-  std_msgs
+	angles
+	geometry_msgs
+	lama_interfaces
+	lama_msgs
+	nav_msgs
+	roscpp
+	std_msgs
+	tf
 )
 
 ## System dependencies are found with CMake's conventions
@@ -83,7 +87,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 	INCLUDE_DIRS include
 	LIBRARIES crossing_escaper
-	CATKIN_DEPENDS geometry_msgs lama_msgs roscpp std_msgs
+	CATKIN_DEPENDS angles geometry_msgs lama_interfaces lama_msgs nav_msgs roscpp std_msgs tf
 	#  DEPENDS system_lib
 )
 
@@ -105,15 +109,15 @@ add_library(crossing_escaper
 )
 
 ## Declare a cpp executable
-add_executable(escape_crossing src/escape_crossing_node.cpp)
+add_executable(nj_escape_crossing src/nj_escape_crossing_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(escape_crossing_node escape_crossing_generate_messages_cpp)
+# add_dependencies(nj_escape_crossing escape_crossing_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(crossing_escaper ${catkin_LIBRARIES})
-target_link_libraries(escape_crossing ${catkin_LIBRARIES})
+target_link_libraries(nj_escape_crossing crossing_escaper ${catkin_LIBRARIES})
 
 #############
 ## Install ##

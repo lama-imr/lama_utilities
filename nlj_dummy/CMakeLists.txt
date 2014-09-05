@@ -7,7 +7,6 @@ project(nlj_dummy)
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
 	lama_interfaces
-	actionlib
 	)
 
 ## System dependencies are found with CMake's conventions
@@ -81,7 +80,7 @@ generate_messages(
 catkin_package(
 	INCLUDE_DIRS include
 	#  LIBRARIES nlj_dummy
-	CATKIN_DEPENDS roscpp actionlib lama_interfaces
+	CATKIN_DEPENDS roscpp lama_interfaces
 	#  DEPENDS system_lib
 	)
 

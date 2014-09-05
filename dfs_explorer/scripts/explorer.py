@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 # Implement a Depth-First Search explorer.
-# Works in combination with lj_laser_heading and nj_laser nodes.
+# Works in combination with lj_laser_heading, nj_laser, and nj_escape_crossing
+# jockeys.
 
 from __future__ import print_function, division
 
@@ -39,6 +40,8 @@ class ExplorerNode(object):
                                                  'navigating_jockey')
         localizing_jockey_name = rospy.get_param('localizing_jockey_name',
                                                  'localizing_jockey')
+        escape_jockey_name = rospy.get_param('escape_jockey_name',
+                                             'nj_escape_jockey')
 
         # Navigate jockey server.
         self.navigate = actionlib.SimpleActionClient(navigating_jockey_name,
@@ -53,6 +56,13 @@ class ExplorerNode(object):
         rospy.logdebug('Waiting for the localizing jockey action server')
         self.localize.wait_for_server()
         rospy.logdebug('Communicating with the localizing jockey action server')
+
+        # Crossing escape jockey server.
+        self.escape = actionlib.SimpleActionClient(escape_jockey_name,
+                                                   NavigateAction)
+        rospy.logdebug('Waiting for the crossing escape jockey action server')
+        self.escape.wait_for_server()
+        rospy.logdebug('Commnunicating with the crossing escape jockey action server')
 
         # Map agent server.
         self.map_agent = rospy.ServiceProxy('lama_map_agent', ActOnMap)
@@ -264,7 +274,10 @@ class ExplorerNode(object):
         return None
 
     def move_to_next_crossing(self):
-        pass
+        path = self.find_path()
+        for vertex, angle in path:
+            goal = NavigateGoal()
+            goal.action =
 
     def find_path(self):
         """Return a list of (vertex, angle)
@@ -300,6 +313,10 @@ class ExplorerNode(object):
                 p.append((v1, graph[(v0, v1)]))
             return p
 
+        # TODO: use a BrowseVertex that has as attributes the BrowseVertex
+        # it comes from during browsing and the associated angle so that
+        # after the dfs-tree is built, the path can be found by browsing the
+        # referenced vertices.
         start = self.last_vertex
         end = self.next_vertex
         queue = [start]

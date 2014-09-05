@@ -38,14 +38,22 @@
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>angles</build_depend>
   <build_depend>geometry_msgs</build_depend>
+  <build_depend>lama_interfaces</build_depend>
   <build_depend>lama_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>tf</build_depend>
+  <run_depend>angles</run_depend>
   <run_depend>geometry_msgs</run_depend>
+  <run_depend>lama_interfaces</run_depend>
   <run_depend>lama_msgs</run_depend>
+  <run_depend>nav_msgs</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>std_msgs</run_depend>
+  <run_depend>tf</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

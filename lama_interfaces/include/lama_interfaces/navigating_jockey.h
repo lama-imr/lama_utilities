@@ -33,7 +33,7 @@ class NavigatingJockey : public Jockey
     NavigatingJockey(std::string name);
 
     // A daugther class must implement functions corresponding to actions
-    // TRAVERSE, STOP, INTERRUT, CONTINUE respectively.
+    // TRAVERSE, and STOP.
     virtual void onTraverse() = 0;
     virtual void onStop() = 0;
     virtual void onInterrupt();

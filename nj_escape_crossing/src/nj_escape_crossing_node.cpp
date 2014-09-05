@@ -14,5 +14,7 @@ int main(int argc, char** argv)
     ros::console::notifyLoggerLevelsChanged();
   }
 
+  lama::nj_escape_crossing::CrossingEscaper jockey(ros::this_node::getName() + "_jockey");
+
   ros::spin();
 }

@@ -114,7 +114,8 @@ target_link_libraries(crossing_goer
   ${catkin_LIBRARIES}
 )
 target_link_libraries(goto_crossing
-  ${catkin_LIBRARIES}
+	crossing_goer
+	${catkin_LIBRARIES}
 )
 
 #############

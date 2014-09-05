@@ -65,10 +65,10 @@ bool CrossingGoer::goto_crossing(const lama_msgs::Crossing& crossing, geometry_m
 
 /* Callback for the Crossing topic.
  */
-void CrossingGoer::goto_crossing_callback(const lama_msgs::CrossingConstPtr& crossing) const
+void CrossingGoer::goto_crossing_callback(const lama_msgs::Crossing& crossing) const
 {
   geometry_msgs::Twist twist;
-  bool goal_reached = goto_crossing(*crossing, twist);
+  bool goal_reached = goto_crossing(crossing, twist);
 
   twist_publisher_.publish(twist);
   goal_reached_publisher_.publish((uint8_t)goal_reached);

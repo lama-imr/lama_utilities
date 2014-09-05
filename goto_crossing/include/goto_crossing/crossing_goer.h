@@ -20,7 +20,7 @@ class CrossingGoer
     CrossingGoer();
 
     bool goto_crossing(const lama_msgs::Crossing& crossing, geometry_msgs::Twist& twist) const;
-    void goto_crossing_callback(const lama_msgs::CrossingConstPtr& crossing) const;
+    void goto_crossing_callback(const lama_msgs::Crossing& crossing) const;
 
   private:
 

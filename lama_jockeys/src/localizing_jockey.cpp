@@ -2,11 +2,9 @@
  *
  */
 
-#include <lama_interfaces/localizing_jockey.h>
+#include <lama_jockeys/localizing_jockey.h>
 
 namespace lama
-{
-namespace interfaces
 {
 
 LocalizingJockey::LocalizingJockey(std::string name) :
@@ -21,7 +19,7 @@ LocalizingJockey::LocalizingJockey(std::string name) :
 
 void LocalizingJockey::goalCallback()
 {
-  lama_interfaces::LocalizeGoalConstPtr current_goal = server_.acceptNewGoal();
+  lama_jockeys::LocalizeGoalConstPtr current_goal = server_.acceptNewGoal();
   goal_.action = current_goal->action;
 
   // Check that preempt has not been requested by the client.
@@ -35,36 +33,36 @@ void LocalizingJockey::goalCallback()
 
   switch (goal_.action)
   {
-    case lama_interfaces::LocalizeGoal::GET_VERTEX_DESCRIPTOR:
+    case lama_jockeys::LocalizeGoal::GET_VERTEX_DESCRIPTOR:
       initAction();
       goal_.descriptor = current_goal->descriptor;
       onGetVertexDescriptor();
       break;
-    case lama_interfaces::LocalizeGoal::GET_EDGES_DESCRIPTORS:
+    case lama_jockeys::LocalizeGoal::GET_EDGES_DESCRIPTORS:
       initAction();
       goal_.descriptor = current_goal->descriptor;
       onGetEdgesDescriptors();
       break;
-    case lama_interfaces::LocalizeGoal::LOCALIZE_IN_VERTEX:
+    case lama_jockeys::LocalizeGoal::LOCALIZE_IN_VERTEX:
       initAction();
       goal_.descriptor = current_goal->descriptor;
       onLocalizeInVertex();
       break;
-    case lama_interfaces::LocalizeGoal::LOCALIZE_EDGE:
+    case lama_jockeys::LocalizeGoal::LOCALIZE_EDGE:
       initAction();
       goal_.descriptor = current_goal->descriptor;
       onLocalizeEdge();
       break;
-    case lama_interfaces::LocalizeGoal::GET_SIMILARITY:
+    case lama_jockeys::LocalizeGoal::GET_SIMILARITY:
       initAction();
       goal_.descriptor = current_goal->descriptor;
       onGetSimilarity();
       break;
-    case lama_interfaces::LocalizeGoal::INTERRUPT:
+    case lama_jockeys::LocalizeGoal::INTERRUPT:
       interrupt();
       onInterrupt();
       break;
-    case lama_interfaces::LocalizeGoal::CONTINUE:
+    case lama_jockeys::LocalizeGoal::CONTINUE:
       resume();
       onContinue();
       break;
@@ -96,6 +94,5 @@ void LocalizingJockey::onContinue()
   ROS_DEBUG("%s: localizing goal %d resumed", jockey_name_.c_str(), goal_.descriptor.object_id);
 }
 
-} // namespace interfaces
 } // namespace lama
 

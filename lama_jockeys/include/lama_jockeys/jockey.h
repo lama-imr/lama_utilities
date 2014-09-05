@@ -12,8 +12,6 @@
 
 namespace lama
 {
-namespace interfaces
-{
 
 class Jockey
 {
@@ -49,7 +47,6 @@ class Jockey
     ros::Duration interruptions_duration_;  //!> Total interruption time (not including the current one)
 };
 
-} // namespace interfaces
 } // namespace lama
 
 #endif // _LAMA_INTERFACES_JOCKEY_H_

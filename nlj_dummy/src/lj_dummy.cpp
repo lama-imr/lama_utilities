@@ -1,6 +1,6 @@
 #include <nlj_dummy/lj_dummy.h>
 
-LJDummy::LJDummy(std::string name, std::string set_service_name) : lama::interfaces::LocalizingJockey(name),
+LJDummy::LJDummy(std::string name, std::string set_service_name) : lama::LocalizingJockey(name),
   set_service_name_(set_service_name),
   rand_generator_(rd_()),
   descriptor_distribution_(0, 360),
@@ -12,7 +12,7 @@ LJDummy::LJDummy(std::string name, std::string set_service_name) : lama::interfa
 void LJDummy::onGetVertexDescriptor()
 {
   ROS_INFO("Responded with vertex description");
-  result_.state = lama_interfaces::LocalizeResult::DONE;
+  result_.state = lama_jockeys::LocalizeResult::DONE;
   result_.completion_time = ros::Duration(0.001);
   server_.setSucceeded(result_);
 }
@@ -54,7 +54,7 @@ void LJDummy::onGetEdgesDescriptors()
         ROS_INFO("outgoing edge %i", ds.request.descriptor.value);
       }
 
-      result_.state = lama_interfaces::LocalizeResult::DONE;
+      result_.state = lama_jockeys::LocalizeResult::DONE;
       result_.completion_time = ros::Duration(localizing_duration);
       server_.setSucceeded(result_);
       break;
@@ -66,7 +66,7 @@ void LJDummy::onGetEdgesDescriptors()
 void LJDummy::onLocalizeInVertex()
 {
   ROS_INFO("LJDummy responded with localization inside vertex");
-  result_.state = lama_interfaces::LocalizeResult::DONE;
+  result_.state = lama_jockeys::LocalizeResult::DONE;
   result_.completion_time = ros::Duration(0.001);
   server_.setSucceeded(result_);
 }
@@ -74,7 +74,7 @@ void LJDummy::onLocalizeInVertex()
 void LJDummy::onLocalizeEdge()
 {
   ROS_INFO("LJDummy responded with edge localization");
-  result_.state = lama_interfaces::LocalizeResult::DONE;
+  result_.state = lama_jockeys::LocalizeResult::DONE;
   result_.completion_time = ros::Duration(0.001);
   server_.setSucceeded(result_);
 }
@@ -82,7 +82,7 @@ void LJDummy::onLocalizeEdge()
 void LJDummy::onGetSimilarity()
 {
   ROS_INFO("LJDummy responded with similarity");
-  result_.state = lama_interfaces::LocalizeResult::DONE;
+  result_.state = lama_jockeys::LocalizeResult::DONE;
   result_.completion_time = ros::Duration(0.001);
   server_.setSucceeded(result_);
 }

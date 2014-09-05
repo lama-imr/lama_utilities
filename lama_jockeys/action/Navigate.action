@@ -6,8 +6,8 @@ uint32 STOP=1
 uint32 INTERRUPT=2
 uint32 CONTINUE=3
 
-LamaObject edge
-DescriptorIdentifier descriptor
+lama_interfaces/LamaObject edge
+lama_interfaces/DescriptorIdentifier descriptor
 ---
 # Result.
 

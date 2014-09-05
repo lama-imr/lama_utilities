@@ -7,7 +7,7 @@ project(nj_escape_crossing)
 find_package(catkin REQUIRED COMPONENTS
 	angles
 	geometry_msgs
-	lama_interfaces
+	lama_jockeys
 	lama_msgs
 	nav_msgs
 	roscpp
@@ -87,7 +87,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 	INCLUDE_DIRS include
 	LIBRARIES crossing_escaper
-	CATKIN_DEPENDS angles geometry_msgs lama_interfaces lama_msgs nav_msgs roscpp std_msgs tf
+	CATKIN_DEPENDS angles geometry_msgs lama_jockeys lama_msgs nav_msgs roscpp std_msgs tf
 	#  DEPENDS system_lib
 )
 

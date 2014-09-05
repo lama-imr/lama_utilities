@@ -1,26 +1,22 @@
 /* Base class for localizing jockeys
  */
 
-#ifndef _LAMA_INTERFACES_LOCALIZING_JOCKEY_H_
-#define _LAMA_INTERFACES_LOCALIZING_JOCKEY_H_
+#ifndef _LAMA_JOCKEYS_LOCALIZING_JOCKEY_H_
+#define _LAMA_JOCKEYS_LOCALIZING_JOCKEY_H_
 
 #include <string>
 
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
 
-#include <lama_interfaces/jockey.h>
-#include <lama_interfaces/LocalizeAction.h>
-#include <lama_interfaces/LocalizeGoal.h>
-#include <lama_interfaces/LocalizeFeedback.h>
+#include <lama_jockeys/jockey.h>
+#include <lama_jockeys/LocalizeAction.h>
+#include <lama_jockeys/LocalizeGoal.h>
+#include <lama_jockeys/LocalizeFeedback.h>
 
-namespace lama
-{
-namespace interfaces
-{
+namespace lama {
 
-
-typedef actionlib::SimpleActionServer<lama_interfaces::LocalizeAction> LocalizeServer;
+typedef actionlib::SimpleActionServer<lama_jockeys::LocalizeAction> LocalizeServer;
 
 class LocalizingJockey : public Jockey
 {
@@ -43,13 +39,13 @@ class LocalizingJockey : public Jockey
     // NodeHandle instance must be created before this line. Otherwise strange
     // error may occur (this is done in Jockey).
     LocalizeServer server_;
-    lama_interfaces::LocalizeResult result_;
-    lama_interfaces::LocalizeFeedback feedback_;
+    lama_jockeys::LocalizeResult result_;
+    lama_jockeys::LocalizeFeedback feedback_;
 
     // In case of INTERRUPT and CONTINUE, the descritptor attribute
     // of current goal are irrelevant.
     // This information needs to be saved for use after a CONTINUE action.
-    lama_interfaces::LocalizeGoal goal_;
+    lama_jockeys::LocalizeGoal goal_;
 
   private:
 
@@ -62,7 +58,6 @@ class LocalizingJockey : public Jockey
     using Jockey::resume;
 };
 
-} // namespace interfaces
 } // namespace lama
 
-#endif // _LAMA_INTERFACES_LOCALIZING_JOCKEY_H_
+#endif // _LAMA_JOCKEYS_LOCALIZING_JOCKEY_H_

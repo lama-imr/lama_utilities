@@ -3,12 +3,12 @@
 
 #include <random>
 
-#include <lama_interfaces/navigating_jockey.h>
+#include <lama_jockeys/navigating_jockey.h>
 
 #include <nlj_dummy/GetDummyDescriptor.h>
 
 
-class NJDummy : public lama::interfaces::NavigatingJockey
+class NJDummy : public lama::NavigatingJockey
 {
   public:
 

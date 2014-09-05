@@ -8,7 +8,7 @@ const double CrossingEscaper::threshold_w_only_ = 1.0;  // (rad), ~60 deg.
 const double CrossingEscaper::max_data_age_ = 0.050;
 
 CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
-  lama::interfaces::NavigatingJockey(name),
+  lama::NavigatingJockey(name),
   escape_distance_(escape_distance),
   twist_advertised_(false),
   angle_reached_(false),
@@ -52,7 +52,7 @@ void CrossingEscaper::onTraverse()
   geometry_msgs::Twist twist;
 
   ros::Rate r(50);
-  while (ros::ok() && goal_.action == lama_interfaces::NavigateGoal::TRAVERSE)
+  while (ros::ok() && goal_.action == lama_jockeys::NavigateGoal::TRAVERSE)
   {
     // TODO: add a timeout mechanism if odometry_ is not updated.
     if (!angle_reached_)
@@ -76,7 +76,7 @@ void CrossingEscaper::onTraverse()
       // The robot reached its goal.
       feedback_.completion = 1;
       server_.publishFeedback(feedback_);
-      result_.final_state = lama_interfaces::NavigateResult::DONE;
+      result_.final_state = lama_jockeys::NavigateResult::DONE;
       result_.completion_time = ros::Time::now() - getStartTime() - getInterruptionsDuration();
       server_.setSucceeded(result_);
       break;
@@ -100,7 +100,7 @@ void CrossingEscaper::onStop()
     twist_publisher_.shutdown();
     twist_advertised_ = false;
   }
-  result_.final_state = lama_interfaces::NavigateResult::DONE;
+  result_.final_state = lama_jockeys::NavigateResult::DONE;
   result_.completion_time = ros::Duration(0);
   server_.setSucceeded(result_);
 }

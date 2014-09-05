@@ -7,6 +7,7 @@ project(nlj_dummy)
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
 	lama_interfaces
+	lama_jockeys
 	)
 
 ## System dependencies are found with CMake's conventions
@@ -66,6 +67,7 @@ add_service_files(
 generate_messages(
 	DEPENDENCIES
 	lama_interfaces
+	lama_jockeys
 )
 
 ###################################
@@ -80,7 +82,7 @@ generate_messages(
 catkin_package(
 	INCLUDE_DIRS include
 	#  LIBRARIES nlj_dummy
-	CATKIN_DEPENDS roscpp lama_interfaces
+	CATKIN_DEPENDS roscpp lama_interfaces lama_jockeys
 	#  DEPENDS system_lib
 	)
 

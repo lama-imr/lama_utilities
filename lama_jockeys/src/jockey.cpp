@@ -2,11 +2,9 @@
  *
  */
 
-#include <lama_interfaces/jockey.h>
+#include <lama_jockeys/jockey.h>
 
 namespace lama
-{
-namespace interfaces
 {
 
 Jockey::Jockey(std::string name) :
@@ -54,6 +52,5 @@ void Jockey::onContinue()
   ROS_DEBUG("%s: action resumed", jockey_name_.c_str());
 }
 
-} // namespace interfaces
 } // namespace lama
 

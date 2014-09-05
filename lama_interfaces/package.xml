@@ -2,7 +2,10 @@
 <package>
   <name>lama_interfaces</name>
   <version>0.0.0</version>
-  <description>The lama_interfaces package</description>
+  <description>
+	  The lama_interfaces package provides the interfaces between ROS nodes
+	  (such as jockeys from lama_jockeys) and the map.
+  </description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <maintainer email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</maintainer>
@@ -36,19 +39,13 @@
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <run_depend>message_generation</run_depend>
-  <build_depend>actionlib</build_depend>
-  <build_depend>actionlib_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>nav_msgs</build_depend>
-  <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>message_runtime</run_depend>
-  <run_depend>actionlib</run_depend>
-  <run_depend>actionlib_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>nav_msgs</run_depend>

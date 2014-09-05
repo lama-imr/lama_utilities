@@ -1,27 +1,24 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(lama_interfaces)
+project(lama_jockeys)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED
-	COMPONENTS
-	rospy
-	message_generation
-	geometry_msgs
-	sensor_msgs
-	nav_msgs
-	)
+find_package(catkin REQUIRED COMPONENTS
+  actionlib
+  actionlib_msgs
+  lama_interfaces
+  roscpp
+)
 
 ## System dependencies are found with CMake's conventions
-#find_package(PkgConfig)
-#pkg_check_modules(SQLITE REQUIRED sqlite3)
+# find_package(Boost REQUIRED COMPONENTS system)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-catkin_python_setup()
+# catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -48,46 +45,32 @@ catkin_python_setup()
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-	FILES
-	DescriptorIdentifier.msg
-	MapAction.msg
-	LamaObject.msg
-)
+# add_message_files(
+#   FILES
+#   Message1.msg
+#   Message2.msg
+# )
 
 ## Generate services in the 'srv' folder
-add_service_files(
-	FILES
-	AddInterface.srv
-	ActOnMap.srv
-	GetLamaObject.srv
-	SetLamaObject.srv
-	GetPolygon.srv
-	SetPolygon.srv
-	GetVectorDouble.srv
-	SetVectorDouble.srv
-	GetVectorLaserScan.srv
-	SetVectorLaserScan.srv
-	GetVectorOdometry.srv
-	SetVectorOdometry.srv
-	GetVectorPose.srv
-	SetVectorPose.srv
-)
+# add_service_files(
+#   FILES
+#   Service1.srv
+#   Service2.srv
+# )
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+add_action_files(
+  FILES
+  Learn.action
+  Localize.action
+  Navigate.action
+)
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
   actionlib_msgs
-  geometry_msgs
-  sensor_msgs
-  nav_msgs
+  lama_interfaces
 )
 
 ###################################
@@ -100,10 +83,10 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-	#INCLUDE_DIRS include
-	#LIBRARIES
-	CATKIN_DEPENDS rospy geometry_msgs sensor_msgs nav_msgs
-	DEPENDS python-sqlalchemy
+	INCLUDE_DIRS include
+	LIBRARIES jockey learning_jockey localizing_jockey navigating_jockey
+	CATKIN_DEPENDS actionlib actionlib_msgs roscpp
+	#  DEPENDS system_lib
 )
 
 ###########
@@ -114,23 +97,34 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
+	include
+	${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
-#add_library(lama_core src/lama_core.cpp)
+add_library(jockey src/jockey.cpp)
+add_library(learning_jockey src/learning_jockey.cpp)
+add_library(localizing_jockey src/localizing_jockey.cpp)
+add_library(navigating_jockey src/navigating_jockey.cpp)
 
 ## Declare a cpp executable
-# set(SRC ${SRC} src/lama_interfaces.cpp)
-# add_executable(lama_interfaces ${SRC})
+# add_executable(lama_jockeys_node src/lama_jockeys_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-#add_dependencies(lama_interfaces_node lama_interfaces_generate_messages_cpp)
+add_dependencies(jockey lama_jockeys_generate_messages_cpp)
+add_dependencies(learning_jockey lama_jockeys_generate_messages_cpp)
+add_dependencies(learning_jockey jockey)
+add_dependencies(localizing_jockey lama_jockeys_generate_messages_cpp)
+add_dependencies(localizing_jockey jockey)
+add_dependencies(navigating_jockey lama_jockeys_generate_messages_cpp)
+add_dependencies(navigating_jockey jockey)
 
 ## Specify libraries to link a library or executable target against
-#target_link_libraries(lama_interfaces_node ${catkin_LIBRARIES})
+target_link_libraries(jockey ${catkin_LIBRARIES})
+target_link_libraries(learning_jockey jockey ${catkin_LIBRARIES})
+target_link_libraries(localizing_jockey jockey ${catkin_LIBRARIES})
+target_link_libraries(navigating_jockey jockey ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -147,7 +141,7 @@ include_directories(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS lama_interfaces lama_interfaces_node
+# install(TARGETS lama_jockeys lama_jockeys_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -172,10 +166,10 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_lama_interfaces.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_lama_jockeys.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
 
 ## Add folders to be run by python nosetests
-catkin_add_nosetests(test)
+# catkin_add_nosetests(test)

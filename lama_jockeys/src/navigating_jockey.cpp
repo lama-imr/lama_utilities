@@ -2,11 +2,9 @@
  *
  */
 
-#include <lama_interfaces/navigating_jockey.h>
+#include <lama_jockeys/navigating_jockey.h>
 
 namespace lama
-{
-namespace interfaces
 {
 
 NavigatingJockey::NavigatingJockey(std::string name) :
@@ -36,7 +34,7 @@ NavigatingJockey::NavigatingJockey(std::string name) :
 
 void NavigatingJockey::goalCallback()
 {
-  lama_interfaces::NavigateGoalConstPtr current_goal = server_.acceptNewGoal();
+  lama_jockeys::NavigateGoalConstPtr current_goal = server_.acceptNewGoal();
   goal_.action = current_goal->action;
 
   // Check that preempt has not been requested by the client.
@@ -50,24 +48,24 @@ void NavigatingJockey::goalCallback()
 
   switch (goal_.action)
   {
-    case lama_interfaces::NavigateGoal::STOP:
+    case lama_jockeys::NavigateGoal::STOP:
       initAction();
       // Reset the goal, just in case.
       goal_.edge = lama_interfaces::LamaObject();
       goal_.descriptor = lama_interfaces::DescriptorIdentifier();
       onStop();
       break;
-    case lama_interfaces::NavigateGoal::TRAVERSE:
+    case lama_jockeys::NavigateGoal::TRAVERSE:
       initAction();
       goal_.edge = current_goal->edge;
       goal_.descriptor = current_goal->descriptor;
       onTraverse();
       break;
-    case lama_interfaces::NavigateGoal::INTERRUPT:
+    case lama_jockeys::NavigateGoal::INTERRUPT:
       interrupt();
       onInterrupt();
       break;
-    case lama_interfaces::NavigateGoal::CONTINUE:
+    case lama_jockeys::NavigateGoal::CONTINUE:
       resume();
       onContinue();
       break;
@@ -136,6 +134,5 @@ geometry_msgs::Twist NavigatingJockey::goToGoal(const geometry_msgs::Point& goal
   return twist;
 }
 
-} // namespace interfaces
 } // namespace lama
 

@@ -84,7 +84,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES lama_msgs
-#  CATKIN_DEPENDS other_catkin_pkg
+	CATKIN_DEPENDS geometry_msgs lama_interfaces message_runtime
 #  DEPENDS system_lib
 )
 

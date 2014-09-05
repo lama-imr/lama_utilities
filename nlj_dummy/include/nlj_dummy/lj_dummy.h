@@ -3,11 +3,11 @@
 
 #include <random>
 
-#include <lama_interfaces/localizing_jockey.h>
+#include <lama_jockeys/localizing_jockey.h>
 
 #include <nlj_dummy/SetDummyDescriptor.h>
 
-class LJDummy : public lama::interfaces::LocalizingJockey
+class LJDummy : public lama::LocalizingJockey
 {
   public:
 

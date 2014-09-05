@@ -71,7 +71,9 @@ void CrossingGoer::goto_crossing_callback(const lama_msgs::Crossing& crossing) c
   bool goal_reached = goto_crossing(crossing, twist);
 
   twist_publisher_.publish(twist);
-  goal_reached_publisher_.publish((uint8_t)goal_reached);
+  std_msgs::Bool goal_reached_msg;
+  goal_reached_msg.data = goal_reached;
+  goal_reached_publisher_.publish(goal_reached_msg);
 }
 
 /* Return the twist to reach the given goal pose

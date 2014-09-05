@@ -1,6 +1,6 @@
 #include <nlj_dummy/nj_dummy.h>
 
-NJDummy::NJDummy(std::string name, std::string get_service_name) : lama::interfaces::NavigatingJockey(name),
+NJDummy::NJDummy(std::string name, std::string get_service_name) : lama::NavigatingJockey(name),
   get_service_name_(get_service_name),
   rand_generator_(rd_()),
   mean_traversing_time_(2.0),
@@ -12,7 +12,7 @@ void NJDummy::onStop()
 {
   ROS_DEBUG("NJDummy STOP");
 
-  result_.final_state = lama_interfaces::NavigateResult::STOPPED;
+  result_.final_state = lama_jockeys::NavigateResult::STOPPED;
   result_.completion_time = ros::Duration(0);
   server_.setSucceeded(result_);
 }
@@ -49,7 +49,7 @@ void NJDummy::onTraverse()
       // time_elapsed_for_task runs.
       time_elapsed_for_task = real_time_elapsed - getInterruptionsDuration();
     }
-    feedback_.current_state = lama_interfaces::NavigateFeedback::TRAVERSING;
+    feedback_.current_state = lama_jockeys::NavigateFeedback::TRAVERSING;
     feedback_.time_elapsed = time_elapsed_for_task;
     feedback_.completion = completion(time_elapsed_for_task);
     server_.publishFeedback(feedback_);
@@ -57,7 +57,7 @@ void NJDummy::onTraverse()
     // Eventually get the result.
     if (time_elapsed_for_task.toSec() > traversing_duration)
     {
-      result_.final_state = lama_interfaces::NavigateResult::DONE;
+      result_.final_state = lama_jockeys::NavigateResult::DONE;
       result_.completion_time = real_time_elapsed;
       server_.setSucceeded(result_);
       break;

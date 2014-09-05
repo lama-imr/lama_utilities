@@ -1,33 +1,30 @@
 <?xml version="1.0"?>
 <package>
-  <name>nlj_dummy</name>
+  <name>lama_jockeys</name>
   <version>0.0.0</version>
-  <description>The nlj_dummy package</description>
+  <description>The lama_jockeys package contains base classes for learning,
+  localizing, and navigating jockeys.</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
-  <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
   <maintainer email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
-  <!-- Commonly used license strings: -->
-  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>BSD</license>
+  <license>MIT</license>
 
 
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/nlj_dummy</url> -->
+  <!-- <url type="website">http://wiki.ros.org/lama_jockeys</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
   <!-- Authors do not have to be maintianers, but could be -->
-  <!-- Example: -->
-  <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
   <author email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</author>
   <author email="kosnar@labe.felk.cvut.cz">Karel Košnar</author>
+  <author email="vonasek@labe.felk.cvut.cz">Vojtěch Vonásek</author>
 
 
   <!-- The *_depend tags are used to specify dependencies -->
@@ -42,13 +39,14 @@
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>roscpp</build_depend>
+  <build_depend>actionlib</build_depend>
+  <build_depend>actionlib_msgs</build_depend>
   <build_depend>lama_interfaces</build_depend>
-  <build_depend>lama_jockeys</build_depend>
-  <run_depend>roscpp</run_depend>
+  <build_depend>roscpp</build_depend>
+  <run_depend>actionlib</run_depend>
+  <run_depend>actionlib_msgs</run_depend>
   <run_depend>lama_interfaces</run_depend>
-  <run_depend>lama_jockeys</run_depend>
-  <test_depend>unittest</test_depend>
+  <run_depend>roscpp</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

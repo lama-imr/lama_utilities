@@ -12,13 +12,13 @@
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
 
-#include <lama_interfaces/navigating_jockey.h>
+#include <lama_jockeys/navigating_jockey.h>
 #include <lama_msgs/Crossing.h>
 
 namespace lama {
 namespace nj_escape_crossing {
 
-class CrossingEscaper : lama::interfaces::NavigatingJockey
+class CrossingEscaper : lama::NavigatingJockey
 {
   public:
 

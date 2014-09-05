@@ -2,11 +2,9 @@
  *
  */
 
-#include <lama_interfaces/learning_jockey.h>
+#include <lama_jockeys/learning_jockey.h>
 
 namespace lama
-{
-namespace interfaces
 {
 
 LearningJockey::LearningJockey(std::string name) :
@@ -21,7 +19,7 @@ LearningJockey::LearningJockey(std::string name) :
 
 void LearningJockey::goalCallback()
 {
-  lama_interfaces::LearnGoalConstPtr current_goal = server_.acceptNewGoal();
+  lama_jockeys::LearnGoalConstPtr current_goal = server_.acceptNewGoal();
   goal_.action = current_goal->action;
 
   // Check that preempt has not been requested by the client.
@@ -35,18 +33,18 @@ void LearningJockey::goalCallback()
 
   switch (goal_.action)
   {
-    case lama_interfaces::LearnGoal::START_LEARN:
+    case lama_jockeys::LearnGoal::START_LEARN:
       initAction();
       onStartLearn();
       break;
-    case lama_interfaces::LearnGoal::STOP_LEARN:
+    case lama_jockeys::LearnGoal::STOP_LEARN:
       onStopLearn();
       break;
-    case lama_interfaces::LearnGoal::INTERRUPT:
+    case lama_jockeys::LearnGoal::INTERRUPT:
       interrupt();
       onInterrupt();
       break;
-    case lama_interfaces::LearnGoal::CONTINUE:
+    case lama_jockeys::LearnGoal::CONTINUE:
       resume();
       onContinue();
       break;
@@ -70,6 +68,5 @@ void LearningJockey::onContinue()
   ROS_DEBUG("%s: learning resumed", jockey_name_.c_str());
 }
 
-} // namespace interfaces
 } // namespace lama
 

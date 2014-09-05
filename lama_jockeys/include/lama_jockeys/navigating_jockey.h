@@ -1,8 +1,8 @@
 /* Base class for navigating jockeys
  */
 
-#ifndef _LAMA_INTERFACES_NAVIGATING_JOCKEY_H_
-#define _LAMA_INTERFACES_NAVIGATING_JOCKEY_H_
+#ifndef _LAMA_JOCKEYS_NAVIGATING_JOCKEY_H_
+#define _LAMA_JOCKEYS_NAVIGATING_JOCKEY_H_
 
 #include <string>
 #include <cmath>
@@ -12,19 +12,18 @@
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Point.h>
 
-#include <lama_interfaces/jockey.h>
 #include <lama_interfaces/LamaObject.h>
 #include <lama_interfaces/DescriptorIdentifier.h>
-#include <lama_interfaces/NavigateAction.h>
-#include <lama_interfaces/NavigateGoal.h>
-#include <lama_interfaces/NavigateFeedback.h>
+
+#include <lama_jockeys/jockey.h>
+#include <lama_jockeys/NavigateAction.h>
+#include <lama_jockeys/NavigateGoal.h>
+#include <lama_jockeys/NavigateFeedback.h>
 
 namespace lama
 {
-namespace interfaces
-{
 
-typedef actionlib::SimpleActionServer<lama_interfaces::NavigateAction> NavigateServer;
+typedef actionlib::SimpleActionServer<lama_jockeys::NavigateAction> NavigateServer;
 
 class NavigatingJockey : public Jockey
 {
@@ -68,13 +67,13 @@ class NavigatingJockey : public Jockey
     // NodeHandle instance must be created before this line. Otherwise strange
     // error may occur (this is done in Jockey).
     NavigateServer server_;
-    lama_interfaces::NavigateResult result_;
-    lama_interfaces::NavigateFeedback feedback_;
+    lama_jockeys::NavigateResult result_;
+    lama_jockeys::NavigateFeedback feedback_;
 
     // In case of INTERRUPT and CONTINUE, the edge and descritptor attributes
     // of current goal are irrelevant.
     // This information needs to be saved for use after a CONTINUE action.
-    lama_interfaces::NavigateGoal goal_;
+    lama_jockeys::NavigateGoal goal_;
 
   private:
 
@@ -95,7 +94,6 @@ class NavigatingJockey : public Jockey
     double reach_distance_;  //!> Goal is reached if closer than this (m).
 };
 
-} // namespace interfaces
 } // namespace lama
 
-#endif // _LAMA_INTERFACES_NAVIGATING_JOCKEY_H_
+#endif // _LAMA_JOCKEYS_NAVIGATING_JOCKEY_H_

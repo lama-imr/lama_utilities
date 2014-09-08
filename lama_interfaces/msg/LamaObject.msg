@@ -2,7 +2,7 @@
 # When adding a vertex into the database, this id will be ignored.
 int32 id
 
-# id of lama object in the world (usage is implentation specific).
+# id of lama object in the world (usage is implementation specific).
 int32 id_in_world
 
 # name of object

@@ -1,6 +1,6 @@
+MapAction action
 LamaObject object
 DescriptorIdentifier descriptor
-MapAction action
 ---
 LamaObject[] objects
 DescriptorIdentifier[] descriptors

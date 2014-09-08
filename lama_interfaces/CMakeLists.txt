@@ -64,6 +64,8 @@ add_service_files(
 	SetLamaObject.srv
 	GetPolygon.srv
 	SetPolygon.srv
+	GetDouble.srv
+	SetDouble.srv
 	GetVectorDouble.srv
 	SetVectorDouble.srv
 	GetVectorLaserScan.srv

@@ -1,17 +1,17 @@
 # Action.
 
 uint32 action
-uint32 START_LEARN=0
-uint32 STOP_LEARN=1
-uint32 INTERRUPT=2
-uint32 CONTINUE=3
+uint32 START_LEARN=1
+uint32 STOP_LEARN=2
+uint32 INTERRUPT=3
+uint32 CONTINUE=4
 ---
 # Result.
 
 uint32 final_state
-uint32 DONE=0
-uint32 STOPPED=1
-uint32 FAILED=2
+uint32 DONE=1
+uint32 STOPPED=2
+uint32 FAILED=3
 
 lama_interfaces/DescriptorIdentifier descriptor
 duration completion_time
@@ -19,8 +19,8 @@ duration completion_time
 # Feedback.
 
 uint32 current_state
-uint32 LEARNING=0
-uint32 INTERRUPTED=1
+uint32 LEARNING=1
+uint32 INTERRUPTED=2
 
 # Completion is -1 if unknown, 0 if just started, 1 if finised
 float32 completion

@@ -1,10 +1,10 @@
 # Action (goal).
 
 uint32 action
-uint32 TRAVERSE=0
-uint32 STOP=1
-uint32 INTERRUPT=2
-uint32 CONTINUE=3
+uint32 TRAVERSE=1
+uint32 STOP=2
+uint32 INTERRUPT=3
+uint32 CONTINUE=4
 
 lama_interfaces/LamaObject edge
 lama_interfaces/DescriptorIdentifier descriptor
@@ -12,17 +12,17 @@ lama_interfaces/DescriptorIdentifier descriptor
 # Result.
 
 uint32 final_state
-uint32 DONE=0
-uint32 STOPPED=1
-uint32 FAILED=2
+uint32 DONE=1
+uint32 STOPPED=2
+uint32 FAILED=3
 
 duration completion_time
 ---
 # Feedback.
 
 uint32 current_state
-uint32 TRAVERSING=0
-uint32 INTERRUPTED=1
+uint32 TRAVERSING=1
+uint32 INTERRUPTED=2
 
 # Completion is -1 if unknown, 0 if just started, 1 if finised
 float32 completion

@@ -11,6 +11,7 @@ from math import pi
 
 import rospy
 import actionlib
+from std_msgs.msg import Float32
 
 from lama_interfaces.msg import NavigateAction
 from lama_interfaces.msg import NavigateGoal
@@ -62,27 +63,39 @@ class ExplorerNode(object):
                                                    NavigateAction)
         rospy.logdebug('Waiting for the crossing escape jockey action server')
         self.escape.wait_for_server()
-        rospy.logdebug('Commnunicating with the crossing escape jockey action server')
+        rospy.logdebug('Commnunicating with the crossing ' +
+                       'escape jockey action server')
 
         # Map agent server.
         self.map_agent = rospy.ServiceProxy('lama_map_agent', ActOnMap)
 
-        # Descriptor getter for (x, y, r), (vector of doubles).
-        crossing_center_getter_name = rospy.get_param(
-            'crossing_center_getter_name', 'lj_laser_heading_vdouble')
+        # Descriptor getter for Crossing.
+        self.crossing_interface_name = rospy.get_param(
+            'crossing_interface_name', 'lj_laser_crossing')
         exits_iface = interface_factory(
-            crossing_center_getter_name,
-            'lama_interfaces/GetVectorDouble',
-            'lama_interfaces/SetVectorDouble')
+            self.crossing_interface_name,
+            'lama_interfaces/GetCrossing',
+            'lama_interfaces/SetCrossing')
+        self.crossing_getter = exits_iface.getter_service_proxy
 
-        # Exit angles getter (vector of doubles).
-        exits_getter_name = rospy.get_param('exits_getter_name',
-                                            'lj_laser_heading_exits')
+        # Exit angles getter and setter (double).
+        exit_angles_interface_name = rospy.get_param(
+            'exit_angles_interface_name',
+            'dfs_explorer_exit_angles')
         exits_iface = interface_factory(
-            exits_getter_name,
-            'lama_interfaces/GetVectorDouble',
-            'lama_interfaces/SetVectorDouble')
-        self.exits_getter = exits_iface.getter_service_proxy
+            exit_angles_interface_name,
+            'lama_interfaces/GetDouble',
+            'lama_interfaces/SetDouble')
+        self.exit_angles_getter = exits_iface.getter_service_proxy
+        self.exit_angles_setter = exits_iface.setter_service_proxy
+
+        # Exit angle topic advertiser.
+        exit_angle_topic_name = rospy.get_param("exit_angle_topic",
+                                                "exit_angle")
+        self.exit_angle_publisher = rospy.Publisher(exit_angle_topic_name,
+                                                    Float32,
+                                                    queue_size=1,
+                                                    latch=True)
 
         self.at_first_crossing = False
         self.first_vertex = None
@@ -115,9 +128,9 @@ class ExplorerNode(object):
         self.navigate.wait_for_result()
         nav_result = self.navigate.get_result()
         if nav_result.final_state == nav_result.DONE:
-            rospy.loginfo('Traversed to the first crossing center in ' +
-                          '{:.2f} s'.format(
-                              nav_result.completion_time.to_sec()))
+            rospy.logdebug('Traversed to crossing center in ' +
+                           '{:.2f} s'.format(
+                               nav_result.completion_time.to_sec()))
         else:
             rospy.logerr('Something wrong happened, exiting!')
             raise Exception('Something wrong happened, exiting!')
@@ -132,7 +145,7 @@ class ExplorerNode(object):
         2. Choose the vertex with the next exit to visit and the direction to
            move with DFS.
         3. Move to that vertex.
-        4. Let the robot move without jockey in the chosen direction.
+        4. Let the robot escape from the node in the chosen direction.
         5. Let the navigating jockey move to the next crossing.
         6. Repeat from 1. indefinitely.
         """
@@ -153,6 +166,13 @@ class ExplorerNode(object):
 
             # 3. Move to that vertex.
             self.move_to_next_crossing()
+
+            # 4. Let the robot escape from the node in the chosen direction.
+            # The edge does not exists yet, set the direction through a topic.
+            self.escape_from_crossing()
+
+            # 5. Let the navigating jockey move to the next crossing.
+            self.move_to_first_crossing()
 
     def get_descriptor(self):
         """Get the descriptors from the current crossing center
@@ -187,25 +207,24 @@ class ExplorerNode(object):
         if vertex_is_new:
             # Add vertex to map.
             map_action = ActOnMapRequest()
-            map_action.action = map_action.PUSH_VERTEX
+            map_action.action.action = map_action.action.PUSH_VERTEX
             response = self.map_agent(map_action)
             new_vertex = response.object.id
             # Assign descriptors.
             map_action = ActOnMapRequest()
             map_action.object.id = new_vertex
-            map_action.action = map_action.action.ASSIGN_DESCRIPTOR_VERTEX
+            map_action.action.action = (
+                map_action.action.ASSIGN_DESCRIPTOR_VERTEX)
             for descriptor in descriptors:
                 map_action.descriptor.descriptor_id = descriptor.descriptor_id
                 self.map_agent(map_action)
             # Get the exit_angles from map.
             # TODO: Don't use magic numbers.
-            # Crossing radius is the 3rd component of the 2nd descriptor.
-            _, _, r = self.crossing_center_getter(descriptors[1].descriptor_id)
-            self.crossing_radii[new_vertex] = r
-            # Exit angles are in the 3rd descriptor.
-            exits = self.exits_getter(descriptors[2].descriptor_id)
+            # Crossing is the 2nd descriptor.
+            crossing = self.crossing_getter(descriptors[1].descriptor_id)
+            self.crossing_radii[new_vertex] = crossing.radius
             # Add vertex and associate the sorted list of [None, angle].
-            nodes = [[None, angle] for angle in exits]
+            nodes = [[None, f.angle] for f in crossing.frontiers]
             self.graph[new_vertex] = sorted(nodes)
             self.add_edge_to_graph(new_vertex)
             self.last_vertex = new_vertex
@@ -235,6 +254,8 @@ class ExplorerNode(object):
         This means replace None with vertex for the adjacent vertex of
         self.last_vertex for which the edge information is self.exit_taken.
         """
+        # TODO: rebuild the graph from the map...
+        # so that several robots can be used simultaneously.
         if not self.last_vertex:
             return
         old_nodes = self.graph[self.last_vertex]
@@ -242,9 +263,32 @@ class ExplorerNode(object):
         for v, a in old_nodes:
             if a == self.exit_taken:
                 new_nodes.append([vertex, a])
+                self.add_edge_to_map(self.last_vertex, vertex, self.exit_taken)
             else:
                 new_nodes.append([v, a])
         self.graph[self.last_vertex] = new_nodes
+
+    def add_edge_to_map(self, v0, v1, exit_angle):
+        """Add an edge and its associated descriptor to the map
+
+        The oriented edge is from v0 to v1.
+        The edge descriptor is the exit angle to take at v0 to go to v1.
+        """
+        # Add edge.
+        map_action = ActOnMapRequest()
+        map_action.action.action = map_action.PUSH_EDGE
+        map_action.object.type = map_action.object.EDGE
+        map_action.object.references.append(v0)
+        map_action.object.references.append(v1)
+        edge_response = self.map_agent(map_action)
+        # Add descriptor.
+        desc_response = self.exit_angles_setter(exit_angle)
+        # Assign descriptor.
+        map_action = ActOnMapRequest()
+        map_action.action.action = map_action.action.ASSIGN_DESCRIPTOR_EDGE
+        map_action.descriptor.object_id = edge_response.id
+        map_action.descriptor.descriptor_id = desc_response.id
+        self.map_agent(map_action)
 
     def get_next_vertex_to_visit(self):
         """Return the tuple (vertex, angle)
@@ -274,10 +318,44 @@ class ExplorerNode(object):
         return None
 
     def move_to_next_crossing(self):
+        # TODO: remove angle from find_path output
         path = self.find_path()
         for vertex, angle in path:
+            # Escape from crossing center.
             goal = NavigateGoal()
-            goal.action =
+            goal.action = goal.TRAVERSE
+            goal.edge.type = goal.edge.EDGE
+            goal.edge.id = self.edge_id(self.last_vertex, vertex)
+            if goal.edge.id is None:
+                err = 'No edge from {} to {}'.format(self.last_vertex, vertex)
+                rospy.logfatal(err)
+                return False
+            result = self.escape.send_goal_and_wait(goal)
+            if result.final_state != result.DONE:
+                err = 'Escape jockey did not succeed'
+                rospy.logerr(err)
+                return False
+            # Go to next crossing.
+            goal = NavigateGoal()
+            goal.action = goal.TRAVERSE
+            result = self.navigate.send_goal_and_wait(goal)
+            if result.final_state != result.DONE:
+                err = 'Escape jockey did not succeed'
+                rospy.logerr(err)
+                return False
+            self.last_vertex = vertex
+            self.exit_taken = angle
+        return True
+
+    def edge_id(self, v0, v1):
+        """Return the id of edge from v0 to v1"""
+        map_action = ActOnMapRequest()
+        map_action.action.action = map_action.action.GET_EDGE_LIST
+        response = self.map_agent(map_action)
+        for o in response.objects:
+            if (o.references[0] == v0) and (o.references[1] == v1):
+                return o.id
+        return None
 
     def find_path(self):
         """Return a list of (vertex, angle)
@@ -285,6 +363,7 @@ class ExplorerNode(object):
         self.last_vertex (the crossing the robot presently is in) will not be
         part of the path. The last vertex will be self.next_vertex.
         """
+        # TODO: remove angle from find_path output
         def adjacent_vertices(vertex):
             vertices = []
             for v, a in self.graph[vertex]:
@@ -333,6 +412,30 @@ class ExplorerNode(object):
                     edges.add((v, vertex))
                     queue.append(v)
         return None
+
+    def get_crossing_desc_id(self, vertex):
+        """Return the first Crossing descriptor associated with vertex"""
+        map_action = ActOnMapRequest()
+        map_action.action.action = map_action.action.PULL_VERTEX
+        map_action.object.id = vertex
+        response = self.map_agent(map_action)
+        for d in response.descriptors:
+            if d.interface_name == self.crossing_interface_name:
+                return response.descriptors.descriptor_id
+
+    def escape_from_crossing(self):
+        """Escape from crossing towards an unknown edge and return when done"""
+        self.exit_angle_publisher.publish(self.next_exit)
+        nav_goal = NavigateGoal()
+        nav_goal.action = nav_goal.action.TRAVERSE
+        nav_goal.descriptor.descriptor_id = self.get_crossing_desc_id(
+            self.next_vertex)
+        self.escape.send_goal_and_wait(nav_goal)
+        escape_result = self.escape.get_result()
+        if escape_result != escape_result.DONE:
+            err = 'Escape jockey did not succeed'
+            rospy.logerr(err)
+            raise Exception(err)
 
 node = ExplorerNode()
 node.move_to_first_crossing()

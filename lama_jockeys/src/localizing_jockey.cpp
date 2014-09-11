@@ -7,7 +7,7 @@
 namespace lama
 {
 
-LocalizingJockey::LocalizingJockey(std::string name) :
+LocalizingJockey::LocalizingJockey(const std::string& name) :
   Jockey(name),
   server_(nh_, name, false)
 {
@@ -15,12 +15,13 @@ LocalizingJockey::LocalizingJockey(std::string name) :
   server_.registerPreemptCallback(boost::bind(&LocalizingJockey::preemptCallback, this));
 
   server_.start();
+  ROS_DEBUG("Action server '%s' started for Localization", jockey_name_.c_str());
 }
 
 void LocalizingJockey::goalCallback()
 {
   lama_jockeys::LocalizeGoalConstPtr current_goal = server_.acceptNewGoal();
-  goal_.action = current_goal->action;
+  goal_ = *current_goal;
 
   // Check that preempt has not been requested by the client.
   if (server_.isPreemptRequested() || !ros::ok())

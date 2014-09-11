@@ -7,7 +7,7 @@
 namespace lama
 {
 
-NavigatingJockey::NavigatingJockey(std::string name) :
+NavigatingJockey::NavigatingJockey(const std::string& name) :
   Jockey(name),
   server_(nh_, name, false),
   goal_reached_(false)
@@ -16,26 +16,27 @@ NavigatingJockey::NavigatingJockey(std::string name) :
   server_.registerPreemptCallback(boost::bind(&NavigatingJockey::preemptCallback, this));
 
   server_.start();
+  ROS_DEBUG("Action server '%s' started for Navigation", jockey_name_.c_str());
 
-  ros::NodeHandle n("~");
-  if (!n.getParamCached("max_goal_distance", max_goal_distance_))
+  if (!nh_.getParamCached("max_goal_distance", max_goal_distance_))
     max_goal_distance_ = 10.0;
-  if (!n.getParamCached("max_goal_dtheta", max_goal_dtheta_))
+  if (!nh_.getParamCached("max_goal_dtheta", max_goal_dtheta_))
     max_goal_dtheta_ = 0.785;  // 45 deg
-  if (!n.getParamCached("kp_v", kp_v_))
+  if (!nh_.getParamCached("kp_v", kp_v_))
     kp_v_ = 0.05;
-  if (!n.getParamCached("kp_w", kp_w_))
+  if (!nh_.getParamCached("kp_w", kp_w_))
     kp_w_ = 0.2;
-  if (!n.getParamCached("min_velocity", min_velocity_))
+  if (!nh_.getParamCached("min_velocity", min_velocity_))
     min_velocity_ = 0.020;
-  if (!n.getParamCached("reach_distance", reach_distance_))
+  if (!nh_.getParamCached("reach_distance", reach_distance_))
     reach_distance_ = 0.050;
 }
 
 void NavigatingJockey::goalCallback()
 {
   lama_jockeys::NavigateGoalConstPtr current_goal = server_.acceptNewGoal();
-  goal_.action = current_goal->action;
+  goal_ = *current_goal;
+  
 
   // Check that preempt has not been requested by the client.
   if (server_.isPreemptRequested() || !ros::ok())

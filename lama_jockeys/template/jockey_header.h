@@ -25,6 +25,9 @@
  * - service type, server default name, description
  * - polygon_matcher::PolygonSimilarity, "~/similarity_server", used to
  *    compare all known places with the current place
+ *
+ * Parameters:
+ * - name, type, default name, description
  */
 
 

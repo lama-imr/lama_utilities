@@ -22,7 +22,7 @@ class LocalizingJockey : public Jockey
 {
   public:
 
-    LocalizingJockey(std::string name);
+    LocalizingJockey(const std::string& name);
 
     virtual void onGetVertexDescriptor() = 0;
     virtual void onGetEdgesDescriptors() = 0;

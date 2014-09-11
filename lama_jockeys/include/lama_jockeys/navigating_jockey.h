@@ -29,16 +29,7 @@ class NavigatingJockey : public Jockey
 {
   public:
 
-    NavigatingJockey(std::string name);
-
-    // A daugther class must implement functions corresponding to actions
-    // TRAVERSE, and STOP.
-    virtual void onTraverse() = 0;
-    virtual void onStop() = 0;
-    virtual void onInterrupt();
-    virtual void onContinue();
-
-    virtual geometry_msgs::Twist goToGoal(const geometry_msgs::Point& goal);
+    NavigatingJockey(const std::string& name);
 
     double get_max_goal_distance() {return max_goal_distance_;}
     void set_max_goal_distance(double d) {max_goal_distance_ = (d > 0) ? d : 0;}
@@ -58,11 +49,20 @@ class NavigatingJockey : public Jockey
     double get_reach_distance() {return reach_distance_;}
     void set_reach_distance(double d) {reach_distance_ = (d > 0) ? d : 0;}
 
+  protected:
+
+    // A daugther class must implement functions corresponding to actions
+    // TRAVERSE, and STOP.
+    virtual void onTraverse() = 0;
+    virtual void onStop() = 0;
+    virtual void onInterrupt();
+    virtual void onContinue();
+
+    virtual geometry_msgs::Twist goToGoal(const geometry_msgs::Point& goal);
+
     double setGoalReached() {goal_reached_ = true;}
     double unsetGoalReached() {goal_reached_ = false;}
     double isGoalReached() {return goal_reached_;}
-
-  protected:
 
     // NodeHandle instance must be created before this line. Otherwise strange
     // error may occur (this is done in Jockey).

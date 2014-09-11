@@ -17,7 +17,11 @@ class Jockey
 {
   public:
 
-    Jockey(std::string name);
+    Jockey(const std::string& name);
+
+    std::string getName() const {return jockey_name_;}
+
+  protected:
 
     virtual void onInterrupt();
     virtual void onContinue();
@@ -27,8 +31,7 @@ class Jockey
     ros::Time getInterruptionTime() const {return interruption_time_;}
     ros::Time getResumeTime() const {return resume_time_;}
     ros::Duration getInterruptionsDuration() const {return interruptions_duration_;}
-
-  protected:
+    ros::Duration getCompletionTime() const;
 
     ros::NodeHandle nh_;
     std::string jockey_name_;

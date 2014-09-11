@@ -23,7 +23,7 @@ class LearningJockey : public Jockey
 {
   public:
 
-    LearningJockey(std::string name);
+    LearningJockey(const std::string& name);
 
     virtual void onStartLearn() = 0;
     virtual void onStopLearn() = 0;

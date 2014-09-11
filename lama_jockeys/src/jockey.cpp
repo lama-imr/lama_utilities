@@ -7,10 +7,11 @@
 namespace lama
 {
 
-Jockey::Jockey(std::string name) :
+Jockey::Jockey(const std::string& name) :
+  nh_("~"),
   jockey_name_(name)
 {
-  map_agent_ = nh_.serviceClient<lama_interfaces::ActOnMap>("lama_map_agent");
+  map_agent_ = nh_.serviceClient<lama_interfaces::ActOnMap>("/lama_map_agent");
   map_agent_.waitForExistence();
 }
 
@@ -52,5 +53,9 @@ void Jockey::onContinue()
   ROS_DEBUG("%s: action resumed", jockey_name_.c_str());
 }
 
+ros::Duration Jockey::getCompletionTime() const
+{
+  return ros::Time::now() - start_time_ - interruptions_duration_;
+}
 } // namespace lama
 

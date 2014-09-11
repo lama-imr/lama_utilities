@@ -7,7 +7,7 @@
 namespace lama
 {
 
-LearningJockey::LearningJockey(std::string name) :
+LearningJockey::LearningJockey(const std::string& name) :
   Jockey(name),
   server_(nh_, name, false)
 {
@@ -15,12 +15,13 @@ LearningJockey::LearningJockey(std::string name) :
   server_.registerPreemptCallback(boost::bind(&LearningJockey::preemptCallback, this));
 
   server_.start();
+  ROS_DEBUG("Action server '%s' started for Learning", jockey_name_.c_str());
 }
 
 void LearningJockey::goalCallback()
 {
   lama_jockeys::LearnGoalConstPtr current_goal = server_.acceptNewGoal();
-  goal_.action = current_goal->action;
+  goal_ = *current_goal;
 
   // Check that preempt has not been requested by the client.
   if (server_.isPreemptRequested() || !ros::ok())

@@ -24,8 +24,6 @@
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
   <!-- Authors do not have to be maintianers, but could be -->
   <author email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</author>
-  <author email="kosnar@labe.felk.cvut.cz">Karel Košnar</author>
-  <author email="vonasek@labe.felk.cvut.cz">Vojtěch Vonásek</author>
 
 
   <!-- The *_depend tags are used to specify dependencies -->
@@ -43,9 +41,13 @@
   <build_depend>geometry_msgs</build_depend>
   <build_depend>lama_interfaces</build_depend>
   <build_depend>message_generation</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>visualization_msgs</build_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>lama_interfaces</run_depend>
   <run_depend>message_runtime</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>visualization_msgs</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

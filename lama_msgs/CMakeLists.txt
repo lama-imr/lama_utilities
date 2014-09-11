@@ -9,6 +9,8 @@ find_package(catkin REQUIRED
 	geometry_msgs
 	lama_interfaces
 	message_generation
+	roscpp
+	visualization_msgs
 	)
 
 ## System dependencies are found with CMake's conventions
@@ -82,10 +84,10 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES lama_msgs
-	CATKIN_DEPENDS geometry_msgs lama_interfaces message_runtime
-#  DEPENDS system_lib
+	INCLUDE_DIRS include
+	LIBRARIES crossing_utils crossing_visualization
+	CATKIN_DEPENDS geometry_msgs lama_interfaces message_runtime roscpp visualization_msgs
+	#  DEPENDS system_lib
 )
 
 ###########
@@ -94,24 +96,26 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+include_directories(
+	include
+	${catkin_INCLUDE_DIRS}
+	)
 
 ## Declare a cpp library
-# add_library(lama_msgs
-#   src/${PROJECT_NAME}/lama_msgs.cpp
-# )
+add_library(crossing_utils src/crossing_utils.cpp)
+add_library(crossing_visualization src/crossing_visualization.cpp)
 
 ## Declare a cpp executable
 # add_executable(lama_msgs_node src/lama_msgs_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(lama_msgs_node lama_msgs_generate_messages_cpp)
+add_dependencies(crossing_utils lama_msgs_generate_messages_cpp)
+add_dependencies(crossing_visualization lama_msgs_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(lama_msgs_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(crossing_utils ${catkin_LIBRARIES})
+target_link_libraries(crossing_visualization ${catkin_LIBRARIES})
 
 #############
 ## Install ##

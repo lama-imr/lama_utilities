@@ -6,6 +6,7 @@ project(lama_msgs)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED
 	COMPONENTS
+	angles
 	geometry_msgs
 	lama_interfaces
 	message_generation
@@ -86,7 +87,7 @@ generate_messages(
 catkin_package(
 	INCLUDE_DIRS include
 	LIBRARIES crossing_utils crossing_visualization
-	CATKIN_DEPENDS geometry_msgs lama_interfaces message_runtime roscpp visualization_msgs
+	CATKIN_DEPENDS angles geometry_msgs lama_interfaces message_runtime roscpp visualization_msgs
 	#  DEPENDS system_lib
 )
 

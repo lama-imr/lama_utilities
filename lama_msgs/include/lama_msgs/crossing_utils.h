@@ -4,6 +4,7 @@
 #include <cmath>
 #include <vector>
 
+#include <angles/angles.h> // for angles::normalize_angle.
 #include <lama_msgs/Crossing.h>
 #include <lama_msgs/Frontier.h>
 

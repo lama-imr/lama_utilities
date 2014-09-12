@@ -48,7 +48,7 @@
   <run_depend>roscpp</run_depend>
   <run_depend>lama_interfaces</run_depend>
   <run_depend>lama_jockeys</run_depend>
-  <test_depend>unittest</test_depend>
+  <test_depend>python-nose</test_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

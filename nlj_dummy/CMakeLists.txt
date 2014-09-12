@@ -83,7 +83,7 @@ catkin_package(
 	INCLUDE_DIRS include
 	#  LIBRARIES nlj_dummy
 	CATKIN_DEPENDS roscpp lama_interfaces lama_jockeys
-	#  DEPENDS system_lib
+	DEPENDS python-nose
 	)
 
 ###########

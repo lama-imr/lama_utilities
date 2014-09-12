@@ -13,6 +13,7 @@ from geometry_msgs.msg import Polygon
 from geometry_msgs.msg import Point32
 
 from lama_interfaces.interface_factory import interface_factory
+from lama_interfaces.cleartext_interface_factory import cleartext_interface_factory
 from lama_interfaces.srv import GetVectorDoubleRequest
 from lama_interfaces.srv import GetVectorLaserScanRequest
 from lama_interfaces.srv import GetVectorPoseRequest
@@ -47,18 +48,21 @@ class RosTestCase(unittest.TestCase):
                                        msg='Argument {} differ: {} != {}'.
                                        format(slot, value0, value1))
 
+# According to http://stackoverflow.com/a/22517624, the test should work.
 
-class TestDbMessagePassing(RosTestCase):
+class DbMessagePassingBase(object):
     """test setting and getting several descriptors"""
     def test_vector_double(self):
         """Test for a message as a list or tuple"""
-        interface_name = 'vector_double_descriptor'
+        interface_name = 'vector_double_descriptor_' + self.interface_type
         getter_service = 'lama_interfaces/GetVectorDouble'
         setter_service = 'lama_interfaces/SetVectorDouble'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
-        iface = interface_factory(interface_name, getter_service, setter_service)
+        iface = self.interface_factory(interface_name,
+                                       getter_service,
+                                       setter_service)
         get_srv = rospy.ServiceProxy(iface.getter_service_name,
                                      iface.getter_service_class)
         set_srv = rospy.ServiceProxy(iface.setter_service_name,
@@ -90,13 +94,15 @@ class TestDbMessagePassing(RosTestCase):
 
     def test_vector_laser_scan(self):
         """Test passing and getting a LaserScan[] message"""
-        interface_name = 'laser_descriptor'
+        interface_name = 'laser_descriptor_' + self.interface_type
         getter_service = 'lama_interfaces/GetVectorLaserScan'
         setter_service = 'lama_interfaces/SetVectorLaserScan'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
-        iface = interface_factory(interface_name, getter_service, setter_service)
+        iface = self.interface_factory(interface_name,
+                                       getter_service,
+                                       setter_service)
         get_srv = rospy.ServiceProxy(iface.getter_service_name,
                                      iface.getter_service_class)
         set_srv = rospy.ServiceProxy(iface.setter_service_name,
@@ -137,13 +143,15 @@ class TestDbMessagePassing(RosTestCase):
 
     def test_pose(self):
         """Test passing and getting a Pose[] message"""
-        interface_name = 'pose_descriptor'
+        interface_name = 'pose_descriptor_' + self.interface_type
         getter_service = 'lama_interfaces/GetVectorPose'
         setter_service = 'lama_interfaces/SetVectorPose'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
-        iface = interface_factory(interface_name, getter_service, setter_service)
+        iface = self.interface_factory(interface_name,
+                                       getter_service,
+                                       setter_service)
         get_srv = rospy.ServiceProxy(iface.getter_service_name,
                                      iface.getter_service_class)
         set_srv = rospy.ServiceProxy(iface.setter_service_name,
@@ -177,13 +185,15 @@ class TestDbMessagePassing(RosTestCase):
 
     def test_odometry(self):
         """Test passing and getting a Odometry[] message"""
-        interface_name = 'odometry_descriptor'
+        interface_name = 'odometry_descriptor_' + self.interface_type
         getter_service = 'lama_interfaces/GetVectorOdometry'
         setter_service = 'lama_interfaces/SetVectorOdometry'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
-        iface = interface_factory(interface_name, getter_service, setter_service)
+        iface = self.interface_factory(interface_name,
+                                       getter_service,
+                                       setter_service)
         get_srv = rospy.ServiceProxy(iface.getter_service_name,
                                      iface.getter_service_class)
         set_srv = rospy.ServiceProxy(iface.setter_service_name,
@@ -250,15 +260,15 @@ class TestDbMessagePassing(RosTestCase):
 
     def test_polygon(self):
         """Test passing and getting a Polygon message"""
-        interface_name = 'poly'
+        interface_name = 'polygon_' + self.interface_type
         getter_service = 'lama_interfaces/GetPolygon'
         setter_service = 'lama_interfaces/SetPolygon'
 
         # Set up node as well as getter and setter services.
         rospy.init_node('lama_interfaces', anonymous=True)
-        iface = interface_factory(interface_name,
-                                  getter_service,
-                                  setter_service)
+        iface = self.interface_factory(interface_name,
+                                       getter_service,
+                                       setter_service)
         get_srv = rospy.ServiceProxy(iface.getter_service_name,
                                      iface.getter_service_class)
         set_srv = rospy.ServiceProxy(iface.setter_service_name,
@@ -302,8 +312,23 @@ class TestDbMessagePassing(RosTestCase):
             self.assertAlmostEqual(point_out.y, point_in.y, places=5)
             self.assertAlmostEqual(point_out.z, point_in.z, places=5)
 
+
+class TestDbMessagePassingSerialized(DbMessagePassingBase, RosTestCase):
+    def interface_factory(self, n, gs, ss):
+        return interface_factory(n, gs, ss)
+    interface_type = 'serialization'
+
+
+class TestDbMessagePassingCleartext(DbMessagePassingBase, RosTestCase):
+    def interface_factory(self, n, gs, ss):
+        return cleartext_interface_factory(n, gs, ss)
+    interface_type = 'cleartext'
+
 if __name__ == '__main__':
     import rostest
     rostest.rosrun('lama_interfaces',
-                   'test_db_message_passing',
-                   TestDbMessagePassing)
+                   'test_db_message_passing_serialized',
+                   TestDbMessagePassingSerialized)
+    rostest.rosrun('lama_interfaces',
+                   'test_db_message_passing_cleartext',
+                   TestDbMessagePassingCleartext)

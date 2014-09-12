@@ -15,6 +15,7 @@ int main(int argc, char** argv)
   }
 
   lama::nj_escape_crossing::CrossingEscaper jockey(ros::this_node::getName() + "_jockey");
+  ROS_INFO("%s started (with server %s)", ros::this_node::getName().c_str(), jockey.getName().c_str());
 
   ros::spin();
 }

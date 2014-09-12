@@ -13,13 +13,13 @@ import rospy
 import actionlib
 from std_msgs.msg import Float32
 
-from lama_interfaces.msg import NavigateAction
-from lama_interfaces.msg import NavigateGoal
-from lama_interfaces.msg import LocalizeAction
-from lama_interfaces.msg import LocalizeGoal
+from lama_jockeys.msg import NavigateAction
+from lama_jockeys.msg import NavigateGoal
+from lama_jockeys.msg import LocalizeAction
+from lama_jockeys.msg import LocalizeGoal
 from lama_interfaces.srv import ActOnMap
 from lama_interfaces.srv import ActOnMapRequest
-from lama_interface import interface_factory
+from lama_interfaces.interface_factory import interface_factory
 
 # TODO: add a mechanism for the robot not to come back to the vertex it comes
 # from.
@@ -36,33 +36,36 @@ def normalize_angles(angles):
 class ExplorerNode(object):
     def __init__(self):
         # Node and server initialization.
-        rospy.init_node('dfs_explorer', log_level=rospy.DEBUG)
-        navigating_jockey_name = rospy.get_param('navigating_jockey_name',
+        self.node = rospy.init_node('dfs_explorer', log_level=rospy.DEBUG)
+        navigating_jockey_name = rospy.get_param('~navigating_jockey_name',
                                                  'navigating_jockey')
-        localizing_jockey_name = rospy.get_param('localizing_jockey_name',
+        localizing_jockey_name = rospy.get_param('~localizing_jockey_name',
                                                  'localizing_jockey')
-        escape_jockey_name = rospy.get_param('escape_jockey_name',
+        escape_jockey_name = rospy.get_param('~escape_jockey_name',
                                              'nj_escape_jockey')
 
         # Navigate jockey server.
         self.navigate = actionlib.SimpleActionClient(navigating_jockey_name,
                                                      NavigateAction)
-        rospy.logdebug('Waiting for the navigating jockey action server')
-        self.navigate.wait_for_server()
+        while not self.navigate.wait_for_server(rospy.Duration(5)):
+            rospy.loginfo('Waiting for the navigating jockey action ' +
+                          'server ({})'.format(navigating_jockey_name))
         rospy.logdebug('Communicating with the navigating jockey action server')
 
         # Localize jockey server.
         self.localize = actionlib.SimpleActionClient(localizing_jockey_name,
                                                      LocalizeAction)
-        rospy.logdebug('Waiting for the localizing jockey action server')
-        self.localize.wait_for_server()
+        while not self.localize.wait_for_server(rospy.Duration(5)):
+            rospy.loginfo('Waiting for the localizing jockey action ' +
+                          'server ({})'.format(localizing_jockey_name))
         rospy.logdebug('Communicating with the localizing jockey action server')
 
         # Crossing escape jockey server.
         self.escape = actionlib.SimpleActionClient(escape_jockey_name,
                                                    NavigateAction)
-        rospy.logdebug('Waiting for the crossing escape jockey action server')
-        self.escape.wait_for_server()
+        while not self.escape.wait_for_server(rospy.Duration(5)):
+            rospy.loginfo('Waiting for the crossing escape jockey action ' +
+                          'server ({})'.format(escape_jockey_name))
         rospy.logdebug('Commnunicating with the crossing ' +
                        'escape jockey action server')
 
@@ -74,8 +77,8 @@ class ExplorerNode(object):
             'crossing_interface_name', 'lj_laser_crossing')
         exits_iface = interface_factory(
             self.crossing_interface_name,
-            'lama_interfaces/GetCrossing',
-            'lama_interfaces/SetCrossing')
+            'lama_msgs/GetCrossing',
+            'lama_msgs/SetCrossing')
         self.crossing_getter = exits_iface.getter_service_proxy
 
         # Exit angles getter and setter (double).
@@ -97,7 +100,7 @@ class ExplorerNode(object):
                                                     queue_size=1,
                                                     latch=True)
 
-        self.at_first_crossing = False
+        self.first_crossing_reached = False
         self.first_vertex = None
         self.last_vertex = None
         self.exit_taken = None
@@ -113,15 +116,14 @@ class ExplorerNode(object):
         # a to b is the exit angle that was taken from a to reach b.
         self.graph = {}
 
-        # For each vertex, store its radius so that we know how far to go from
-        # the crossing center when we move without navigating jockey.
-        self.crossing_radii = {}
+        rospy.logdebug(rospy.get_name() + ' initialized')
 
-    def move_to_first_crossing(self):
+    def move_to_crossing(self):
         """Move the robot to the first crossing
         Move the robot to the first crossing so that we can have a descriptor
         list to start with with the DFS algorithm.
         """
+        rospy.logdebug('Moving to crossing')
         nav_goal = NavigateGoal()
         nav_goal.action = nav_goal.TRAVERSE
         self.navigate.send_goal(nav_goal)
@@ -134,7 +136,7 @@ class ExplorerNode(object):
         else:
             rospy.logerr('Something wrong happened, exiting!')
             raise Exception('Something wrong happened, exiting!')
-        self.at_first_crossing = True
+        self.first_crossing_reached = True
 
     def loop(self):
         """Run the DFS algorithm until all vertices are visited
@@ -149,13 +151,16 @@ class ExplorerNode(object):
         5. Let the navigating jockey move to the next crossing.
         6. Repeat from 1. indefinitely.
         """
-        if not self.at_first_crossing:
+        if not self.first_crossing_reached:
             rospy.logerr('Go to first crossing first')
             raise Exception('Go to first crossing first')
 
         while True:
             # 1. Get a new vertex descriptor when finished traversing.
-            self.get_descriptor()
+            rospy.logdebug('Getting descriptor')
+            if not self.get_descriptor():
+                rospy.logwarn('No descriptor, exiting')
+                break
 
             # 2. Choose the vertex with the next exit to visit
             vertex_and_angle = self.get_next_vertex_to_visit()
@@ -163,6 +168,8 @@ class ExplorerNode(object):
                 rospy.loginfo('I visisted all crossings, successfully exiting')
                 break
             self.next_vertex, self.next_exit = vertex_and_angle
+            rospy.logdebug('Next vertex to visit {} (exit angle: {}'.format(
+                self.next_vertex, self.next_exit))
 
             # 3. Move to that vertex.
             self.move_to_next_crossing()
@@ -172,7 +179,7 @@ class ExplorerNode(object):
             self.escape_from_crossing()
 
             # 5. Let the navigating jockey move to the next crossing.
-            self.move_to_first_crossing()
+            self.move_to_crossing()
 
     def get_descriptor(self):
         """Get the descriptors from the current crossing center
@@ -193,11 +200,12 @@ class ExplorerNode(object):
         if not loc_result:
             rospy.logerr('Did not receive vertex descriptor within ' +
                          '0.5 s, exiting')
-            break
+            return False
         rospy.logdebug('Received vertex descriptor')
         # The LaserScan and the exit_ angles are the 1st and 3rd descriptors
         # respectively.
         self.add_vertex(loc_result.descriptors)
+        return True
 
     def add_vertex(self, descriptors):
         vertices, similarities = self.get_similarity()
@@ -219,10 +227,10 @@ class ExplorerNode(object):
                 map_action.descriptor.descriptor_id = descriptor.descriptor_id
                 self.map_agent(map_action)
             # Get the exit_angles from map.
-            # TODO: Don't use magic numbers.
+            # TODO: Don't use magic numbers (modify and rename
+            # get_crossing_desc_id to return (desc, desc_id).
             # Crossing is the 2nd descriptor.
             crossing = self.crossing_getter(descriptors[1].descriptor_id)
-            self.crossing_radii[new_vertex] = crossing.radius
             # Add vertex and associate the sorted list of [None, angle].
             nodes = [[None, f.angle] for f in crossing.frontiers]
             self.graph[new_vertex] = sorted(nodes)
@@ -244,7 +252,7 @@ class ExplorerNode(object):
         if not loc_result:
             rospy.logerr('Did not received vertex descriptor within ' +
                          '0.5 s, exiting')
-            break
+            return None, None
         rospy.logdebug('Received vertex descriptor')
         return loc_result.idata, loc_result.fdata
 
@@ -330,6 +338,8 @@ class ExplorerNode(object):
                 err = 'No edge from {} to {}'.format(self.last_vertex, vertex)
                 rospy.logfatal(err)
                 return False
+            rospy.logdebug('Escaping along edge {}'.format(
+                goal.edge.id))
             result = self.escape.send_goal_and_wait(goal)
             if result.final_state != result.DONE:
                 err = 'Escape jockey did not succeed'
@@ -338,6 +348,7 @@ class ExplorerNode(object):
             # Go to next crossing.
             goal = NavigateGoal()
             goal.action = goal.TRAVERSE
+            rospy.logdebug('Moving to next crossing')
             result = self.navigate.send_goal_and_wait(goal)
             if result.final_state != result.DONE:
                 err = 'Escape jockey did not succeed'
@@ -430,6 +441,8 @@ class ExplorerNode(object):
         nav_goal.action = nav_goal.action.TRAVERSE
         nav_goal.descriptor.descriptor_id = self.get_crossing_desc_id(
             self.next_vertex)
+        rospy.logdebug('Escaping from crossing {} with direction {}'.format(
+            nav_goal.descriptor.descriptor_id, self.next_exit))
         self.escape.send_goal_and_wait(nav_goal)
         escape_result = self.escape.get_result()
         if escape_result != escape_result.DONE:
@@ -438,5 +451,5 @@ class ExplorerNode(object):
             raise Exception(err)
 
 node = ExplorerNode()
-node.move_to_first_crossing()
+node.move_to_crossing()
 node.loop()

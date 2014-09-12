@@ -31,9 +31,10 @@ class Jockey
     ros::Time getInterruptionTime() const {return interruption_time_;}
     ros::Time getResumeTime() const {return resume_time_;}
     ros::Duration getInterruptionsDuration() const {return interruptions_duration_;}
-    ros::Duration getCompletionTime() const;
+    ros::Duration getCompletionDuration() const;
 
     ros::NodeHandle nh_;
+    ros::NodeHandle private_nh_;
     std::string jockey_name_;
     ros::ServiceClient map_agent_;
 

@@ -5,6 +5,7 @@ project(goto_crossing)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+	angles
 	geometry_msgs
 	lama_msgs
 	roscpp
@@ -83,7 +84,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 	INCLUDE_DIRS include
 	LIBRARIES crossing_goer
-	CATKIN_DEPENDS geometry_msgs lama_msgs roscpp std_msgs
+	CATKIN_DEPENDS angles geometry_msgs lama_msgs roscpp std_msgs
 	#DEPENDS system_lib
 )
 
@@ -107,7 +108,8 @@ add_executable(goto_crossing src/goto_crossing_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(goto_crossing_node goto_crossing_generate_messages_cpp)
+add_dependencies(crossing_goer lama_msgs_generate_messages_cpp)
+add_dependencies(goto_crossing lama_msgs_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(crossing_goer

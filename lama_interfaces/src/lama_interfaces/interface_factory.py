@@ -22,12 +22,19 @@ class DBInterface(object):
         get_srv_class = roslib.message.get_service_class(getter_srv_msg)
         set_srv_class = roslib.message.get_service_class(setter_srv_msg)
 
+        rospy.logdebug('Interface: {} ({},{})'.format(interface_name,
+                                                      getter_srv_msg,
+                                                      setter_srv_msg))
         rospy.logdebug('Getter class {}'.format(get_srv_class))
-        rospy.logdebug('Getter request slots: {}'.format(get_srv_class._request_class.__slots__))
-        rospy.logdebug('Getter response slots: {}'.format(get_srv_class._response_class.__slots__))
+        rospy.logdebug('Getter request slots: {}'.format(
+            get_srv_class._request_class.__slots__))
+        rospy.logdebug('Getter response slots: {}'.format(
+            get_srv_class._response_class.__slots__))
         rospy.logdebug('Setter class {}'.format(set_srv_class))
-        rospy.logdebug('Setter request slots: {}'.format(set_srv_class._request_class.__slots__))
-        rospy.logdebug('Setter response slots: {}'.format(set_srv_class._response_class.__slots__))
+        rospy.logdebug('Setter request slots: {}'.format(
+            set_srv_class._request_class.__slots__))
+        rospy.logdebug('Setter response slots: {}'.format(
+            set_srv_class._response_class.__slots__))
 
         # getter class
         self.getter_service_name = interface_name + '_getter'

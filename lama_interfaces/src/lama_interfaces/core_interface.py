@@ -69,7 +69,8 @@ class CoreDBInterface(object):
         # The table format is hard-coded.
         table = Table(self.interface_name,
                       self.metadata,
-                      Column('id', types.Integer, primary_key=True))
+                      Column('id', types.Integer, primary_key=True),
+                      extend_existing=True)
         table.append_column(Column('id_in_world',
                                    types.Integer))
         table.append_column(Column('name', types.String))
@@ -89,7 +90,8 @@ class CoreDBInterface(object):
         """Create the SQL tables for descritptors"""
         table = Table(self.descriptor_table_name,
                       self.metadata,
-                      Column('id', types.Integer, primary_key=True))
+                      Column('id', types.Integer, primary_key=True),
+                      extend_existing=True)
         table.append_column(Column('object_id',
                                    types.Integer,
                                    ForeignKey(self.interface_name + '.id')))
@@ -138,31 +140,27 @@ class CoreDBInterface(object):
         ----------
         - msg: an instance of ActOnMap request.
         """
+        callbacks = {
+            MapAction.PUSH_VERTEX: self.push_lama_object,
+            MapAction.PULL_VERTEX: self.pull_lama_object,
+            MapAction.ASSIGN_DESCRIPTOR_VERTEX: (
+                self.assign_descriptor_to_lama_object),
+            MapAction.PUSH_EDGE: self.push_lama_object,
+            MapAction.PULL_EDGE: self.pull_lama_object,
+            MapAction.ASSIGN_DESCRIPTOR_EDGE: (
+                self.assign_descriptor_to_lama_object),
+            MapAction.GET_VERTEX_LIST: self.get_vertex_list,
+            MapAction.GET_EDGE_LIST: self.get_edge_list,
+            MapAction.GET_NEIGHBOR_VERTICES: self.get_neighbor_vertices,
+            MapAction.GET_OUTGOING_EDGES: self.get_outgoing_edges,
+        }
         action = msg.action.action
-        if action == MapAction.PUSH_VERTEX:
-            r = self.push_lama_object(msg)
-        elif action == MapAction.PULL_VERTEX:
-            r = self.pull_lama_object(msg)
-        elif action == MapAction.ASSIGN_DESCRIPTOR_VERTEX:
-            r = self.assign_descriptor_to_lama_object(msg)
-        elif action == MapAction.PUSH_EDGE:
-            r = self.push_lama_object(msg)
-        elif action == MapAction.PULL_EDGE:
-            r = self.pull_lama_object(msg)
-        elif action == MapAction.ASSIGN_DESCRIPTOR_EDGE:
-            r = self.assign_descriptor_to_lama_object(msg)
-        elif action == MapAction.GET_VERTEX_LIST:
-            r = self.get_vertex_list(msg)
-        elif action == MapAction.GET_EDGE_LIST:
-            r = self.get_edge_list(msg)
-        elif action == MapAction.GET_NEIGHBOR_VERTICES:
-            r = self.get_neighbor_vertices(msg)
-        elif action == MapAction.GET_OUTGOING_EDGES:
-            r = self.get_outgoing_edges(msg)
-        else:
+        if action not in callbacks:
             # TODO: find a mechanism for non-implemented actions.
             rospy.logerr('Action {} not implemented'.format(msg.action))
             r = self.action_service_class._response_class()
+        else:
+            r = callbacks[action](msg)
         return r
 
     def _get_lama_object(self, id_):
@@ -247,7 +245,8 @@ class CoreDBInterface(object):
                 connection = self.engine.connect()
                 transaction = connection.begin()
                 query = self.core_obj_ref_table.select(
-                    whereclause=(self.core_obj_ref_table.parent_id == result['id']))
+                    whereclause=(
+                        self.core_obj_ref_table.parent_id == result['id']))
                 refs = connection.execute(query).fetchall()
                 transaction.commit()
                 connection.close()

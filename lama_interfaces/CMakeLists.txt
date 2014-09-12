@@ -105,7 +105,7 @@ catkin_package(
 	#INCLUDE_DIRS include
 	#LIBRARIES
 	CATKIN_DEPENDS rospy geometry_msgs sensor_msgs nav_msgs
-	DEPENDS python-sqlalchemy
+	DEPENDS python-sqlalchemy python-nose
 )
 
 ###########

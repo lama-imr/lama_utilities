@@ -23,7 +23,7 @@ def handle_add_interface(req):
 
 
 if __name__ == '__main__':
-    rospy.init_node('lama_interfaces', anonymous=True)
+    rospy.init_node('lama_interfaces', anonymous=True, log_level=rospy.DEBUG)
 
     # Add the core interface for lama objects and descriptor_id objects.
     core_interface()

@@ -4,7 +4,9 @@
 # where the range is the maximum range of the LaserSCan or
 # borders between free and unknown pixels of a costmap.
 
-geometry_msgs/Polygon points
+Header header
+
+geometry_msgs/Polygon polygon
 
 # Segments to exclude, segment i is between point i and i+1.
 # The last segment is between points (n-1) and 0, where n is the number of points.

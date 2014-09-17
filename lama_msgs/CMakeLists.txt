@@ -11,6 +11,7 @@ find_package(catkin REQUIRED
 	lama_interfaces
 	message_generation
 	roscpp
+	sensor_msgs
 	visualization_msgs
 	)
 
@@ -52,6 +53,7 @@ add_message_files(
   FILES
   Frontier.msg
   Crossing.msg
+  PlaceProfile.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -86,8 +88,8 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 	INCLUDE_DIRS include
-	LIBRARIES crossing_utils crossing_visualization
-	CATKIN_DEPENDS angles geometry_msgs lama_interfaces message_runtime roscpp visualization_msgs
+	LIBRARIES crossing_utils crossing_visualization place_profile_utils place_profile_conversions
+	CATKIN_DEPENDS angles geometry_msgs lama_interfaces message_runtime roscpp sensor_msgs visualization_msgs
 	#  DEPENDS system_lib
 )
 
@@ -105,6 +107,8 @@ include_directories(
 ## Declare a cpp library
 add_library(crossing_utils src/crossing_utils.cpp)
 add_library(crossing_visualization src/crossing_visualization.cpp)
+add_library(place_profile_utils src/place_profile_utils.cpp)
+add_library(place_profile_conversions src/place_profile_conversions.cpp)
 
 ## Declare a cpp executable
 # add_executable(lama_msgs_node src/lama_msgs_node.cpp)
@@ -113,10 +117,14 @@ add_library(crossing_visualization src/crossing_visualization.cpp)
 ## as an example, message headers may need to be generated before nodes
 add_dependencies(crossing_utils lama_msgs_generate_messages_cpp)
 add_dependencies(crossing_visualization lama_msgs_generate_messages_cpp)
+add_dependencies(place_profile_utils lama_msgs_generate_messages_cpp)
+add_dependencies(place_profile_conversions lama_msgs_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(crossing_utils ${catkin_LIBRARIES})
 target_link_libraries(crossing_visualization ${catkin_LIBRARIES})
+target_link_libraries(place_profile_utils ${catkin_LIBRARIES})
+target_link_libraries(place_profile_conversions ${catkin_LIBRARIES})
 
 #############
 ## Install ##

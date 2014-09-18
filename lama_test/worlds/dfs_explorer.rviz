@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /TF1/Frames1
+        - /PointCloud1
       Splitter Ratio: 0.5
     Tree Height: 456
   - Class: rviz/Selection
@@ -88,7 +89,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 1
@@ -104,7 +105,7 @@ Visualization Manager:
       Topic: /base_scan
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /nj_costmap/crossing_marker
@@ -137,9 +138,9 @@ Visualization Manager:
         Value: true
       Axis: Z
       Channel Name: intensity
-      Class: rviz/LaserScan
+      Class: rviz/PointCloud
       Color: 255; 255; 255
-      Color Transformer: Intensity
+      Color Transformer: ""
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -147,14 +148,14 @@ Visualization Manager:
       Max Intensity: 4096
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: LaserScan
-      Position Transformer: XYZ
+      Name: PointCloud
+      Position Transformer: ""
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.05
       Style: Flat Squares
-      Topic: /nj_costmap/fake_scan
+      Topic: /nj_costmap/place_profile
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -215,5 +216,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1213
-  X: 18
-  Y: 83
+  X: 9
+  Y: 75

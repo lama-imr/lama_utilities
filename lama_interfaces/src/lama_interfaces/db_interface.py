@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 import sqlalchemy
 
 import rospy
-import roslib
+import roslib.message
 
 # Table name for type description
 _interfaces_table_name = 'map_interfaces'
@@ -12,6 +12,7 @@ _interfaces_table_name = 'map_interfaces'
 
 class DBInterfaceAbstract(object):
     __metaclass__ = ABCMeta
+
     def __init__(self, engine, interface_name, getter_srv_msg, setter_srv_msg):
         if '@' in interface_name:
             rospy.logerr('@ not allowd in interface name')

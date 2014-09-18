@@ -234,7 +234,7 @@ vector<size_t> getRayCast(const double angle, const size_t nrow, const size_t nc
  *
  * The map center is (0, 0).
  */
-inline void indexToReal(const nav_msgs::OccupancyGrid& map, const size_t index, geometry_msgs::Point32 point)
+inline void indexToReal(const nav_msgs::OccupancyGrid& map, const size_t index, geometry_msgs::Point32& point)
 {
   const double xcenter = (map.info.width / 2) * map.info.resolution;
   const double ycenter = (map.info.height / 2) * map.info.resolution;
@@ -259,7 +259,7 @@ inline void indexToReal(const nav_msgs::OccupancyGrid& map, const size_t index, 
  * map[in] occupancy grid 
  * angle[in] angle of the laser ray
  */
-bool firstNonFree(const nav_msgs::OccupancyGrid& map, const double angle, geometry_msgs::Point32 point)
+bool firstNonFree(const nav_msgs::OccupancyGrid& map, const double angle, geometry_msgs::Point32& point)
 {
   vector<size_t> ray = getRayCast(angle, map.info.height, map.info.width);
 	for (size_t i = 0; i < ray.size(); ++i)
@@ -286,8 +286,13 @@ PlaceProfile costmapToPlaceProfile(const nav_msgs::OccupancyGrid& map)
   profile.header = map.header;
   profile.polygon.points.reserve(COSTMAP_DISCRETISATION_COUNT);
 
-  const double angle_min = -M_PI;
+  // angle_min should be slightly greater than M_PI to be sure that the
+  // pixel on the bottom half of the map is chosen if map height is even.
+  const double angle_min = -M_PI + 1e-6;
   const double resolution = 2 * M_PI / COSTMAP_DISCRETISATION_COUNT;
+  geometry_msgs::Point32 last_point;
+  // last_point should be different than any point in the map.
+  last_point.x = 2 * map.info.width * map.info.resolution;
   geometry_msgs::Point32 this_point;
   geometry_msgs::Point32 next_point;
   bool this_in_range = firstNonFree(map, angle_min, this_point);
@@ -297,13 +302,17 @@ PlaceProfile costmapToPlaceProfile(const nav_msgs::OccupancyGrid& map)
     bool next_in_range = firstNonFree(map, next_angle, next_point);
     if (this_in_range)
     {
-      profile.polygon.points.push_back(this_point);
+      if ((this_point.x != last_point.x) && (this_point.y != last_point.y))
+      {
+        profile.polygon.points.push_back(this_point);
+      }
     }
     else if (next_in_range)
     {
       profile.exclude_segments.push_back(profile.polygon.points.size() - 1);
     }
     next_angle += resolution;
+    last_point = this_point;
     this_point = next_point;
     this_in_range = next_in_range;
   }

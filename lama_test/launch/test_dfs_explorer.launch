@@ -51,7 +51,7 @@
 			<param name="ki_w" value="0" />
 			<param name="min_linear_velocity" value="0" />
 			<param name="min_angular_velocity" value="0" />
-			<remap from="nj_costmap/local_costmap" to="costmap/local_map" />
+			<remap from="nj_costmap/local_costmap" to="/costmap/local_map" />
 			<remap from="nj_costmap/cmd_vel" to="/cmd_vel" />
 			<remap from="nj_costmap/base_scan" to="/base_scan" />
 		</node>

@@ -4,22 +4,43 @@
 
 #ifdef DEBUG_CROSSDETECT
 #include <fstream>
+#include <cassert>
+#include <iostream>
 #endif
 
 namespace lama {
 namespace crossing_detector {
 
 #ifdef DEBUG_CROSSDETECT
+/* Save a list of points into a file (comma separation).
+ */
 template <typename T>
-void points_output(const char filename[30], std::vector<T> points)
+void points_output(const char filename[30], const std::vector<T> points)
 {
-	// Cf. tests/debug_plots.py
-	// "cd /tmp; python $(rospack find nj_costmap)/tests/debug_plots.py"
-  // "cd /tmp; python $(rospack find nj_costmap)/tests/debug_plots.py pts filt_pts edges"
-	std::ofstream ofs(filename);
+  ROS_INFO("%s: %zu points", filename, points.size());
+	//std::ofstream ofs(filename);
 	for (size_t i = 0; i < points.size(); ++i)
 	{
-		ofs << points[i].x << "," << points[i].y << "\n";
+    ROS_INFO("%zu: %f %f", i, points[i].x, points[i].y);
+		//ofs << points[i].x << " " << points[i].y << "\n";
+    std::cout << points[i].x << " " << points[i].y << std::endl;
+
+		//ofs << 5235 << " " << 534 << " " << i << "\n";
+	}
+	//ofs.close();
+  std::cout << std::flush;
+}
+
+/* Save a list of points into a file (comma-separated x1, y1, x2, y2).
+ */
+template <typename T>
+void edges_output(const char filename[30], const std::vector<T> points1, const std::vector<T> points2)
+{
+  assert(points1.size() == points2.size());
+	std::ofstream ofs(filename);
+	for (size_t i = 0; i < points1.size(); ++i)
+	{
+		ofs << points1[i].x << " " << points1[i].y << " " << points2[i].x << " " << points2[i].y << "\n";
 	}
 	ofs.close();
 }
@@ -45,7 +66,7 @@ Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const
   }
   vector<Point> inputPoints = delaunayInput(place_profile_);
 
-  ROS_DEBUG("%zu Delaunay points", inputPoints.size());
+  ROS_INFO("%zu PlaceProfile points", place_profile_.polygon.points.size());
   ROS_INFO("%zu Delaunay points", inputPoints.size());
   
   // Insert points and compute the Delaunay triangulation.
@@ -58,14 +79,16 @@ Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const
   ROS_DEBUG("Delaunay triangulation is %svalid", triangulation.is_valid() ? "" : "not ");
   ROS_INFO("Number of vertices: %zu", triangulation.number_of_vertices());
   ROS_INFO("Number of faces: %zu", triangulation.number_of_faces());
+  // check if the polygon is simple.
+  ROS_INFO("The polygon is %ssimple", polygon.is_simple() ? "" : "not ");
 
   for (Face_iterator face = triangulation.finite_faces_begin(); face != triangulation.finite_faces_end(); ++face)
   {
-    ROS_INFO("1 face");
     const Point c = triangulation.circumcenter(face);
     const Point& p = face->vertex(0)->point();
     if (polygon.bounded_side(p) == CGAL::ON_BOUNDED_SIDE)
     {
+      ROS_INFO("Inside");
       // The circumcenter lies inside place_profile_.
       const double circle_radius = std::sqrt((c[0] - p.x()) * (c[0] - p.x()) + (c[1] - p.y()) * (c[1] - p.y()));
       if (circle_radius > crossing.radius)
@@ -75,12 +98,20 @@ Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const
         crossing.radius = circle_radius;
       }
     }
+    else
+      ROS_INFO("Outside");
   }
 
   crossing.frontiers = frontiers_();
 
 #ifdef DEBUG_CROSSDETECT
+	// Cf. tests/debug_plots.py
+	// "python $(rospack find crossing_detector)/tests/debug_plots.py"
+  // "python $(rospack find crossing_detector)/tests/debug_plots.py place_profile delaunay_input"
+  
+  // Output place profile.
   points_output("/tmp/place_profile.dat", place_profile_.polygon.points); 
+  // Output Delaunay input points.
   vector<geometry_msgs::Point32> inputPointsRos;
   vector<Point>::const_iterator it = inputPoints.begin();
   for (; it != inputPoints.end(); ++it)
@@ -90,7 +121,23 @@ Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const
     point.y = it->y();
     inputPointsRos.push_back(point);
   }
-  points_output("/tmp/delaunay.dat", inputPointsRos);
+  //points_output("/tmp/delaunay_input.dat", inputPointsRos);
+  // Output Delaunay edges.
+  vector<geometry_msgs::Point32> edgePoints1;
+  vector<geometry_msgs::Point32> edgePoints2;
+  Delaunay::Edge_iterator edge_it = triangulation.finite_edges_begin();
+  for (; edge_it != triangulation.finite_edges_end(); ++edge_it)
+  {
+    geometry_msgs::Point32 point0;
+    geometry_msgs::Point32 point1;
+    point0.x = edge_it->first->vertex(0)->point().x();
+    point0.y = edge_it->first->vertex(0)->point().y();
+    point1.x = edge_it->first->vertex(1)->point().x();
+    point1.y = edge_it->first->vertex(1)->point().y();
+    edgePoints1.push_back(point0);
+    edgePoints2.push_back(point1);
+  }
+  edges_output("/tmp/delaunay_edges.dat", edgePoints1, edgePoints2);
 #endif
 
   return crossing;

@@ -6,6 +6,7 @@
 #define _CROSSING_DETECTOR_CROSSING_DETECTOR_H_
 
 #include <cmath>
+#include <cstring>
 #include <vector>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
@@ -32,7 +33,6 @@ typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef K::Point_2 Point;
 typedef CGAL::Delaunay_triangulation_2<K> Delaunay;
 typedef Delaunay::Face_iterator Face_iterator;
-//typedef Delaunay::Vertex Vertex;
 typedef CGAL::Polygon_2<K> Polygon;
 
 class CrossingDetector
@@ -50,6 +50,9 @@ class CrossingDetector
     double getMaxFrontierAngle() const {return max_frontier_angle_;}
     void setMaxFrontierAngle(const double value) {max_frontier_angle_ = std::fabs(value);}
 
+    double getMinRelevance() const {return min_relevance_;}
+    void setMinRelevance(const double value) {min_relevance_ = std::fabs(value);}
+
     PlaceProfile getPlaceProfile() const {return place_profile_;}
 
   private:
@@ -57,11 +60,16 @@ class CrossingDetector
     vector<Point> delaunayInput(const PlaceProfile& profile) const;
     vector<Frontier> frontiers_() const;
 
+    // Parameters shown outside (constructor and setter).
     double frontier_width_;  //!> Min. frontier width, i.e. space turough which a robot can go (m).
     double max_frontier_angle_;  //!> Max. angle between frontier and line from robot to frontier (rad).
                                  //!> 0 means that the angle between the line from robot to frontier middle
                                  //!> and the frontier is 90 deg.
+    double min_relevance_;  //!> Points with relevance smaller than this will be removed (m).
+                            //!> Defaults to 0.15.
 
+    // Internals.
+    char node_name_[31];
     PlaceProfile place_profile_;  //!> PlaceProfile used to compute the crossing.
 
 };

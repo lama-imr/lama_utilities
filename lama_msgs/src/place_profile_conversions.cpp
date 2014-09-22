@@ -292,7 +292,7 @@ PlaceProfile costmapToPlaceProfile(const nav_msgs::OccupancyGrid& map)
   const double resolution = 2 * M_PI / COSTMAP_DISCRETISATION_COUNT;
   geometry_msgs::Point32 last_point;
   // last_point should be different than any point in the map.
-  last_point.x = 2 * map.info.width * map.info.resolution;
+  last_point.x = map.info.width * map.info.resolution;
   geometry_msgs::Point32 this_point;
   geometry_msgs::Point32 next_point;
   bool this_in_range = firstNonFree(map, angle_min, this_point);
@@ -302,7 +302,7 @@ PlaceProfile costmapToPlaceProfile(const nav_msgs::OccupancyGrid& map)
     bool next_in_range = firstNonFree(map, next_angle, next_point);
     if (this_in_range)
     {
-      if ((this_point.x != last_point.x) && (this_point.y != last_point.y))
+      if ((this_point.x != last_point.x) || (this_point.y != last_point.y))
       {
         profile.polygon.points.push_back(this_point);
       }
@@ -323,8 +323,6 @@ PlaceProfile costmapToPlaceProfile(const nav_msgs::OccupancyGrid& map)
     profile.exclude_segments[0] = profile.polygon.points.size() - 1;
   }
 
-  ROS_INFO("%s: %zu points",
-      ros::this_node::getName().c_str(), profile.polygon.points.size());
   return profile;
 }
 

@@ -2,9 +2,8 @@
 
 NJDummy::NJDummy(std::string name, std::string get_service_name) : lama::NavigatingJockey(name),
   get_service_name_(get_service_name),
-  rand_generator_(rd_()),
   mean_traversing_time_(2.0),
-  traversing_time_distribution_(mean_traversing_time_, 0.1)
+  max_traversing_delta_(0.5)
 {
 }
 
@@ -21,8 +20,8 @@ void NJDummy::onTraverse()
 {
   ROS_DEBUG("NJDummy TRAVERSING");
 
-  auto start_time = ros::Time::now();
-  auto traversing_duration = traversing_time_distribution_(rand_generator_);
+  ros::Time start_time = ros::Time::now();
+  double traversing_duration = random_duration();
   nlj_dummy::GetDummyDescriptor dg;
 
   dg.request.id = goal_.descriptor;
@@ -63,5 +62,22 @@ void NJDummy::onTraverse()
       break;
     }
   }
+}
+
+double NJDummy::random_duration()
+{
+  const double min = mean_traversing_time_ - max_traversing_delta_;
+  const double max = mean_traversing_time_ + max_traversing_delta_;
+  return min + (max - min) * ((double) std::rand()) / RAND_MAX;
+}
+
+double NJDummy::completion(ros::Duration time_elapsed)
+{
+  if (time_elapsed.toSec() > mean_traversing_time_)
+  {
+    // The maximum completion prediction will be 90 %.
+    return 0.9;
+  }
+  return 0.9 * time_elapsed.toSec() / mean_traversing_time_;
 }
 

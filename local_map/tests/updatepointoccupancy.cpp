@@ -1,7 +1,8 @@
 #include <vector>
 #include <iostream>
-#include <cstdint>
 #include <cmath>
+#include <stdint.h>
+#include <math.h>
 
 #define MAX_OBSERVATION_COUNT 10 // The larger, the more memory.
 // Probability that a point is occupied when the laser ranger says so.
@@ -80,7 +81,7 @@ void updatePointOccupancy(const bool occupied, const pt_t& pt, const int ncol, v
 		log_odds[idx] = max_log_odds;
 	}
 	// Update occupancy.
-	int8_t new_occupancy = std::lround((1 - 1 / (1 + std::exp(log_odds[idx]))) * 100);
+	int8_t new_occupancy = lround((1 - 1 / (1 + std::exp(log_odds[idx]))) * 100);
 	if (new_occupancy < 1)
 	{
 		new_occupancy = 1;
@@ -92,7 +93,7 @@ void updatePointOccupancy(const bool occupied, const pt_t& pt, const int ncol, v
 	occupancy[idx] = new_occupancy;
 }
 
-pt_t pt {0, 0};
+pt_t pt(0, 0);
 const int ncol = 1;
 vector<int8_t> occupancy(1, -1);
 vector<double> log_odds(1, 0);

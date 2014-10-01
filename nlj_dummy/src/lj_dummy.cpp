@@ -2,11 +2,10 @@
 
 LJDummy::LJDummy(std::string name, std::string set_service_name) : lama::LocalizingJockey(name),
   set_service_name_(set_service_name),
-  rand_generator_(rd_()),
-  descriptor_distribution_(0, 360),
   mean_localizing_time_(0.1),
-  localizing_time_distribution_(mean_localizing_time_, 0.01)
+  max_localizing_delta_(0.03)
 {
+  std::srand(std::time(0));
 }
 
 void LJDummy::onGetVertexDescriptor()
@@ -21,16 +20,16 @@ void LJDummy::onGetEdgesDescriptors()
 {
   ROS_INFO("* onGetEdgesDescriptors");
 
-  auto start_time = ros::Time::now();
-  auto localizing_duration = localizing_time_distribution_(rand_generator_);
+  ros::Time start_time = ros::Time::now();
+  double localizing_duration = random_duration();
   nlj_dummy::SetDummyDescriptor ds;
 
   // Start the computer intensive localizing (uninterruptable).
   double last_feedback_update = 0.0;
   while (true)
   {
-    auto current_time = ros::Time::now();
-    auto time_elapsed = current_time.toSec() - start_time.toSec();
+    ros::Time current_time = ros::Time::now();
+    double time_elapsed = current_time.toSec() - start_time.toSec();
 
     // update the feedback every 0.01 s.
     if (time_elapsed - last_feedback_update > 0.01)
@@ -47,7 +46,7 @@ void LJDummy::onGetEdgesDescriptors()
       result_.descriptors.clear();
       for (int i = 0 ; i < 4 ; i++)
       {
-        ds.request.descriptor.value = descriptor_distribution_(rand_generator_);
+        ds.request.descriptor.value = random_angle();
         ros::service::call(set_service_name_, ds);
         result_.descriptors.push_back(ds.response.id);
         ROS_INFO("outgoing descriptor_id %i", ds.response.id.descriptor_id);
@@ -85,5 +84,27 @@ void LJDummy::onGetDissimilarity()
   result_.state = lama_jockeys::LocalizeResult::DONE;
   result_.completion_time = ros::Duration(0.001);
   server_.setSucceeded(result_);
+}
+
+double LJDummy::random_duration()
+{
+  const double min = mean_localizing_time_ - max_localizing_delta_;
+  const double max = mean_localizing_time_ + max_localizing_delta_;
+  return min + (max - min) * ((double) std::rand()) / RAND_MAX;
+}
+
+double LJDummy::random_angle()
+{
+  return 359 * ((double) std::rand()) / RAND_MAX;
+}
+
+double LJDummy::completion(double current_time)
+{
+  if (current_time > mean_localizing_time_)
+  {
+    // The maximum completion prediction will be 90 %.
+    return 0.9;
+  }
+  return 0.9 * current_time / mean_localizing_time_;
 }
 

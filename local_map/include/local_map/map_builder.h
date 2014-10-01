@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <ros/ros.h>
+#include <tf/tf.h>
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
 #include <sensor_msgs/LaserScan.h>

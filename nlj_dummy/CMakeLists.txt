@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
 	)
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+# find_package(Boost REQUIRED COMPONENTS random)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -89,8 +89,6 @@ catkin_package(
 ###########
 ## Build ##
 ###########
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations

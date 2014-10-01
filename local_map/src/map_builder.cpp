@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <fstream>
+#include <math.h>  // for round(), std::round() is since C++11.
 
 #include "local_map/map_builder.h"
 
@@ -18,10 +19,9 @@ const double max_log_odds_for_belief = 20;
 using std::vector;
 using std::abs;
 using std::max;
-using std::lround;
 
 // A map to store ray castings
-typedef std::map<double, vector<size_t>> raycast_dict;
+typedef std::map<double, vector<size_t> > raycast_dict;
 
 std::string getWorldFrame(const tf::Transformer& tfTransformer, const std::string& child)
 {
@@ -49,7 +49,7 @@ double angleFromQuaternion(const tf::Quaternion& q)
 {
 	if (std::fabs(q.x()) > 1e-5 || std::fabs(q.y()) > 1e-5)
 	{
-		auto axis = q.getAxis();
+    tf::Vector3 axis = q.getAxis();
 		ROS_WARN("Laser frame rotation is not around the z-axis (axis = [%f, %f, %f], just pretending it is",
 				axis.x(), axis.y(), axis.z());
 	}
@@ -156,7 +156,7 @@ void rayLookup(const raycast_dict& raycast_lookup, const double angle, vector<si
 	double dangle_lower;
 	double dangle_upper;
 
-	auto upper_bound = raycast_lookup.upper_bound(angle);
+  raycast_dict::const_iterator upper_bound = raycast_lookup.upper_bound(angle);
 	if (upper_bound == raycast_lookup.begin())
 	{
 
@@ -182,7 +182,7 @@ void rayLookup(const raycast_dict& raycast_lookup, const double angle, vector<si
 	else
 	{
 		dangle_upper = upper_bound->first - angle;
-		auto lower_bound = upper_bound;
+    raycast_dict::const_iterator lower_bound = upper_bound;
 		lower_bound--;
 		dangle_lower = angle - lower_bound->first;
 		if (dangle_lower < dangle_upper)
@@ -208,7 +208,7 @@ void getRayCast(const nav_msgs::OccupancyGrid& map, const double angle, vector<s
 {
 	// Store the ray casting up to the map border into a look-up table. Ray
 	// casting exclusively depends on the ray angle.
-	static std::map<double, vector<size_t>> raycast_lookup;
+	static std::map<double, vector<size_t> > raycast_lookup;
 	static bool raycast_lookup_cached;
 
 	if (!raycast_lookup_cached)
@@ -240,8 +240,6 @@ bool bresenham(const nav_msgs::OccupancyGrid& map, const double angle, const dou
 
 	vector<size_t> ray_to_map_border;
 	getRayCast(map, angle, ray_to_map_border);
-	const size_t row_origin = rowFromOffset(ray_to_map_border[0], map.info.width);
-	const size_t col_origin = colFromOffset(ray_to_map_border[0], map.info.width);
 	// range in pixel length. The ray length in pixels corresponds to the number
 	// of pixels in the bresenham algorithm.
 	const size_t pixel_range = lround(range * max(abs(std::cos(angle)), abs(std::sin(angle))) / map.info.resolution);
@@ -392,9 +390,10 @@ void updatePointOccupancy(const bool occupied, const size_t idx, vector<int8_t>&
  */
 inline void updatePointsOccupancy(const bool occupied, const vector<size_t>& indexes, vector<int8_t>& occupancy, vector<double>& log_odds)
 {
-	for (const auto& idx : indexes)
-	{
-		updatePointOccupancy(occupied, idx, occupancy, log_odds);
+  vector<size_t>::const_iterator idx = indexes.begin();
+	for (; idx != indexes.end(); ++idx)
+  {
+		updatePointOccupancy(occupied, *idx, occupancy, log_odds);
 	}
 }
 
@@ -522,7 +521,7 @@ bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, const long int dx
 		if (obstacle_in_map)
 		{
 			// Last point is the point with obstacle.
-			auto last_pt = pts.back();
+			size_t last_pt = pts.back();
 			updatePointOccupancy(true, last_pt, m_map.data, m_log_odds);
 			pts.pop_back();
 		}
@@ -534,7 +533,6 @@ bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, const long int dx
 
 bool MapBuilder::saveMap(const std::string& name) const
 {
-	bool res = true;
 	ros::Time time = ros::Time::now();
 	const int sec = time.sec;
 	const int nsec = time.nsec;
@@ -556,7 +554,7 @@ bool MapBuilder::saveMap(const std::string& name) const
 	}
 
 	std::ofstream ofs;
-	ofs.open(filename);
+	ofs.open(filename.c_str());
 	if (!ofs.is_open())
 	{
 		ROS_ERROR("Cannot open %s", filename.c_str());
@@ -576,5 +574,6 @@ bool MapBuilder::saveMap(const std::string& name) const
 		}
 	}
 	ofs.close();
+  return true;
 }
 

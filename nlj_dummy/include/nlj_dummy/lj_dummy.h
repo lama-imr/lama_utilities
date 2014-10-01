@@ -17,7 +17,7 @@ class LJDummy : public lama::LocalizingJockey
     void onGetEdgesDescriptors();
     void onLocalizeInVertex();
     void onLocalizeEdge();
-    void onGetSimilarity();
+    void onGetDissimilarity();
 
   private:
 

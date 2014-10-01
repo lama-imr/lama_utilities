@@ -79,9 +79,9 @@ void LJDummy::onLocalizeEdge()
   server_.setSucceeded(result_);
 }
 
-void LJDummy::onGetSimilarity()
+void LJDummy::onGetDissimilarity()
 {
-  ROS_INFO("LJDummy responded with similarity");
+  ROS_INFO("LJDummy responded with dissimilarity");
   result_.state = lama_jockeys::LocalizeResult::DONE;
   result_.completion_time = ros::Duration(0.001);
   server_.setSucceeded(result_);

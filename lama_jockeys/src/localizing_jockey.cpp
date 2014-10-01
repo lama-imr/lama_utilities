@@ -1,7 +1,3 @@
-/* Base class for localizing jockeys
- *
- */
-
 #include <lama_jockeys/localizing_jockey.h>
 
 namespace lama
@@ -52,10 +48,10 @@ void LocalizingJockey::goalCallback(const lama_jockeys::LocalizeGoalConstPtr& go
       goal_.descriptor = goal->descriptor;
       onLocalizeEdge();
       break;
-    case lama_jockeys::LocalizeGoal::GET_SIMILARITY:
+    case lama_jockeys::LocalizeGoal::GET_DISSIMILARITY:
       initAction();
       goal_.descriptor = goal->descriptor;
-      onGetSimilarity();
+      onGetDissimilarity();
       break;
     case lama_jockeys::LocalizeGoal::INTERRUPT:
       interrupt();

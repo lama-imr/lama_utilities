@@ -254,7 +254,7 @@ class ExplorerNode(object):
 
     def get_dissimilarity(self):
         loc_goal = LocalizeGoal()
-        loc_goal.action = loc_goal.GET_SIMILARITY
+        loc_goal.action = loc_goal.GET_DISSIMILARITY
         self.localize.send_goal_and_wait(loc_goal, rospy.Duration(0.5))
         loc_result = self.localize.get_result()
         if not loc_result:

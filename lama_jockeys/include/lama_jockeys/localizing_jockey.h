@@ -1,4 +1,6 @@
-/* Base class for localizing jockeys
+/* 
+ * Base class for localizing jockeys
+ *
  */
 
 #ifndef _LAMA_JOCKEYS_LOCALIZING_JOCKEY_H_
@@ -28,7 +30,7 @@ class LocalizingJockey : public Jockey
     virtual void onGetEdgesDescriptors() = 0;
     virtual void onLocalizeInVertex() = 0;
     virtual void onLocalizeEdge() = 0;
-    virtual void onGetSimilarity() = 0;
+    virtual void onGetDissimilarity() = 0;
     virtual void onInterrupt();
     virtual void onContinue();
 

@@ -23,7 +23,7 @@
  *
  * Services used (other than map-related):
  * - service type, server default name, description
- * - polygon_matcher::PolygonSimilarity, "~/similarity_server", used to
+ * - polygon_matcher::PolygonDissimilarity, "~/dissimilarity_server", used to
  *    compare all known places with the current place
  *
  * Parameters:

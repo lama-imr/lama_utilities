@@ -5,9 +5,11 @@ project(crossing_detector)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+	angles
 	geometry_msgs
 	lama_msgs
 	nav_msgs
+	rosbag
 	roscpp
 	sensor_msgs
 )
@@ -86,7 +88,7 @@ include(${CGAL_USE_FILE})
 catkin_package(
 	INCLUDE_DIRS include
 	LIBRARIES crossing_detector laser_crossing_detector costmap_crossing_detector
-	CATKIN_DEPENDS geometry_msgs lama_msgs nav_msgs roscpp sensor_msgs
+	CATKIN_DEPENDS angles geometry_msgs lama_msgs nav_msgs roscpp sensor_msgs
 	DEPENDS cgal
 )
 
@@ -164,10 +166,10 @@ target_link_libraries(costmap_crossing_detector crossing_detector ${catkin_LIBRA
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_crossing_detector.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
+catkin_add_gtest(${PROJECT_NAME}-test test/utest.cpp)
+if(TARGET ${PROJECT_NAME}-test)
+  target_link_libraries(${PROJECT_NAME}-test crossing_detector laser_crossing_detector costmap_crossing_detector)
+endif()
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)

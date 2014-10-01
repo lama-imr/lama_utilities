@@ -37,12 +37,15 @@
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>angles</build_depend>
   <build_depend>cgal</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>lama_msgs</build_depend>
   <build_depend>nav_msgs</build_depend>
+  <build_depend>rosbag</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>sensor_msgs</build_depend>
+  <run_depend>angles</run_depend>
   <run_depend>cgal</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>lama_msgs</run_depend>

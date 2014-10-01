@@ -66,12 +66,11 @@ class CrossingDetector
                                  //!> 0 means that the angle between the line from robot to frontier middle
                                  //!> and the frontier is 90 deg.
     double min_relevance_;  //!> Points with relevance smaller than this will be removed (m).
-                            //!> Defaults to 0.15.
+                            //!> Defaults to 0.01.
 
     // Internals.
     char node_name_[31];
     PlaceProfile place_profile_;  //!> PlaceProfile used to compute the crossing.
-
 };
 
 } // namespace crossing_detector

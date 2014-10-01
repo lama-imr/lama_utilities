@@ -17,6 +17,11 @@ namespace crossing_detector {
 void points_output(const std::string& filename, const std::vector<geometry_msgs::Point32>& points)
 {
 	std::ofstream ofs(filename.c_str());
+  if (!ofs.is_open())
+  {
+    ROS_WARN("Cannot open %s for writing", filename.c_str());
+    return;
+  }
 	for (size_t i = 0; i < points.size(); ++i)
 	{
 		ofs << points[i].x << " " << points[i].y << "\n";
@@ -29,6 +34,11 @@ void points_output(const std::string& filename, const std::vector<geometry_msgs:
 void points_output(const std::string& filename, const std::vector<Point>& points)
 {
 	std::ofstream ofs(filename.c_str());
+  if (!ofs.is_open())
+  {
+    ROS_WARN("Cannot open %s for writing", filename.c_str());
+    return;
+  }
 	for (size_t i = 0; i < points.size(); ++i)
 	{
 		ofs << points[i].x() << " " << points[i].y() << "\n";
@@ -36,11 +46,16 @@ void points_output(const std::string& filename, const std::vector<Point>& points
 	ofs.close();
 }
 
-/* Save a list of points into a file (space-separated x1, y1, x2, y2).
+/* Save a list of edges into a file (space-separated x1, y1, x2, y2).
  */
 void edges_output(const std::string& filename, const Delaunay& dt)
 {
 	std::ofstream ofs(filename.c_str());
+  if (!ofs.is_open())
+  {
+    ROS_WARN("Cannot open %s for writing", filename.c_str());
+    return;
+  }
   Delaunay::Edge_iterator edge_it = dt.finite_edges_begin();
   for (; edge_it != dt.finite_edges_end(); ++edge_it)
   {
@@ -56,13 +71,20 @@ void edges_output(const std::string& filename, const Delaunay& dt)
 	ofs.close();
 }
 
-void candidates_output(const std::string& filename, const Delaunay& dt, const Polygon& polygon)
+/* Save a list of (x, z, r) into a file
+ */
+void candidates_output(const std::string& filename, const Delaunay& dt, const Polygon& polygon, const bool rejected=false)
 {
 	std::ofstream ofs(filename.c_str());
+  if (!ofs.is_open())
+  {
+    ROS_WARN("Cannot open %s for writing", filename.c_str());
+    return;
+  }
   for (Face_iterator face = dt.finite_faces_begin(); face != dt.finite_faces_end(); ++face)
   {
     const Point c = dt.circumcenter(face);
-    if (polygon.bounded_side(c) == CGAL::ON_BOUNDED_SIDE)
+    if ((polygon.bounded_side(c) == CGAL::ON_BOUNDED_SIDE) ^ rejected)
     {
       // The circumcenter lies inside place_profile_.
       const Point& p = face->vertex(0)->point();
@@ -72,12 +94,13 @@ void candidates_output(const std::string& filename, const Delaunay& dt, const Po
   }
   ofs.close();
 }
+
 #endif
 
 CrossingDetector::CrossingDetector(const double frontier_width, const double max_frontier_angle) :
   frontier_width_(frontier_width),
   max_frontier_angle_(max_frontier_angle),
-  min_relevance_(0.15)
+  min_relevance_(0.01)
 {
   std::strncpy(node_name_, ros::this_node::getName().c_str(), 30);
 }
@@ -96,8 +119,8 @@ Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const
   }
   vector<Point> inputPoints = delaunayInput(place_profile_);
 
-  ROS_INFO("%s: %zu PlaceProfile points", node_name_, place_profile_.polygon.points.size());
-  ROS_INFO("%s: %zu Delaunay input points", node_name_, inputPoints.size());
+  ROS_DEBUG("%s: %zu PlaceProfile points", node_name_, place_profile_.polygon.points.size());
+  ROS_DEBUG("%s: %zu Delaunay input points", node_name_, inputPoints.size());
   
   // Insert points and compute the Delaunay triangulation.
   Delaunay triangulation;
@@ -134,17 +157,20 @@ Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const
 	// "python $(rospack find crossing_detector)/tests/debug_plots.py"
   
   // Output place profile.
-  std::string filename = "/tmp" + ros::this_node::getName() + "_place_profile.dat";
+  std::string filename = "/tmp/" + ros::this_node::getName() + "_place_profile.dat";
   points_output(filename, place_profile_.polygon.points); 
   // Output Delaunay input points.
-  filename = "/tmp" + ros::this_node::getName() + "_delaunay_input.dat";
+  filename = "/tmp/" + ros::this_node::getName() + "_delaunay_input.dat";
   points_output(filename, inputPoints);
   // Output Delaunay edges.
-  filename = "/tmp" + ros::this_node::getName() + "_delaunay_edges.dat";
+  filename = "/tmp/" + ros::this_node::getName() + "_delaunay_edges.dat";
   edges_output(filename, triangulation);
   // Output crossing center candidates.
-  filename = "/tmp" + ros::this_node::getName() + "_candidates.dat";
+  filename = "/tmp/" + ros::this_node::getName() + "_candidates.dat";
   candidates_output(filename, triangulation, polygon);
+  // Output excluded crossing center.
+  filename = "/tmp/" + ros::this_node::getName() + "_rejected.dat";
+  candidates_output(filename, triangulation, polygon, true);
 #endif
 
   return crossing;
@@ -242,6 +268,7 @@ vector<Frontier> CrossingDetector::frontiers(const PlaceProfile& profile, const 
 vector<Point> CrossingDetector::delaunayInput(const PlaceProfile& profile) const
 {
   PlaceProfile delaunayProfile = simplifiedPlaceProfile(profile, min_relevance_);
+  ROS_DEBUG("%s: %zu relevant points in the PlaceProfile", node_name_, delaunayProfile.polygon.points.size());
   closePlaceProfile(delaunayProfile, frontier_width_ / 2);
   vector<Point> points;
   points.reserve(delaunayProfile.polygon.points.size());

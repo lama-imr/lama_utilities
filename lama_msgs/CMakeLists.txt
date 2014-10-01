@@ -9,6 +9,7 @@ find_package(catkin REQUIRED
 	angles
 	geometry_msgs
 	lama_interfaces
+	laser_geometry
 	message_generation
 	roscpp
 	sensor_msgs
@@ -89,7 +90,7 @@ generate_messages(
 catkin_package(
 	INCLUDE_DIRS include
 	LIBRARIES crossing_utils crossing_visualization place_profile_utils place_profile_conversions
-	CATKIN_DEPENDS angles geometry_msgs lama_interfaces message_runtime roscpp sensor_msgs visualization_msgs
+	CATKIN_DEPENDS angles geometry_msgs laser_geometry lama_interfaces message_runtime roscpp sensor_msgs visualization_msgs
 	#  DEPENDS system_lib
 )
 
@@ -168,7 +169,7 @@ target_link_libraries(place_profile_conversions ${catkin_LIBRARIES})
 ## Add gtest based cpp test target and link libraries
 catkin_add_gtest(${PROJECT_NAME}-test test/utest.cpp)
 if(TARGET ${PROJECT_NAME}-test)
-  target_link_libraries(${PROJECT_NAME}-test place_profile_utils ${catkin_LIBRARIES})
+	target_link_libraries(${PROJECT_NAME}-test place_profile_utils place_profile_conversions ${catkin_LIBRARIES})
 endif()
 
 ## Add folders to be run by python nosetests

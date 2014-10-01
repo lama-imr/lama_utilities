@@ -90,6 +90,7 @@ size_t lastIncludedPointFrom(const PlaceProfile& profile, const int32_t index);
 void normalizePlaceProfile(PlaceProfile& profile);
 PlaceProfile normalizedPlaceProfile(const PlaceProfile& profile);
 
+bool isClosed(const PlaceProfile& profile, const double max_frontier_width);
 void closePlaceProfile(PlaceProfile& profile, const double max_frontier_width);
 PlaceProfile closedPlaceProfile(const PlaceProfile& profile, const double max_frontier_width);
 

@@ -40,8 +40,23 @@ sensor_msgs::PointCloud placeProfileToPointCloud(const PlaceProfile& profile)
   return cloud;
 }
 
-PlaceProfile laserScanToPlaceProfile(const sensor_msgs::LaserScan& scan, const double max_range)
+/* Return true if the point is surrounded by two excluded segments.
+ */
+inline bool pointIsExcluded(const vector<bool>& in_range, const size_t i)
 {
+  return !in_range[circular_index(i - 1, in_range.size())] && !in_range[(i + 1) % in_range.size()];
+}
+
+/* Tranform a LaserScan into a PlaceProfile
+ *
+ * The laser beams greater than range_cutoff are removed. However, the first and the last beam of
+ * a series of beams larger than range_cutoff are kept are their length is reduced to range_cutoff.
+ */
+PlaceProfile laserScanToPlaceProfile(const sensor_msgs::LaserScan& scan, const double range_cutoff)
+{
+  // Use LaserProjection for its caching of sine and cosine values.
+  static laser_geometry::LaserProjection projector;
+
   PlaceProfile profile;
   profile.header = scan.header;
   size_t size = scan.ranges.size();
@@ -50,27 +65,58 @@ PlaceProfile laserScanToPlaceProfile(const sensor_msgs::LaserScan& scan, const d
   vector<bool> in_range(size, false);
   for (size_t i = 0; i < size; ++i)
   {
-    if (scan.ranges[i] <= max_range)
+    if (scan.ranges[i] < range_cutoff)
     {
       in_range[i] = true;
     }
   }
 
-  for (size_t i = 0; i < size; ++i)
+  const double greater_than_longest = 2 * (*(std::max_element(scan.ranges.begin(), scan.ranges.end())));
+  sensor_msgs::PointCloud cloud;
+  projector.projectLaser(scan, cloud, greater_than_longest, laser_geometry::channel_option::None);
+
+  if (scan.ranges.size() != cloud.points.size())
   {
-    if (in_range[i])
+    // We cannot guarantee otherwise than using a modified copy of scan that
+    // all beams are kept in cloud. This is because beams smaller than
+    // scan.min_range do not belong to the resulting cloud.
+    // A solution would be to use channel_option::Index to keep trace of the
+    // point in the scan.
+    ROS_ERROR("Some scan ranges where smaller than min_range and this is not implemented");
+    return profile;
+  }
+
+  int idx_start;
+  int idx_end;
+  int idx_increment;
+  if (scan.angle_increment > 0)
+  {
+    idx_start = 0;
+    idx_end = size;
+    idx_increment = 1;
+  }
+  else
+  {
+    idx_start = size - 1;
+    idx_end = -1;
+    idx_increment = -1;
+  }
+  for (int i = idx_start; i != idx_end; i += idx_increment)
+  {
+    if (in_range[i] && in_range[circular_index(i + idx_increment, size)])
     {
-      const double angle = scan.angle_min + ((double) i) * scan.angle_increment;
-      geometry_msgs::Point32 point;
-      point.x = scan.ranges[i] * std::cos(angle);
-      point.y = scan.ranges[i] * std::sin(angle);
-      profile.polygon.points.push_back(point);
+      // point i and next point are included.
+      profile.polygon.points.push_back(cloud.points[i]);
     }
-    else if (in_range[(i + 1) % size])
+    else if (in_range[i] && !in_range[circular_index(i + idx_increment, size)])
     {
+      // point i is included, next point (which will not be part of
+      // profile.polygon) is excluded.
+      profile.polygon.points.push_back(cloud.points[i]);
       profile.exclude_segments.push_back(profile.polygon.points.size() - 1);
     }
   }
+  
   if (!profile.exclude_segments.empty() && (profile.exclude_segments.front() == -1))
   {
     // If segment between last point and point 0 is excluded.
@@ -78,6 +124,7 @@ PlaceProfile laserScanToPlaceProfile(const sensor_msgs::LaserScan& scan, const d
     profile.exclude_segments[0] = profile.polygon.points.size() - 1;
   }
 
+  normalizePlaceProfile(profile);
   return profile;
 }
 

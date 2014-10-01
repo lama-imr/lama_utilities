@@ -9,10 +9,9 @@ namespace lama
 
 NavigatingJockey::NavigatingJockey(const std::string& name) :
   Jockey(name),
-  server_(nh_, name, false),
+  server_(nh_, name, boost::bind(&NavigatingJockey::goalCallback, this, _1), false),
   goal_reached_(false)
 {
-  server_.registerGoalCallback(boost::bind(&NavigatingJockey::goalCallback, this));
   server_.registerPreemptCallback(boost::bind(&NavigatingJockey::preemptCallback, this));
 
   server_.start();
@@ -32,10 +31,9 @@ NavigatingJockey::NavigatingJockey(const std::string& name) :
     reach_distance_ = 0.050;
 }
 
-void NavigatingJockey::goalCallback()
+void NavigatingJockey::goalCallback(const lama_jockeys::NavigateGoalConstPtr& goal)
 {
-  lama_jockeys::NavigateGoalConstPtr current_goal = server_.acceptNewGoal();
-  goal_ = *current_goal;
+  goal_.action = goal->action;
 
   // Check that preempt has not been requested by the client.
   if (server_.isPreemptRequested() || !ros::ok())
@@ -57,8 +55,8 @@ void NavigatingJockey::goalCallback()
       break;
     case lama_jockeys::NavigateGoal::TRAVERSE:
       initAction();
-      goal_.edge = current_goal->edge;
-      goal_.descriptor = current_goal->descriptor;
+      goal_.edge = goal->edge;
+      goal_.descriptor = goal->descriptor;
       onTraverse();
       break;
     case lama_jockeys::NavigateGoal::INTERRUPT:
@@ -105,7 +103,7 @@ geometry_msgs::Twist NavigatingJockey::goToGoal(const geometry_msgs::Point& goal
   double distance = std::sqrt(goal.x * goal.x + goal.y * goal.y);
   if (distance > max_goal_distance_)
   {
-    ROS_DEBUG("distance to goal (%f) is greater than max (%f)", distance, max_goal_distance_);
+    ROS_DEBUG("%s: distance to goal (%f) is greater than max (%f)", jockey_name_.c_str(), distance, max_goal_distance_);
     return twist;
   }
 
@@ -116,7 +114,7 @@ geometry_msgs::Twist NavigatingJockey::goToGoal(const geometry_msgs::Point& goal
   }
 
   double dtheta = std::atan2(goal.y, goal.x);
-  ROS_DEBUG("distance to goal: %f, dtheta to goal: %f", distance, dtheta);
+  ROS_DEBUG("%s: distance to goal: %f, dtheta to goal: %f", jockey_name_.c_str(), distance, dtheta);
   if (dtheta > max_goal_dtheta_) dtheta = max_goal_dtheta_;
   if (dtheta < -max_goal_dtheta_) dtheta = -max_goal_dtheta_;
 

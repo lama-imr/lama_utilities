@@ -49,7 +49,7 @@ class LocalizingJockey : public Jockey
 
   private:
 
-    void goalCallback();
+    void goalCallback(const lama_jockeys::LocalizeGoalConstPtr& goal);
     void preemptCallback();
 
     // Change the visibility to avoid double calls.

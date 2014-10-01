@@ -77,7 +77,7 @@ class NavigatingJockey : public Jockey
 
   private:
 
-    void goalCallback();
+    void goalCallback(const lama_jockeys::NavigateGoalConstPtr& goal);
     void preemptCallback();
 
     // Change the visibility to avoid double calls.

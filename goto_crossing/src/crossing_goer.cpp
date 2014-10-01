@@ -1,4 +1,3 @@
-#include <iostream>  // DEBUG
 #include <goto_crossing/crossing_goer.h>
 
 namespace lama {
@@ -11,8 +10,8 @@ CrossingGoer::CrossingGoer() :
   sum_v_(0),
   sum_w_(0)
 {
-  // Debug log level
-  if(ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug))
+  // Log level
+  if(ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info))
   {
     ros::console::notifyLoggerLevelsChanged();
   }
@@ -36,8 +35,7 @@ CrossingGoer::CrossingGoer() :
   twist_publisher_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   goal_reached_publisher_ = nh_.advertise<std_msgs::Bool>("goal_reached", 1);
   
-  ROS_INFO("CrossingGoer initialized (%s)", ros::this_node::getName().c_str());
-  std::cout << "CrossingGoer initialized (" << ros::this_node::getName() << ")" << std::endl; // DEBUG
+  ROS_INFO("%s: CrossingGoer initialized", ros::this_node::getName().c_str());
 }
 
 /* Compute the twist needed to reach the goal
@@ -97,7 +95,7 @@ bool CrossingGoer::goto_crossing(const lama_msgs::Crossing& crossing, geometry_m
     goal.x = crossing.center.x;
     goal.y = crossing.center.y;
   }
-  ROS_DEBUG("goal = (%.3f, %.3f)", goal.x, goal.y);
+  ROS_DEBUG("%s: goal = (%.3f, %.3f)", ros::this_node::getName().c_str(), goal.x, goal.y);
   return goToGoal(goal, twist) && can_reach;
 }
 
@@ -130,14 +128,14 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
 
   if (distance < reach_distance_)
   {
-    ROS_DEBUG("Goal (%f, %f) reached", goal.x, goal.y);
+    ROS_DEBUG("%s: Goal (%f, %f) reached", ros::this_node::getName().c_str(), goal.x, goal.y);
     twist = geometry_msgs::Twist();
     // Return true to indicate that the goal is reached.
     return true;
   }
 
   double dtheta = std::atan2(goal.y, goal.x);
-  ROS_DEBUG("distance to goal: %f, dtheta to goal: %f", distance, dtheta);
+  ROS_DEBUG("%s: distance to goal: %f, dtheta to goal: %f", ros::this_node::getName().c_str(), distance, dtheta);
 
   if (std::abs(dtheta) > threshold_w_only_)
   {

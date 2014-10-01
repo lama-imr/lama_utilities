@@ -21,9 +21,9 @@ class DBInterfaceAbstract(object):
         get_srv_class = roslib.message.get_service_class(getter_srv_msg)
         set_srv_class = roslib.message.get_service_class(setter_srv_msg)
 
-        rospy.logdebug('Interface: {} ({},{})'.format(interface_name,
-                                                      getter_srv_msg,
-                                                      setter_srv_msg))
+        rospy.loginfo('Map interface: {} ({},{})'.format(interface_name,
+                                                         getter_srv_msg,
+                                                         setter_srv_msg))
         rospy.logdebug('Getter class {}'.format(get_srv_class))
         rospy.logdebug('Getter request slots: {}'.format(
             get_srv_class._request_class.__slots__))

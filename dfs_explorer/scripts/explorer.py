@@ -24,7 +24,7 @@ from lama_interfaces.interface_factory import interface_factory
 # TODO: add a mechanism for the robot not to come back to the vertex it comes
 # from.
 
-g_max_similarity_for_same = 0.1
+g_max_dissimilarity_for_same = 0.1
 
 
 def normalize_angles(angles):
@@ -36,7 +36,7 @@ def normalize_angles(angles):
 class ExplorerNode(object):
     def __init__(self):
         # Node and server initialization.
-        self.node = rospy.init_node('dfs_explorer', log_level=rospy.DEBUG)
+        rospy.init_node('dfs_explorer', log_level=rospy.DEBUG)
         navigating_jockey_name = rospy.get_param('~navigating_jockey_name',
                                                  'navigating_jockey')
         localizing_jockey_name = rospy.get_param('~localizing_jockey_name',
@@ -50,7 +50,8 @@ class ExplorerNode(object):
         while not self.navigate.wait_for_server(rospy.Duration(5)):
             rospy.loginfo('Waiting for the navigating jockey action ' +
                           'server ({})'.format(navigating_jockey_name))
-        rospy.logdebug('Communicating with the navigating jockey action server')
+        rospy.logdebug('Communicating with the navigating jockey ' +
+                       'action server {}'.format(navigating_jockey_name))
 
         # Localize jockey server.
         self.localize = actionlib.SimpleActionClient(localizing_jockey_name,
@@ -58,7 +59,8 @@ class ExplorerNode(object):
         while not self.localize.wait_for_server(rospy.Duration(5)):
             rospy.loginfo('Waiting for the localizing jockey action ' +
                           'server ({})'.format(localizing_jockey_name))
-        rospy.logdebug('Communicating with the localizing jockey action server')
+        rospy.logdebug('Communicating with the localizing jockey ' +
+                       'action server {}'.format(localizing_jockey_name))
 
         # Crossing escape jockey server.
         self.escape = actionlib.SimpleActionClient(escape_jockey_name,
@@ -66,8 +68,8 @@ class ExplorerNode(object):
         while not self.escape.wait_for_server(rospy.Duration(5)):
             rospy.loginfo('Waiting for the crossing escape jockey action ' +
                           'server ({})'.format(escape_jockey_name))
-        rospy.logdebug('Commnunicating with the crossing ' +
-                       'escape jockey action server')
+        rospy.logdebug('Commnunicating with the navigating jockey ' +
+                       'action server'.format(escape_jockey_name))
 
         # Map agent server.
         self.map_agent = rospy.ServiceProxy('lama_map_agent', ActOnMap)
@@ -123,19 +125,22 @@ class ExplorerNode(object):
         Move the robot to the first crossing so that we can have a descriptor
         list to start with with the DFS algorithm.
         """
-        rospy.logdebug('Moving to crossing')
+        rospy.logdebug('{}: moving to crossing'.format(rospy.get_name()))
         nav_goal = NavigateGoal()
         nav_goal.action = nav_goal.TRAVERSE
         self.navigate.send_goal(nav_goal)
         self.navigate.wait_for_result()
         nav_result = self.navigate.get_result()
         if nav_result.final_state == nav_result.DONE:
-            rospy.logdebug('Traversed to crossing center in ' +
-                           '{:.2f} s'.format(
+            rospy.logdebug(('{}: traversed to crossing center in ' +
+                           '{:.2f} s').format(
+                               rospy.get_name(),
                                nav_result.completion_time.to_sec()))
         else:
-            rospy.logerr('Something wrong happened, exiting!')
-            raise Exception('Something wrong happened, exiting!')
+            err = '{}: something wrong happened, exiting!'.format(
+                rospy.get_name())
+            rospy.logerr(err)
+            raise Exception(err)
         self.first_crossing_reached = True
 
     def loop(self):
@@ -198,8 +203,8 @@ class ExplorerNode(object):
         self.localize.send_goal_and_wait(loc_goal, rospy.Duration(0.5))
         loc_result = self.localize.get_result()
         if not loc_result:
-            rospy.logerr('Did not receive vertex descriptor within ' +
-                         '0.5 s, exiting')
+            rospy.logerr('{}: did not receive vertex descriptor within ' +
+                         '0.5 s, exiting'.format(rospy.get_name()))
             return False
         rospy.logdebug('Received vertex descriptor')
         # The LaserScan and the exit_ angles are the 1st and 3rd descriptors
@@ -208,16 +213,19 @@ class ExplorerNode(object):
         return True
 
     def add_vertex(self, descriptors):
-        vertices, similarities = self.get_similarity()
+        vertices, dissimilarities = self.get_dissimilarity()
         vertex_is_new = True
-        if similarities and (min(similarities) < g_max_similarity_for_same):
+        if (dissimilarities and
+            (min(dissimilarities) < g_max_dissimilarity_for_same)):
             vertex_is_new = False
         if vertex_is_new:
             # Add vertex to map.
             map_action = ActOnMapRequest()
             map_action.action.action = map_action.action.PUSH_VERTEX
             response = self.map_agent(map_action)
-            new_vertex = response.object.id
+            new_vertex = response.objects[0].id
+            rospy.logdebug('{}: new vertex {}'.format(
+                rospy.get_name(), new_vertex))
             # Assign descriptors.
             map_action = ActOnMapRequest()
             map_action.object.id = new_vertex
@@ -237,14 +245,14 @@ class ExplorerNode(object):
             self.add_edge_to_graph(new_vertex)
             self.last_vertex = new_vertex
         else:
-            index_vertex_same = vertices.index(min(similarities))
+            index_vertex_same = vertices.index(min(dissimilarities))
             vertex_same = vertices(index_vertex_same)
             self.add_edge_to_graph(vertex_same)
             self.last_vertex = vertex_same
         if not self.first_vertex:
             self.first_vertex = self.last_vertex
 
-    def get_similarity(self):
+    def get_dissimilarity(self):
         loc_goal = LocalizeGoal()
         loc_goal.action = loc_goal.GET_SIMILARITY
         self.localize.send_goal_and_wait(loc_goal, rospy.Duration(0.5))
@@ -253,7 +261,8 @@ class ExplorerNode(object):
             rospy.logerr('Did not received vertex descriptor within ' +
                          '0.5 s, exiting')
             return None, None
-        rospy.logdebug('Received vertex descriptor')
+        rospy.logdebug('{}: received {} dissimilarities'.format(
+            rospy.get_name(), len(loc_result.idata)))
         return loc_result.idata, loc_result.fdata
 
     def add_edge_to_graph(self, vertex):

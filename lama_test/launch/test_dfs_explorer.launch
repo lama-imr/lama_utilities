@@ -65,7 +65,9 @@
 	-->
 
 	<node name="localizing_jockey" pkg="lj_laser_heading" type="lj_laser_heading"
-			output="screen" />
+			output="screen" >
+		<remap from="localizing_jockey/odom" to="/odom" />
+	</node>
 
 	<node name="crossing_escaper" pkg="nj_escape_crossing" type="nj_escape_crossing"
 			output="screen" />

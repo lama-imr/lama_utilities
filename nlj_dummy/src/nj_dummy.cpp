@@ -24,8 +24,8 @@ void NJDummy::onTraverse()
   double traversing_duration = random_duration();
   nlj_dummy::GetDummyDescriptor dg;
 
-  dg.request.id = goal_.descriptor;
-  ROS_INFO("goal.descriptor: %d", goal_.descriptor.descriptor_id);
+  dg.request.id = goal_.descriptor_link.descriptor_id;
+  ROS_INFO("goal.descriptor: %d", goal_.descriptor_link.descriptor_id);
   ros::service::call(get_service_name_, dg);
   ROS_INFO("dummy descriptor is %i", dg.response.descriptor.value);
 

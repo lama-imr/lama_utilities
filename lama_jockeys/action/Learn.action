@@ -13,7 +13,7 @@ uint32 DONE=1
 uint32 STOPPED=2
 uint32 FAILED=3
 
-lama_interfaces/DescriptorIdentifier descriptor
+lama_interfaces/DescriptorLink descriptor_link
 duration completion_time
 ---
 # Feedback.

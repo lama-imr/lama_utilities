@@ -3,7 +3,7 @@ from StringIO import StringIO
 import rospy
 
 import sqlalchemy
-from sqlalchemy.types import Integer, Binary, String
+from sqlalchemy.types import Integer, Binary
 
 from db_interface import DBInterfaceAbstract
 
@@ -25,7 +25,7 @@ class DBInterface(DBInterfaceAbstract):
         # Make the transaction.
         connection = self.engine.connect()
         transaction = connection.begin()
-        id_ = msg.id.descriptor_id
+        id_ = msg.id
         query = self.table.select(whereclause=(self.table.c.id == id_))
         result = connection.execute(query).fetchone()
         transaction.commit()
@@ -55,8 +55,7 @@ class DBInterface(DBInterfaceAbstract):
 
         # Return a setter response instance with the descriptor identifier.
         response = self.setter_service_class._response_class()
-        response.id.descriptor_id = return_id
-        response.id.interface_name = self.interface_type
+        response.id = return_id
         return response
 
     def _generateSchema(self):
@@ -97,7 +96,7 @@ def interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
       a descriptor from the database. For example
       'lama_interfaces/GetVectorLaserScan'.
       Service definition must be in form:
-            lama_interfaces/DescriptorIdentifier id
+            int32 id
             ---
             * descriptor
     - setter_srv_msg: str, identifies the service message used when adding
@@ -106,7 +105,7 @@ def interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
       Service definition must be in form:
             * descriptor
             ---
-            lama_interfaces/DescriptorIdentifier id
+            int32 id
     """
     if getter_srv_msg.endswith('.srv'):
         getter_srv_msg = getter_srv_msg[:-4]

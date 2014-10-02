@@ -1,7 +1,3 @@
-/* Base class for navigating jockeys
- *
- */
-
 #include <lama_jockeys/navigating_jockey.h>
 
 namespace lama
@@ -50,13 +46,13 @@ void NavigatingJockey::goalCallback(const lama_jockeys::NavigateGoalConstPtr& go
       initAction();
       // Reset the goal, just in case.
       goal_.edge = lama_interfaces::LamaObject();
-      goal_.descriptor = lama_interfaces::DescriptorIdentifier();
+      goal_.descriptor_link = lama_interfaces::DescriptorLink();
       onStop();
       break;
     case lama_jockeys::NavigateGoal::TRAVERSE:
       initAction();
       goal_.edge = goal->edge;
-      goal_.descriptor = goal->descriptor;
+      goal_.descriptor_link = goal->descriptor_link;
       onTraverse();
       break;
     case lama_jockeys::NavigateGoal::INTERRUPT:

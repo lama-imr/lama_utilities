@@ -38,19 +38,17 @@ CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
 
   private_nh.getParamCached("escape_distance", escape_distance_);
 
-  std::string crossing_interface_name;
-  if (!private_nh.getParam("crossing_interface_name", crossing_interface_name))
-    crossing_interface_name = "crossing";
+  if (!private_nh.getParam("crossing_interface_name", crossing_interface_name_))
+    crossing_interface_name_ = "crossing";
 
-  std::string exit_angle_interface_name;  // Name of the map interface for exit angle
-  if (!private_nh.getParam("exit_angle_interface_name", exit_angle_interface_name))
-    exit_angle_interface_name = "exit_angle";
+  if (!private_nh.getParam("exit_angle_interface_name", exit_angle_interface_name_))
+    exit_angle_interface_name_ = "exit_angle";
 
   if (!private_nh.getParam("exit_angle_topic_name", exit_angle_topic_name_))
     exit_angle_topic_name_ = "exit_angle";
 
-  crossing_getter_ = nh_.serviceClient<lama_msgs::GetCrossing>(crossing_interface_name);
-  exit_angle_getter_ = nh_.serviceClient<lama_interfaces::GetDouble>(exit_angle_interface_name);
+  crossing_getter_ = nh_.serviceClient<lama_msgs::GetCrossing>(crossing_interface_name_);
+  exit_angle_getter_ = nh_.serviceClient<lama_interfaces::GetDouble>(exit_angle_interface_name_);
 }
 
 /* First orient the robot, then travel at least "distance_to_escape_".
@@ -203,22 +201,23 @@ void CrossingEscaper::direction_callback(const std_msgs::Float32& direction)
 bool CrossingEscaper::getCrossing()
 {
   lama_interfaces::ActOnMap map_action;
-  map_action.request.action.action = lama_interfaces::MapAction::PULL_VERTEX;
+  map_action.request.action.action = lama_interfaces::MapAction::GET_DESCRIPTOR_LINKS;
   map_action.request.object.id = goal_.edge.references[0];
+  map_action.request.interface_name = crossing_interface_name_;
   map_agent_.call(map_action);
-  lama_msgs::GetCrossing crossing_srv;
-  if (map_action.response.descriptors.empty())
+  if (map_action.response.descriptor_links.empty())
   {
-    ROS_DEBUG("No crossing descriptor for edge %d",
-        map_action.response.objects[0].id);
+    ROS_DEBUG("No crossing descriptor for vertex %d",
+        map_action.request.object.id);
     return false;
   }
-  if (map_action.response.descriptors.size() > 0)
+  if (map_action.response.descriptor_links.size() > 0)
   {
-    ROS_WARN("More than one crossing descriptor for edge %d, taking the first one",
-        map_action.response.objects[0].id);
+    ROS_WARN("More than one crossing descriptor for vertex %d, taking the first one",
+        map_action.request.object.id);
   }
-  crossing_srv.request.id.descriptor_id = map_action.response.descriptors[0].descriptor_id;
+  lama_msgs::GetCrossing crossing_srv;
+  crossing_srv.request.id = map_action.response.descriptor_links[0].descriptor_id;
   crossing_getter_.call(crossing_srv);
   crossing_ = crossing_srv.response.descriptor;
   return true;
@@ -231,22 +230,23 @@ bool CrossingEscaper::getCrossing()
 bool CrossingEscaper::getExitAngle()
 {
   lama_interfaces::ActOnMap map_action;
-  map_action.request.action.action = lama_interfaces::MapAction::PULL_EDGE;
+  map_action.request.action.action = lama_interfaces::MapAction::GET_DESCRIPTOR_LINKS;
   map_action.request.object.id = goal_.edge.id;
+  map_action.request.interface_name = exit_angle_interface_name_;
   map_agent_.call(map_action);
-  lama_interfaces::GetDouble exit_angle_srv;
-  if (map_action.response.descriptors.empty())
+  if (map_action.response.descriptor_links.empty())
   {
-    ROS_DEBUG("No exit angle descriptor for edge %d",
-        map_action.response.objects[0].id);
+    ROS_DEBUG("No exit angle descriptor for vertex %d",
+        map_action.request.object.id);
     return false;
   }
-  if (map_action.response.descriptors.size() > 0)
+  if (map_action.response.descriptor_links.size() > 0)
   {
     ROS_WARN("More than one exit angle descriptor for edge %d, taking the first one",
-        map_action.response.objects[0].id);
+        map_action.request.object.id);
   }
-  exit_angle_srv.request.id.descriptor_id = map_action.response.descriptors[0].descriptor_id;
+  lama_interfaces::GetDouble exit_angle_srv;
+  exit_angle_srv.request.id = map_action.response.descriptor_links[0].descriptor_id;
   exit_angle_getter_.call(exit_angle_srv);
   direction_ = exit_angle_srv.response.descriptor;
   return true;

@@ -3,7 +3,9 @@
 
 #include <cstdlib>
 #include <ctime>
+#include <math.h>  // for lround()
 
+#include <lama_interfaces/DescriptorLink.h>
 #include <lama_jockeys/localizing_jockey.h>
 
 #include <nlj_dummy/SetDummyDescriptor.h>
@@ -12,7 +14,9 @@ class LJDummy : public lama::LocalizingJockey
 {
   public:
 
-    LJDummy(std::string name, std::string set_service_name);
+    LJDummy(const std::string& name,
+        const std::string& interface_name,
+        const std::string& set_service_name);
 
     void onGetVertexDescriptor();
     void onGetEdgesDescriptors();
@@ -22,7 +26,8 @@ class LJDummy : public lama::LocalizingJockey
 
   private:
 
-    // Name of the setter service as interface to Lama.
+    // Name of the interface and setter service as interface to Lama.
+    std::string interface_name_;
     std::string set_service_name_;
 
     // Uniform distribution for the localizing time.
@@ -30,7 +35,7 @@ class LJDummy : public lama::LocalizingJockey
     const double max_localizing_delta_;
 
     double random_duration();
-    double random_angle();
+    int random_angle();
     double completion(double current_time);
 };
 

@@ -34,7 +34,7 @@ int main(int argc, char **argv)
   }
 
   // Run the jockeys.
-  LJDummy loc_jockey("localizing_jockey", srv.response.set_service_name);
+  LJDummy loc_jockey("localizing_jockey", srv.request.interface_name, srv.response.set_service_name);
   NJDummy nav_jockey("navigating_jockey", srv.response.get_service_name);
 
   ROS_DEBUG("dummy_jockey started");

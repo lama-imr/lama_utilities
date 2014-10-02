@@ -1,4 +1,5 @@
-/* Base class for navigating jockeys
+/* 
+ * Base class for navigating jockeys
  */
 
 #ifndef _LAMA_JOCKEYS_NAVIGATING_JOCKEY_H_
@@ -13,7 +14,7 @@
 #include <geometry_msgs/Point.h>
 
 #include <lama_interfaces/LamaObject.h>
-#include <lama_interfaces/DescriptorIdentifier.h>
+#include <lama_interfaces/DescriptorLink.h>
 
 #include <lama_jockeys/jockey.h>
 #include <lama_jockeys/NavigateAction.h>

@@ -7,7 +7,7 @@ uint32 INTERRUPT=3
 uint32 CONTINUE=4
 
 lama_interfaces/LamaObject edge
-lama_interfaces/DescriptorIdentifier descriptor
+lama_interfaces/DescriptorLink descriptor_link
 ---
 # Result.
 

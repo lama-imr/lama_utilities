@@ -10,7 +10,7 @@ uint32 GET_DISSIMILARITY=5
 uint32 INTERRUPT=6
 uint32 CONTINUE=7
 
-lama_interfaces/DescriptorIdentifier descriptor
+lama_interfaces/DescriptorLink descriptor_link
 ---
 # Result.
 
@@ -18,7 +18,7 @@ uint32 state
 uint32 DONE=1
 uint32 NOT_SUPPORTED=2
 
-lama_interfaces/DescriptorIdentifier[] descriptors
+lama_interfaces/DescriptorLink[] descriptor_links
 # Data output, dependent on action.
 int32[] idata
 float32[] fdata

@@ -1,3 +1,3 @@
-DescriptorIdentifier id 
+int32 id 
 ---
 geometry_msgs/Pose[] descriptor 

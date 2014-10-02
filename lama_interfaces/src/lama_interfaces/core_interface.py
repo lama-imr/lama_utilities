@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import copy
+
 from sqlalchemy import create_engine
 from sqlalchemy import select
 from sqlalchemy import MetaData
@@ -14,7 +16,7 @@ import roslib.message
 
 from lama_interfaces.msg import MapAction
 from lama_interfaces.msg import LamaObject
-from lama_interfaces.msg import DescriptorIdentifier
+from lama_interfaces.msg import DescriptorLink
 
 g_default_core_table_name = 'lama_objects'
 g_default_descriptor_table_name = 'lama_descriptor_ids'
@@ -95,9 +97,10 @@ class CoreDBInterface(object):
         table.append_column(Column('object_id',
                                    types.Integer,
                                    ForeignKey(self.interface_name + '.id')))
-        table.append_column(Column('descriptor_id', types.Integer,
-                                   unique=True))
+        table.append_column(Column('descriptor_id', types.Integer))
         table.append_column(Column('interface_name', types.String))
+        # Add a uniqueness constraint on (object_id, descriptor_id,
+        # interface_name)
         self.descriptor_table = table
 
     def getter_callback(self, msg):
@@ -151,6 +154,7 @@ class CoreDBInterface(object):
                 self.assign_descriptor_to_lama_object),
             MapAction.GET_VERTEX_LIST: self.get_vertex_list,
             MapAction.GET_EDGE_LIST: self.get_edge_list,
+            MapAction.GET_DESCRIPTOR_LINKS: self.get_descriptor_links,
             MapAction.GET_NEIGHBOR_VERTICES: self.get_neighbor_vertices,
             MapAction.GET_OUTGOING_EDGES: self.get_outgoing_edges,
         }
@@ -184,7 +188,7 @@ class CoreDBInterface(object):
             err = 'No element with id {} in database table {}'.format(
                 id_, self.core_table.name)
             rospy.logerr(err)
-            raise ValueError(err)
+            raise rospy.ServiceException(err)
 
         lama_object = LamaObject()
         lama_object.id = id_
@@ -230,7 +234,7 @@ class CoreDBInterface(object):
             err = 'No element with id_in_world {} in database table {}'.format(
                 id_in_world, self.core_table.name)
             rospy.logerr(err)
-            raise ValueError(err)
+            raise rospy.ServiceException(err)
 
         lama_objects = []
         for result in results:
@@ -259,36 +263,49 @@ class CoreDBInterface(object):
 
         return lama_objects
 
-    def _get_lama_object_descriptor_ids(self, id_):
-        """Retrieve descriptor identifiers associated with a Lama object
+    def _get_lama_object_descriptor_links(self, id_, interface_name=None):
+        """Retrieve DescriptorLink associated with a Lama object
 
-        Return a list of DescriptorIdentifier.
+        Return a list of DescriptorLink. If interface_name is given, return
+        all DescriptorLink corresponding to this interface_name, otherwise, and
+        if interface_name is '' or '*', return all DescriptorLink.
 
         Parameters
         ----------
         - id_: int, lama object id in the database.
+        - interface_name: string, default to None.
+            If None, '', or '*', all DescriptorLink are returned.
+            Otherwise, only DescriptorLink from this interface are returned.
         """
-        desc_ids = []
+        desc_links = []
         # Make the transaction from the descriptor table.
         connection = self.engine.connect()
         transaction = connection.begin()
-        query = self.descriptor_table.select(
-            whereclause=(self.core_table.c.object_id == id_))
+        table = self.descriptor_table
+        query = table.select()
+        query = query.where(table.c.object_id == id_)
+        if interface_name and interface_name != '*':
+            query = query.where(table.c.interface_name == interface_name)
         results = connection.execute(query).fetchall()
         transaction.commit()
         connection.close()
         if not results:
-            err = 'No lama object with id {} in database table {}'.format(
-                id_, self.descriptor_table.name)
+            if interface_name and interface_name != '*':
+                err = ('No lama object with id {} associated with' +
+                       ' interface {} in database table {}').format(
+                           id_, interface_name, self.descriptor_table.name)
+            else:
+                err = 'No lama object with id {} in database table {}'.format(
+                    id_, self.descriptor_table.name)
             rospy.logerr(err)
-            raise ValueError(err)
+            raise rospy.ServiceException(err)
         for result in results:
-            desc_id = DescriptorIdentifier()
-            desc_id.object_id = id_
-            desc_id.deserialize = result['descriptor_id']
-            desc_id.interface_name = result['interface_name']
-            desc_ids.append(desc_id)
-        return desc_ids
+            desc_link = DescriptorLink()
+            desc_link.object_id = id_
+            desc_link.descriptor_id = result['descriptor_id']
+            desc_link.interface_name = result['interface_name']
+            desc_links.append(desc_link)
+        return desc_links
 
     def _set_lama_object(self, lama_object):
         """Add a lama object to the database
@@ -339,13 +356,16 @@ class CoreDBInterface(object):
         - msg: an instance of ActOnMap request.
         """
         response = self.action_service_class._response_class()
-        response.id = self._set_lama_object(msg.object)
+        lama_object = copy.copy(msg.object)
+        lama_object.id = self._set_lama_object(msg.object)
+        response.objects.append(lama_object)
         return response
 
     def pull_lama_object(self, msg):
         """Retrieve a LaMa object from the database
 
-        Return an instance of ActOnMap response.
+        Return an instance of ActOnMap response. The field descriptor_links will
+        be filled with all DescriptorLink associated with this LamaObject.
 
         Parameters
         ----------
@@ -354,7 +374,7 @@ class CoreDBInterface(object):
         response = self.action_service_class._response_class()
         id_ = msg.object.id
         response.objects.append(self._get_lama_object(id_))
-        response.descriptors = self._get_lama_object_descriptor_ids(id_)
+        response.descriptor_links = self._get_lama_object_descriptor_links(id_)
         return response
 
     def assign_descriptor_to_lama_object(self, msg):
@@ -364,11 +384,10 @@ class CoreDBInterface(object):
 
         Parameters
         ----------
-        - msg: an instance of ActOnMap request. All information must be in
-            msg.descriptor (msg.object is ignored).
+        - msg: an instance of ActOnMap request.
         """
         # Ensure that the lama object exists in the core table.
-        object_id = msg.desciptor.object_id
+        object_id = msg.object.id
         connection = self.engine.connect()
         transaction = connection.begin()
         query = self.core_table.select(
@@ -380,17 +399,17 @@ class CoreDBInterface(object):
             err = 'No lama object with id {} in database table {}'.format(
                 object_id, self.core_table.name)
             rospy.logerr(err)
-            raise ValueError(err)
+            raise rospy.ServiceException(err)
 
         # Ensure that the descriptor exists in the database.
-        table_name = msg.desciptor.interface_name
+        table_name = msg.interface_name
         if table_name not in self.metadata.tables:
             err = 'No interface {} in the database'.format(
-                msg.desciptor.interface_name)
+                msg.interface_name)
             rospy.logerr(err)
-            raise ValueError(err)
+            raise rospy.ServiceException(err)
         table = self.metadata.tables[table_name]
-        desc_id = msg.desciptor.descriptor_id
+        desc_id = msg.descriptor_id
         connection = self.engine.connect()
         transaction = connection.begin()
         query = table.select(
@@ -402,7 +421,7 @@ class CoreDBInterface(object):
             err = 'No descriptor with id {} in database table {}'.format(
                 desc_id, table.name)
             rospy.logerr(err)
-            raise ValueError(err)
+            raise rospy.ServiceException(err)
 
         # Add the descriptor to the descriptor table.
         connection = self.engine.connect()
@@ -467,6 +486,10 @@ class CoreDBInterface(object):
         """
         return self.get_lama_object_list(msg, LamaObject.EDGE)
 
+    def get_descriptor_links(self, msg):
+        return self._get_lama_object_descriptor_links(msg.object.id,
+                                                      msg.interface_name)
+
     def get_neighbor_vertices(self, msg):
         """Retrieve all neighbor vertices from the database
 
@@ -477,7 +500,7 @@ class CoreDBInterface(object):
         - msg: an instance of ActOnMap request.
         """
         # TODO: Discuss with Karel what this action does.
-        rospy.logerr('GET_NEIGHTBOR_VERTICES not implemented')
+        rospy.logerr('GET_NEIGHBOR_VERTICES not implemented')
         response = self.action_service_class._response_class()
         return response
 
@@ -507,7 +530,7 @@ class CoreDBInterface(object):
             err = 'No lama object with id {} in database table {}'.format(
                 msg.object.id, self.core_table.name)
             rospy.logerr(err)
-            raise ValueError(err)
+            raise rospy.ServiceException(err)
         response = self.action_service_class._response_class()
         for result in results:
             edge = self._get_lama_objects(result['id'])

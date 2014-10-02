@@ -1,6 +1,10 @@
 #include <nlj_dummy/lj_dummy.h>
 
-LJDummy::LJDummy(std::string name, std::string set_service_name) : lama::LocalizingJockey(name),
+LJDummy::LJDummy(const std::string& name,
+        const std::string& interface_name,
+        const std::string& set_service_name) :
+  lama::LocalizingJockey(name),
+  interface_name_(interface_name),
   set_service_name_(set_service_name),
   mean_localizing_time_(0.1),
   max_localizing_delta_(0.03)
@@ -22,7 +26,7 @@ void LJDummy::onGetEdgesDescriptors()
 
   ros::Time start_time = ros::Time::now();
   double localizing_duration = random_duration();
-  nlj_dummy::SetDummyDescriptor ds;
+  nlj_dummy::SetDummyDescriptor setter_srv;
 
   // Start the computer intensive localizing (uninterruptable).
   double last_feedback_update = 0.0;
@@ -43,14 +47,18 @@ void LJDummy::onGetEdgesDescriptors()
     if (time_elapsed > localizing_duration)
     {
       // Generate 4 descriptors.
-      result_.descriptors.clear();
+      result_.descriptor_links.clear();
       for (int i = 0 ; i < 4 ; i++)
       {
-        ds.request.descriptor.value = random_angle();
-        ros::service::call(set_service_name_, ds);
-        result_.descriptors.push_back(ds.response.id);
-        ROS_INFO("outgoing descriptor_id %i", ds.response.id.descriptor_id);
-        ROS_INFO("outgoing edge %i", ds.request.descriptor.value);
+        setter_srv.request.descriptor.value = random_angle();
+        ros::service::call(set_service_name_, setter_srv);
+        lama_interfaces::DescriptorLink descriptor_link;
+        descriptor_link.object_id = goal_.descriptor_link.object_id;
+        descriptor_link.descriptor_id = setter_srv.response.id;
+        descriptor_link.interface_name = interface_name_;
+        result_.descriptor_links.push_back(descriptor_link);
+        ROS_INFO("outgoing descriptor_id %i", setter_srv.response.id);
+        ROS_INFO("outgoing edge %i", setter_srv.request.descriptor.value);
       }
 
       result_.state = lama_jockeys::LocalizeResult::DONE;
@@ -93,9 +101,11 @@ double LJDummy::random_duration()
   return min + (max - min) * ((double) std::rand()) / RAND_MAX;
 }
 
-double LJDummy::random_angle()
+/* return an int between 0 and 359 included
+ */
+int LJDummy::random_angle()
 {
-  return 359 * ((double) std::rand()) / RAND_MAX;
+  return lround(-0.499 + 360 * ((double) std::rand()) / RAND_MAX);
 }
 
 double LJDummy::completion(double current_time)

@@ -40,6 +40,8 @@ _types_table_name = 'message_types'
 _engine = sqlalchemy.create_engine('sqlite:///created.sql')
 
 # TODO: remove all occurences of roslib.msgs
+
+
 def getListItem(l, i):
     if i >= len(l):
         return None
@@ -765,15 +767,14 @@ class DBInterface(DBInterfaceAbstract):
         response = self.setter_service_class._response_class()
         id_ = self.sqlmsg.setter(self.engine, msg.descriptor)
         # Return the descriptor identifier.
-        response.id.descriptor_id = id_
-        response.id.interface_name = self.interface_name
+        response.id = id_
         return response
 
     def getter(self, msg):
         """Execute the getter service and return the response"""
         # Create an instance of response.
         response = self.getter_service_class._response_class()
-        result = self.sqlmsg.getter(self.engine, msg.id.descriptor_id)
+        result = self.sqlmsg.getter(self.engine, msg.id)
         response.descriptor = result
         return response
 
@@ -817,7 +818,7 @@ def cleartext_interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
       a descriptor from the database. For example
       'lama_interfaces/GetVectorLaserScan'.
       Service definition must be in form:
-            lama_interfaces/DescriptorIdentifier id
+            int32 id
             ---
             * descriptor
     - setter_srv_msg: str, identifies the service message used when adding
@@ -826,7 +827,7 @@ def cleartext_interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
       Service definition must be in form:
             * descriptor
             ---
-            lama_interfaces/DescriptorIdentifier id
+            int32 id
     """
     if getter_srv_msg.endswith('.srv'):
         getter_srv_msg = getter_srv_msg[:-4]

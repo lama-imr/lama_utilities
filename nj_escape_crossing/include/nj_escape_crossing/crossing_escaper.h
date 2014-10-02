@@ -15,8 +15,8 @@
  * - none
  *
  * Interaction with the map (created by other jockeys):
- * - Getter: lama_msgs/Crossing, "crossing_interface"
- * - Getter: float64, "exit_angle_interface"
+ * - Getter: lama_msgs/Crossing, "crossing"
+ * - Getter: float64, "exit_angle"
  *
  * Subscribers (other than map-related):
  * - nav_msgs::Odometry, "~/odometry", robot position
@@ -86,6 +86,7 @@ class CrossingEscaper : public lama::NavigatingJockey
     bool goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twist& twist) const;
     geometry_msgs::Point goalFromOdometry();
 
+    // Subscribers and publishers.
     ros::Subscriber odometry_subscriber_;
     ros::Publisher twist_publisher_;
     ros::ServiceClient crossing_getter_;
@@ -117,6 +118,8 @@ class CrossingEscaper : public lama::NavigatingJockey
     double direction_;
     nav_msgs::Odometry start_position_;
     double distance_to_escape_;  //!> Either escape_distance_ or crossing_.radius.
+    std::string crossing_interface_name_;  // Name of the map interface for crossing.
+    std::string exit_angle_interface_name_;  // Name of the map interface for exit angle.
 };
 
 } // namespace nj_escape_crossing

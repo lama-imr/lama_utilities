@@ -1,4 +1,4 @@
 geometry_msgs/Polygon descriptor 
 ---
-DescriptorIdentifier id
+int32 id
 

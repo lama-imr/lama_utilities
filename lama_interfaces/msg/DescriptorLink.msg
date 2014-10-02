@@ -1,3 +1,5 @@
+# A DescriptorLink is a bond between a Lama object and a descriptor.
+
 # Id of the Lama object associated with the descriptor (in the database).
 int32 object_id
 

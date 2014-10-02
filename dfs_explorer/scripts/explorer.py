@@ -209,10 +209,10 @@ class ExplorerNode(object):
         rospy.logdebug('Received vertex descriptor')
         # The LaserScan and the exit_ angles are the 1st and 3rd descriptors
         # respectively.
-        self.add_vertex(loc_result.descriptors)
+        self.add_vertex(loc_result.descriptor_links)
         return True
 
-    def add_vertex(self, descriptors):
+    def add_vertex(self, descriptor_links):
         vertices, dissimilarities = self.get_dissimilarity()
         vertex_is_new = True
         if (dissimilarities and
@@ -231,14 +231,15 @@ class ExplorerNode(object):
             map_action.object.id = new_vertex
             map_action.action.action = (
                 map_action.action.ASSIGN_DESCRIPTOR_VERTEX)
-            for descriptor in descriptors:
-                map_action.descriptor.descriptor_id = descriptor.descriptor_id
+            for descriptor_link in descriptor_links:
+                map_action.descriptor_id = descriptor_link.descriptor_id
+                map_action.interface_name = descriptor_link.interface_name
                 self.map_agent(map_action)
             # Get the exit_angles from map.
             # TODO: Don't use magic numbers (modify and rename
             # get_crossing_desc_id to return (desc, desc_id).
             # Crossing is the 2nd descriptor.
-            crossing = self.crossing_getter(descriptors[1].descriptor_id)
+            crossing = self.crossing_getter(descriptor_links[1].descriptor_id)
             # Add vertex and associate the sorted list of [None, angle].
             nodes = [[None, f.angle] for f in crossing.frontiers]
             self.graph[new_vertex] = sorted(nodes)
@@ -293,7 +294,7 @@ class ExplorerNode(object):
         """
         # Add edge.
         map_action = ActOnMapRequest()
-        map_action.action.action = map_action.PUSH_EDGE
+        map_action.action.action = map_action.action.PUSH_EDGE
         map_action.object.type = map_action.object.EDGE
         map_action.object.references.append(v0)
         map_action.object.references.append(v1)
@@ -303,8 +304,8 @@ class ExplorerNode(object):
         # Assign descriptor.
         map_action = ActOnMapRequest()
         map_action.action.action = map_action.action.ASSIGN_DESCRIPTOR_EDGE
-        map_action.descriptor.object_id = edge_response.id
-        map_action.descriptor.descriptor_id = desc_response.id
+        map_action.object.id = edge_response.id
+        map_action.descriptor_id = desc_response.id
         self.map_agent(map_action)
 
     def get_next_vertex_to_visit(self):
@@ -434,14 +435,13 @@ class ExplorerNode(object):
         return None
 
     def get_crossing_desc_id(self, vertex):
-        """Return the first Crossing descriptor associated with vertex"""
+        """Return the first Crossing descriptor associated with a vertex"""
         map_action = ActOnMapRequest()
-        map_action.action.action = map_action.action.PULL_VERTEX
+        map_action.action.action = map_action.action.GET_DESCRIPTOR_LINKS
         map_action.object.id = vertex
+        map_action.interface_name = self.crossing_interface_name
         response = self.map_agent(map_action)
-        for d in response.descriptors:
-            if d.interface_name == self.crossing_interface_name:
-                return response.descriptors.descriptor_id
+        return response.descriptor_links[0].descriptor_id
 
     def escape_from_crossing(self):
         """Escape from crossing towards an unknown edge and return when done"""

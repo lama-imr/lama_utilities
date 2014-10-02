@@ -30,27 +30,27 @@ void LocalizingJockey::goalCallback(const lama_jockeys::LocalizeGoalConstPtr& go
   {
     case lama_jockeys::LocalizeGoal::GET_VERTEX_DESCRIPTOR:
       initAction();
-      goal_.descriptor = goal->descriptor;
+      goal_.descriptor_link = goal->descriptor_link;
       onGetVertexDescriptor();
       break;
     case lama_jockeys::LocalizeGoal::GET_EDGES_DESCRIPTORS:
       initAction();
-      goal_.descriptor = goal->descriptor;
+      goal_.descriptor_link = goal->descriptor_link;
       onGetEdgesDescriptors();
       break;
     case lama_jockeys::LocalizeGoal::LOCALIZE_IN_VERTEX:
       initAction();
-      goal_.descriptor = goal->descriptor;
+      goal_.descriptor_link = goal->descriptor_link;
       onLocalizeInVertex();
       break;
     case lama_jockeys::LocalizeGoal::LOCALIZE_EDGE:
       initAction();
-      goal_.descriptor = goal->descriptor;
+      goal_.descriptor_link = goal->descriptor_link;
       onLocalizeEdge();
       break;
     case lama_jockeys::LocalizeGoal::GET_DISSIMILARITY:
       initAction();
-      goal_.descriptor = goal->descriptor;
+      goal_.descriptor_link = goal->descriptor_link;
       onGetDissimilarity();
       break;
     case lama_jockeys::LocalizeGoal::INTERRUPT:
@@ -74,19 +74,19 @@ void LocalizingJockey::preemptCallback()
 void LocalizingJockey::initAction()
 {
   Jockey::initAction();
-  result_.descriptors.clear();
+  result_.descriptor_links.clear();
   result_.idata.clear();
   result_.fdata.clear();
 }
 
 void LocalizingJockey::onInterrupt()
 {
-  ROS_DEBUG("%s: localizing goal %d interrupted", jockey_name_.c_str(), goal_.descriptor.object_id);
+  ROS_DEBUG("%s: localizing goal with lama object %d interrupted", jockey_name_.c_str(), goal_.descriptor_link.object_id);
 }
 
 void LocalizingJockey::onContinue()
 {
-  ROS_DEBUG("%s: localizing goal %d resumed", jockey_name_.c_str(), goal_.descriptor.object_id);
+  ROS_DEBUG("%s: localizing goal with lama object %d resumed", jockey_name_.c_str(), goal_.descriptor_link.object_id);
 }
 
 } // namespace lama

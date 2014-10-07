@@ -3,8 +3,9 @@
 	<param name="use_sim_time" value="true" />
 
 	<arg name="model" default="$(find lama_test)/worlds/stage-360.world" />
-	<!-- Launch nj_costmap if launch_nj is true, don't launch it otherwise. -->
-	<arg name="launch_nj_costmap" default="true" />
+	<!-- costmap == true => local_map + nj_costmap; costmap == false => nj_laser -->
+	<arg name="costmap" default="true" />
+	<!-- Launch nj_costmap if launch_nj_costmap is true, don't launch it otherwise. -->
 	<arg name="launch_explorer" default="true" />
 
 	<node name="stage" pkg="stage_ros" type="stageros"
@@ -19,12 +20,14 @@
 
 	<node name="map_node" pkg="lama_interfaces" type="map_node.py" />
 
-	<node name="costmap" pkg="local_map" type="local_map"
-			output="screen" launch-prefix="">
-		<remap from="costmap/scan" to="/base_scan" />
-	</node>
+	<group if="$(arg costmap)">
+		<node name="costmap" pkg="local_map" type="local_map"
+				output="screen" launch-prefix="">
+			<param name="map_width" value="200" />
+			<param name="map_height" value="200" />
+			<remap from="costmap/scan" to="/base_scan" />
+		</node>
 
-	<group if="$(arg launch_nj_costmap)">
 		<!--
 		  rosrun nj_costmap nj_costmap __name:=nj_costmap \
 		  _navigating_jockey_server_name:=/navigating_jockey_server \
@@ -40,7 +43,7 @@
 		  nj_costmap/cmd_vel:=/cmd_vel \
 		  nj_costmap/base_scan:=/base_scan
 		-->
-		<node name="nj_costmap" pkg="nj_costmap" type="nj_costmap"
+		<node name="navigating_jockey" pkg="nj_costmap" type="nj_costmap"
 				output="screen" >
 			<param name="navigating_jockey_server_name" value="/navigating_jockey_server" />
 			<param name="odom_frame" value="base_link" />
@@ -51,33 +54,53 @@
 			<param name="ki_w" value="0" />
 			<param name="min_linear_velocity" value="0" />
 			<param name="min_angular_velocity" value="0" />
-			<remap from="nj_costmap/local_costmap" to="/costmap/local_map" />
-			<remap from="nj_costmap/cmd_vel" to="/cmd_vel" />
-			<remap from="nj_costmap/base_scan" to="/base_scan" />
+			<remap from="navigating_jockey/local_costmap" to="/costmap/local_map" />
+			<remap from="navigating_jockey/cmd_vel" to="/cmd_vel" />
+			<remap from="navigating_jockey/base_scan" to="/base_scan" />
 		</node>
 	</group>
 
-	<!--
-	<node name="navigating_jockey" pkg="nj_laser" type="nj_laser"
-			output="screen">
-		<remap from="navigating_jockey/cmd_vel" to="/cmd_vel" />
-	</node>
-	-->
+	<group unless="$(arg costmap)" >
+		<node name="navigating_jockey" pkg="nj_laser" type="nj_laser"
+				output="screen">
+			<param name="navigating_jockey_server_name" value="/navigating_jockey_server" />
+			<param name="frontier_width" value="0.5" />
+			<param name="kp_v" value="0.05" />
+			<param name="kp_w" value="0.1" />
+			<param name="ki_v" value="0" />
+			<param name="ki_w" value="0" />
+			<param name="min_linear_velocity" value="0" />
+			<param name="min_angular_velocity" value="0" />
+			<param name="max_frontier_distance" value="3.5" />
+			<param name="max_frontier_angle" value ="1.2" />
+			<remap from="navigating_jockey/cmd_vel" to="/cmd_vel" />
+			<remap from="navigating_jockey/base_scan" to="/base_scan" />
+		</node>
+	</group>
 
 	<node name="localizing_jockey" pkg="lj_laser_heading" type="lj_laser_heading"
 			output="screen" >
+			<param name="frontier_width" value="0.5" />
+			<param name="max_frontier_distance" value="3.5" />
 		<remap from="localizing_jockey/odom" to="/odom" />
 	</node>
 
 	<node name="crossing_escaper" pkg="nj_escape_crossing" type="nj_escape_crossing"
-			output="screen" />
+			output="screen" >
+		<param name="crossing_interface_name" value="/localizing_jockey_server_crossing_descriptor" />
+	</node>
 
+	<node name="dissimilarity_server" pkg="pm_mcc" type="pm_mcc" 
+			output="screen" >
+	</node>
+	
 	<group if="$(arg launch_explorer)">
 		<node name="explorer" pkg="dfs_explorer" type="explorer.py"
 				output="screen">
 			<param name="navigating_jockey_name" value="navigating_jockey_server" />
 			<param name="localizing_jockey_name" value="localizing_jockey_server" />
 			<param name="escape_jockey_name" value="crossing_escaper_jockey" />
+			<param name="crossing_interface" value="/localizing_jockey_server_crossing_descriptor" />
 		</node>
 	</group>
 

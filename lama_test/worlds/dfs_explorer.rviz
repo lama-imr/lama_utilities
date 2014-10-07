@@ -5,7 +5,6 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /TF1/Frames1
-        - /PointCloud1
       Splitter Ratio: 0.5
     Tree Height: 456
   - Class: rviz/Selection
@@ -59,8 +58,6 @@ Visualization Manager:
           Value: true
         base_link:
           Value: true
-        costmap/local_map:
-          Value: true
         odom:
           Value: true
       Marker Scale: 1
@@ -73,8 +70,7 @@ Visualization Manager:
           base_footprint:
             base_link:
               base_laser_link:
-                costmap/local_map:
-                  {}
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -108,7 +104,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /nj_costmap/crossing_marker
+      Marker Topic: /navigating_jockey/crossing_marker
       Name: Marker
       Namespaces:
         crossing_center: true
@@ -116,7 +112,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /nj_costmap/exits_marker
+      Marker Topic: /navigating_jockey/exits_marker
       Name: Marker
       Namespaces:
         frontiers: true
@@ -126,10 +122,10 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: true
+      Enabled: false
       Name: Map
       Topic: /costmap/local_map
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -140,7 +136,7 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz/PointCloud
       Color: 255; 255; 255
-      Color Transformer: ""
+      Color Transformer: Intensity
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -149,13 +145,13 @@ Visualization Manager:
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: PointCloud
-      Position Transformer: ""
+      Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.05
       Style: Flat Squares
-      Topic: /nj_costmap/place_profile
+      Topic: /navigating_jockey/place_profile
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -216,5 +212,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1213
-  X: 9
-  Y: 75
+  X: 30
+  Y: 76

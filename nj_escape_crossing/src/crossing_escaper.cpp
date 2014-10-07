@@ -23,7 +23,7 @@ CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
   has_odometry_(false),
   has_odometry_and_direction_(false)
 {
-  ros::NodeHandle private_nh;
+  ros::NodeHandle private_nh("~");
   if (!private_nh.getParamCached("kp_v", kp_v_))
     kp_v_ = 0.05;
 
@@ -58,14 +58,19 @@ void CrossingEscaper::onTraverse()
   // TODO: Add a mechanism to stop before distance_to_escape_ if
   // the robot sees only 2 crossing exits on a certain distance.
   
+  ROS_DEBUG("%s: received action TRAVERSE", jockey_name_.c_str());
+  
   twist_publisher_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   odometry_subscriber_ = nh_.subscribe("odometry", 1, &CrossingEscaper::odometry_callback, this);
 
+  ROS_INFO("%s: DEBUG 1", jockey_name_.c_str());
   if (escape_distance_ == 0)
   {
+    ROS_INFO("%s: DEBUG 8", jockey_name_.c_str()); // DEBUG
     // escape_distance_ not set, try to get escape distance from crossing_.
     if (!getCrossing())
     {
+      ROS_INFO("%s: DEBUG 9", jockey_name_.c_str()); // DEBUG
       // crossing_.radius set to 0, don't need to travel very far.
       ROS_WARN("Crossing descriptor to be used as escape distance but radius is 0, DONE");
       twist_publisher_.publish(geometry_msgs::Twist());
@@ -80,6 +85,7 @@ void CrossingEscaper::onTraverse()
   {
     distance_to_escape_ = escape_distance_;
   }
+  ROS_INFO("%s: DEBUG 2", jockey_name_.c_str());
 
   if (!getExitAngle())
   {
@@ -109,6 +115,7 @@ void CrossingEscaper::onTraverse()
     }
     has_odometry_ = false;
   }
+  ROS_INFO("%s: DEBUG 3", jockey_name_.c_str());
 
   start_position_ = odometry_;
   feedback_.completion = 0.01;
@@ -117,8 +124,17 @@ void CrossingEscaper::onTraverse()
   geometry_msgs::Twist twist;
 
   ros::Rate r(50);
-  while (ros::ok() && goal_.action == lama_jockeys::NavigateGoal::TRAVERSE)
+  while (true)
   {
+    if (server_.isPreemptRequested() && !ros::ok())
+    {
+      ROS_INFO("%s: Preempted", jockey_name_.c_str());
+      // set the action state to preempted
+      server_.setPreempted();
+      break;
+    }
+
+    ROS_INFO("%s: DEBUG 4", jockey_name_.c_str());
     // Odometry timeout mechanism.
     if ((ros::Time::now() - odometry_.header.stamp) > max_odometry_age_)
     {
@@ -128,8 +144,10 @@ void CrossingEscaper::onTraverse()
       continue;
     }
 
+    ROS_INFO("%s: DEBUG 5", jockey_name_.c_str());
     if (!angle_reached_)
     {
+      ROS_INFO("%s: DEBUG 6", jockey_name_.c_str());
       angle_reached_ = turnToAngle(direction_, twist);
       twist_publisher_.publish(twist);
       if (angle_reached_)
@@ -140,6 +158,7 @@ void CrossingEscaper::onTraverse()
     }
     else if (!goal_reached_)
     {
+      ROS_INFO("%s: DEBUG 7", jockey_name_.c_str());
       geometry_msgs::Point goal = goalFromOdometry();
       goal_reached_ = goToGoal(goal, twist);
       twist_publisher_.publish(twist);
@@ -193,32 +212,63 @@ void CrossingEscaper::direction_callback(const std_msgs::Float32& direction)
   }
 }
 
-/* Set crossing_ to the descriptor associated with the first vertex of goal_.edge
+/* Set crossing_ to the descriptor associated with the first vertex of goal_.edge or goal_.descriptor_links[0].
+ *
+ * Set crossing_ to the descriptor associated with the first vertex of
+ * goal_.edge, if goal._edge.id non-null. If goal._edge.id is null, get the
+ * crossing with id goal_.descriptor_links[0].descriptor_id.
  *
  * Return false if edge does not exist or if no Crossing descriptor was found,
  * true otherwise.
  */
 bool CrossingEscaper::getCrossing()
 {
-  lama_interfaces::ActOnMap map_action;
-  map_action.request.action.action = lama_interfaces::MapAction::GET_DESCRIPTOR_LINKS;
-  map_action.request.object.id = goal_.edge.references[0];
-  map_action.request.interface_name = crossing_interface_name_;
-  map_agent_.call(map_action);
-  if (map_action.response.descriptor_links.empty())
+  if (goal_.edge.id != 0)
   {
-    ROS_DEBUG("No crossing descriptor for vertex %d",
-        map_action.request.object.id);
+    lama_interfaces::ActOnMap map_action;
+    map_action.request.action.action = lama_interfaces::MapAction::GET_DESCRIPTOR_LINKS;
+    ROS_INFO("%s: DEBUG 10", jockey_name_.c_str()); // DEBUG
+    map_action.request.object.id = goal_.edge.references[0];
+    ROS_INFO("%s: DEBUG 11: %d", jockey_name_.c_str(), goal_.edge.references[0]); // DEBUG
+    map_action.request.interface_name = crossing_interface_name_;
+    if (!map_agent_.call(map_action))
+    {
+      ROS_ERROR("%s: failed to call map agent", ros::this_node::getName().c_str());
+      return false;
+    }
+    if (map_action.response.descriptor_links.empty())
+    {
+      ROS_DEBUG("No crossing descriptor for vertex %d",
+          map_action.request.object.id);
+      return false;
+    }
+    if (map_action.response.descriptor_links.size() > 0)
+    {
+      ROS_WARN("More than one crossing descriptor for vertex %d, taking the first one",
+          map_action.request.object.id);
+    }
+    return retrieveCrossingFromMap(map_action.response.descriptor_links[0].descriptor_id);
+  }
+  else
+  {
+    ROS_DEBUG("%s: goal.edge.id not set, getting descriptor id from goal.descriptor_link",
+        ros::this_node::getName().c_str());
+    return retrieveCrossingFromMap(goal_.descriptor_link.descriptor_id);
+  }
+}
+
+/* Retrieve a Crossing message from the map from its id.
+ */
+bool CrossingEscaper::retrieveCrossingFromMap(const int32_t descriptor_id)
+{
+  lama_msgs::GetCrossing crossing_srv;
+  crossing_srv.request.id = descriptor_id;
+  if (!crossing_getter_.call(crossing_srv))
+  {
+    ROS_ERROR("%s: failed to get Crossing with id %d and interface %s", ros::this_node::getName().c_str(),
+        descriptor_id, crossing_interface_name_.c_str());
     return false;
   }
-  if (map_action.response.descriptor_links.size() > 0)
-  {
-    ROS_WARN("More than one crossing descriptor for vertex %d, taking the first one",
-        map_action.request.object.id);
-  }
-  lama_msgs::GetCrossing crossing_srv;
-  crossing_srv.request.id = map_action.response.descriptor_links[0].descriptor_id;
-  crossing_getter_.call(crossing_srv);
   crossing_ = crossing_srv.response.descriptor;
   return true;
 }

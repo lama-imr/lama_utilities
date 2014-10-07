@@ -81,6 +81,7 @@ class CrossingEscaper : public lama::NavigatingJockey
   private:
 
     bool getCrossing();
+    bool retrieveCrossingFromMap(const int32_t descriptor_id);
     bool getExitAngle();
     bool turnToAngle(const double direction, geometry_msgs::Twist& twist) const;
     bool goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twist& twist) const;

@@ -4,9 +4,11 @@ namespace lama {
 namespace crossing_detector {
 
 LaserCrossingDetector::LaserCrossingDetector(const double frontier_width, const double max_frontier_angle) :
-  CrossingDetector(frontier_width, max_frontier_angle),
-  max_frontier_dist_(0.0)
+  CrossingDetector(frontier_width, max_frontier_angle)
 {
+  ros::NodeHandle private_nh("~");
+  if (!private_nh.getParamCached("max_frontier_distance", max_frontier_dist_))
+    max_frontier_dist_ = 0.0;
 }
 
 Crossing LaserCrossingDetector::crossingDescriptor(const LaserScan& scan, const bool normalize)

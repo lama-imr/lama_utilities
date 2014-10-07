@@ -103,6 +103,10 @@ CrossingDetector::CrossingDetector(const double frontier_width, const double max
   min_relevance_(0.01)
 {
   std::strncpy(node_name_, ros::this_node::getName().c_str(), 30);
+
+  ros::NodeHandle private_nh("~");
+  private_nh.getParamCached("max_frontier_angle", max_frontier_angle_);
+  private_nh.getParamCached("frontier_width", frontier_width_);
 }
 
 Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const bool normalize)

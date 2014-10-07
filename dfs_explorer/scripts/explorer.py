@@ -17,6 +17,7 @@ from lama_jockeys.msg import NavigateAction
 from lama_jockeys.msg import NavigateGoal
 from lama_jockeys.msg import LocalizeAction
 from lama_jockeys.msg import LocalizeGoal
+from lama_msgs.srv import GetCrossing
 from lama_interfaces.srv import ActOnMap
 from lama_interfaces.srv import ActOnMapRequest
 from lama_interfaces.interface_factory import interface_factory
@@ -33,6 +34,20 @@ def normalize_angles(angles):
     return [normalize_angle(a) for a in angles]
 
 
+def debug(msg):
+    rospy.logdebug('{}: {}'.format(rospy.get_name(), msg))
+
+
+def jockey_client(jockey_name, action_type):
+    client = actionlib.SimpleActionClient(jockey_name, action_type)
+    while not client.wait_for_server(rospy.Duration(5)):
+        rospy.loginfo('Waiting for the jockey action ' +
+                      'server ({})'.format(jockey_name))
+    debug('communicating with the jockey ' +
+          'action server {}'.format(jockey_name))
+    return client
+
+
 class ExplorerNode(object):
     def __init__(self):
         # Node and server initialization.
@@ -45,43 +60,24 @@ class ExplorerNode(object):
                                              'nj_escape_jockey')
 
         # Navigate jockey server.
-        self.navigate = actionlib.SimpleActionClient(navigating_jockey_name,
-                                                     NavigateAction)
-        while not self.navigate.wait_for_server(rospy.Duration(5)):
-            rospy.loginfo('Waiting for the navigating jockey action ' +
-                          'server ({})'.format(navigating_jockey_name))
-        rospy.logdebug('Communicating with the navigating jockey ' +
-                       'action server {}'.format(navigating_jockey_name))
+        self.navigate = jockey_client(navigating_jockey_name, NavigateAction)
 
         # Localize jockey server.
-        self.localize = actionlib.SimpleActionClient(localizing_jockey_name,
-                                                     LocalizeAction)
-        while not self.localize.wait_for_server(rospy.Duration(5)):
-            rospy.loginfo('Waiting for the localizing jockey action ' +
-                          'server ({})'.format(localizing_jockey_name))
-        rospy.logdebug('Communicating with the localizing jockey ' +
-                       'action server {}'.format(localizing_jockey_name))
+        self.localize = jockey_client(localizing_jockey_name, LocalizeAction)
 
         # Crossing escape jockey server.
-        self.escape = actionlib.SimpleActionClient(escape_jockey_name,
-                                                   NavigateAction)
-        while not self.escape.wait_for_server(rospy.Duration(5)):
-            rospy.loginfo('Waiting for the crossing escape jockey action ' +
-                          'server ({})'.format(escape_jockey_name))
-        rospy.logdebug('Commnunicating with the navigating jockey ' +
-                       'action server'.format(escape_jockey_name))
+        self.escape = jockey_client(escape_jockey_name, NavigateAction)
 
         # Map agent server.
         self.map_agent = rospy.ServiceProxy('lama_map_agent', ActOnMap)
 
         # Descriptor getter for Crossing.
         self.crossing_interface_name = rospy.get_param(
-            'crossing_interface_name', 'lj_laser_crossing')
-        exits_iface = interface_factory(
-            self.crossing_interface_name,
-            'lama_msgs/GetCrossing',
-            'lama_msgs/SetCrossing')
-        self.crossing_getter = exits_iface.getter_service_proxy
+            '~crossing_interface', 'crossing')
+        crossing_getter_name = self.crossing_interface_name + '_getter'
+        self.crossing_getter = rospy.ServiceProxy(crossing_getter_name,
+                                                  GetCrossing)
+        self.crossing_getter.wait_for_service()
 
         # Exit angles getter and setter (double).
         exit_angles_interface_name = rospy.get_param(
@@ -108,7 +104,8 @@ class ExplorerNode(object):
         self.exit_taken = None
         self.next_vertex = None
         self.next_exit = None
-        # The graph is organized as a map (vertex: list(vertex, exit_angle)).
+        # The graph is organized as a map
+        # vertex: list(list(vertex, exit_angle)).
         # Where the second vertex is the vertex that will be at the next
         # crossing center when traversing edge (corridor) at absolute and
         # exit_angle.
@@ -116,26 +113,31 @@ class ExplorerNode(object):
         # will be visited when all its neighbor vertices are not None.
         # The graph is then an oriented graph where the information for edge
         # a to b is the exit angle that was taken from a to reach b.
-        self.graph = {}
+        self.graph = self.get_graph_from_map()
 
-        rospy.logdebug(rospy.get_name() + ' initialized')
+        debug('initialized')
+
+    def get_graph_from_map(self):
+        """Retrieve the graph from the map"""
+        # TODO: implement
+        # map_action = ActOnMapRequest()
+        # map_action.action.action = map_action.action.GET_VERTEX_LIST
+        return {}
 
     def move_to_crossing(self):
         """Move the robot to the first crossing
         Move the robot to the first crossing so that we can have a descriptor
         list to start with with the DFS algorithm.
         """
-        rospy.logdebug('{}: moving to crossing'.format(rospy.get_name()))
+        debug('moving to crossing')
         nav_goal = NavigateGoal()
         nav_goal.action = nav_goal.TRAVERSE
         self.navigate.send_goal(nav_goal)
         self.navigate.wait_for_result()
         nav_result = self.navigate.get_result()
         if nav_result.final_state == nav_result.DONE:
-            rospy.logdebug(('{}: traversed to crossing center in ' +
-                           '{:.2f} s').format(
-                               rospy.get_name(),
-                               nav_result.completion_time.to_sec()))
+            debug(('traversed to crossing center in {:.2f} s').format(
+                nav_result.completion_time.to_sec()))
         else:
             err = '{}: something wrong happened, exiting!'.format(
                 rospy.get_name())
@@ -162,7 +164,7 @@ class ExplorerNode(object):
 
         while True:
             # 1. Get a new vertex descriptor when finished traversing.
-            rospy.logdebug('Getting descriptor')
+            debug('getting descriptor')
             if not self.get_descriptor():
                 rospy.logwarn('No descriptor, exiting')
                 break
@@ -173,7 +175,7 @@ class ExplorerNode(object):
                 rospy.loginfo('I visisted all crossings, successfully exiting')
                 break
             self.next_vertex, self.next_exit = vertex_and_angle
-            rospy.logdebug('Next vertex to visit {} (exit angle: {}'.format(
+            debug('next vertex to visit {} (exit angle: {})'.format(
                 self.next_vertex, self.next_exit))
 
             # 3. Move to that vertex.
@@ -206,9 +208,8 @@ class ExplorerNode(object):
             rospy.logerr('{}: did not receive vertex descriptor within ' +
                          '0.5 s, exiting'.format(rospy.get_name()))
             return False
-        rospy.logdebug('Received vertex descriptor')
-        # The LaserScan and the exit_ angles are the 1st and 3rd descriptors
-        # respectively.
+        debug('received {} vertex descriptors'.format(
+            len(loc_result.descriptor_links)))
         self.add_vertex(loc_result.descriptor_links)
         return True
 
@@ -224,46 +225,50 @@ class ExplorerNode(object):
             map_action.action.action = map_action.action.PUSH_VERTEX
             response = self.map_agent(map_action)
             new_vertex = response.objects[0].id
-            rospy.logdebug('{}: new vertex {}'.format(
-                rospy.get_name(), new_vertex))
+            debug('new vertex {}'.format(new_vertex))
             # Assign descriptors.
             map_action = ActOnMapRequest()
             map_action.object.id = new_vertex
             map_action.action.action = (
                 map_action.action.ASSIGN_DESCRIPTOR_VERTEX)
-            for descriptor_link in descriptor_links:
-                map_action.descriptor_id = descriptor_link.descriptor_id
-                map_action.interface_name = descriptor_link.interface_name
+            for link in descriptor_links:
+                map_action.descriptor_id = link.descriptor_id
+                map_action.interface_name = link.interface_name
                 self.map_agent(map_action)
+                if link.interface_name == self.crossing_interface_name:
+                    self.current_crossing_id = link.descriptor_id
             # Get the exit_angles from map.
             # TODO: Don't use magic numbers (modify and rename
             # get_crossing_desc_id to return (desc, desc_id).
             # Crossing is the 2nd descriptor.
             crossing = self.crossing_getter(descriptor_links[1].descriptor_id)
+            rospy.logdebug('Exit count: {}'.format(
+                len(crossing.descriptor.frontiers)))
             # Add vertex and associate the sorted list of [None, angle].
-            nodes = [[None, f.angle] for f in crossing.frontiers]
+            nodes = [[None, f.angle] for f in crossing.descriptor.frontiers]
             self.graph[new_vertex] = sorted(nodes)
             self.add_edge_to_graph(new_vertex)
             self.last_vertex = new_vertex
         else:
-            index_vertex_same = vertices.index(min(dissimilarities))
-            vertex_same = vertices(index_vertex_same)
+            index_vertex_same = dissimilarities.index(min(dissimilarities))
+            vertex_same = vertices[index_vertex_same]
             self.add_edge_to_graph(vertex_same)
             self.last_vertex = vertex_same
+            self.current_crossing_id = self.get_crossing_desc_id(vertex_same)
         if not self.first_vertex:
             self.first_vertex = self.last_vertex
 
     def get_dissimilarity(self):
         loc_goal = LocalizeGoal()
         loc_goal.action = loc_goal.GET_DISSIMILARITY
+        debug('Requested GET_DISSIMILARITY')
         self.localize.send_goal_and_wait(loc_goal, rospy.Duration(0.5))
         loc_result = self.localize.get_result()
         if not loc_result:
             rospy.logerr('Did not received vertex descriptor within ' +
                          '0.5 s, exiting')
             return None, None
-        rospy.logdebug('{}: received {} dissimilarities'.format(
-            rospy.get_name(), len(loc_result.idata)))
+        debug('received {} dissimilarities'.format(len(loc_result.idata)))
         return loc_result.idata, loc_result.fdata
 
     def add_edge_to_graph(self, vertex):
@@ -293,20 +298,28 @@ class ExplorerNode(object):
         The edge descriptor is the exit angle to take at v0 to go to v1.
         """
         # Add edge.
+        debug('adding edge ({}, {})'.format(
+            rospy.get_name(), v0, v1))
         map_action = ActOnMapRequest()
         map_action.action.action = map_action.action.PUSH_EDGE
         map_action.object.type = map_action.object.EDGE
         map_action.object.references.append(v0)
         map_action.object.references.append(v1)
         edge_response = self.map_agent(map_action)
+        debug('edge {} added'.format(edge_response.id))
         # Add descriptor.
+        debug('adding descriptor')
         desc_response = self.exit_angles_setter(exit_angle)
+        debug('descriptor {} added'.format(desc_response.id))
         # Assign descriptor.
+        debug('assigining descriptor {} to edge {}'.format(
+            desc_response.id, edge_response.id))
         map_action = ActOnMapRequest()
         map_action.action.action = map_action.action.ASSIGN_DESCRIPTOR_EDGE
         map_action.object.id = edge_response.id
         map_action.descriptor_id = desc_response.id
         self.map_agent(map_action)
+        debug('descriptor assigned')
 
     def get_next_vertex_to_visit(self):
         """Return the tuple (vertex, angle)
@@ -323,6 +336,7 @@ class ExplorerNode(object):
                     return v, a
             return None
 
+        rospy.logdebug('graph: {}'.format(self.graph))
         stack = [self.first_vertex]
         discovered = []
         while stack:
@@ -336,6 +350,8 @@ class ExplorerNode(object):
         return None
 
     def move_to_next_crossing(self):
+        if self.next_vertex is None:
+            return
         # TODO: remove angle from find_path output
         path = self.find_path()
         for vertex, angle in path:
@@ -348,7 +364,7 @@ class ExplorerNode(object):
                 err = 'No edge from {} to {}'.format(self.last_vertex, vertex)
                 rospy.logfatal(err)
                 return False
-            rospy.logdebug('Escaping along edge {}'.format(
+            debug('escaping along edge {}'.format(
                 goal.edge.id))
             result = self.escape.send_goal_and_wait(goal)
             if result.final_state != result.DONE:
@@ -358,7 +374,7 @@ class ExplorerNode(object):
             # Go to next crossing.
             goal = NavigateGoal()
             goal.action = goal.TRAVERSE
-            rospy.logdebug('Moving to next crossing')
+            debug('moving to next crossing')
             result = self.navigate.send_goal_and_wait(goal)
             if result.final_state != result.DONE:
                 err = 'Escape jockey did not succeed'
@@ -417,7 +433,9 @@ class ExplorerNode(object):
         # it comes from during browsing and the associated angle so that
         # after the dfs-tree is built, the path can be found by browsing the
         # referenced vertices.
+        print('Start vertex: '.format(self.last_vertex)) # DEBUG
         start = self.last_vertex
+        print('End vertex: '.format(self.next_vertex)) # DEBUG
         end = self.next_vertex
         queue = [start]
         discovered = set()
@@ -447,11 +465,10 @@ class ExplorerNode(object):
         """Escape from crossing towards an unknown edge and return when done"""
         self.exit_angle_publisher.publish(self.next_exit)
         nav_goal = NavigateGoal()
-        nav_goal.action = nav_goal.action.TRAVERSE
-        nav_goal.descriptor.descriptor_id = self.get_crossing_desc_id(
-            self.next_vertex)
-        rospy.logdebug('Escaping from crossing {} with direction {}'.format(
-            nav_goal.descriptor.descriptor_id, self.next_exit))
+        nav_goal.action = nav_goal.TRAVERSE
+        nav_goal.descriptor_link.descriptor_id = self.current_crossing_id
+        debug('escaping from crossing {} with direction {}'.format(
+            nav_goal.descriptor_link.descriptor_id, self.next_exit))
         self.escape.send_goal_and_wait(nav_goal)
         escape_result = self.escape.get_result()
         if escape_result != escape_result.DONE:

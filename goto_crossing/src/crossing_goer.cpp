@@ -16,7 +16,7 @@ CrossingGoer::CrossingGoer() :
     ros::console::notifyLoggerLevelsChanged();
   }
 
-  ros::NodeHandle private_nh;
+  ros::NodeHandle private_nh("~");
   if (!private_nh.getParamCached("kp_v", kp_v_))
     kp_v_ = 0.1;
   if (!private_nh.getParamCached("kp_w", kp_w_))

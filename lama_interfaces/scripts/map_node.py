@@ -14,9 +14,9 @@ def handle_add_interface(req):
         iface = interface_factory(req.interface_name,
                                   req.get_service_message,
                                   req.set_service_message)
-    except ValueError:
-        response.success = False
-    response.success = True
+    except ValueError, e:
+        raise rospy.ServiceException('Cannot add interface {}: {}'.format(
+            req.interface_name, e))
     response.get_service_name = iface.getter_service_name
     response.set_service_name = iface.setter_service_name
     return response
@@ -25,7 +25,7 @@ def handle_add_interface(req):
 if __name__ == '__main__':
     rospy.init_node('lama_interfaces', anonymous=True, log_level=rospy.DEBUG)
 
-    # Add the core interface for lama objects and descriptor_id objects.
+    # Add the core interface for LamaObject and DescriptorLink objects.
     core_interface()
 
     # Add the server for AddInterface.

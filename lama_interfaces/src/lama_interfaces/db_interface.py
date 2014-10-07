@@ -13,7 +13,20 @@ _interfaces_table_name = 'map_interfaces'
 class DBInterfaceAbstract(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, engine, interface_name, getter_srv_msg, setter_srv_msg):
+    def __init__(self, engine, interface_name, getter_srv_msg, setter_srv_msg,
+                 start=True):
+        """Build the map interface and possibly start ROS services
+
+        Parameters
+        ----------
+        - engine: sqlalchemy.engine.
+        - interface_name: string, name of the map interface.
+        - getter_srv_msg: string, service message to write into the map.
+        - setter_srv_msg: string, service message to read from the map.
+        - start: {True|False}, defaults to True. The ROS services for getter and
+            setter will be started only if start is True. If start is False, the
+            clients proxies will be None.
+        """
         if '@' in interface_name:
             rospy.logerr('@ not allowd in interface name')
             raise ValueError('@ not allowd in interface name')
@@ -57,14 +70,28 @@ class DBInterfaceAbstract(object):
         self._generateSchema()
 
         # Start the services.
-        self.getter_service_proxy = rospy.Service(self.getter_service_name,
-                                                  self.getter_service_class,
-                                                  self.getter)
-        self.setter_service_proxy = rospy.Service(self.setter_service_name,
-                                                  self.setter_service_class,
-                                                  self.setter)
-        rospy.loginfo('Services %s and %s started',
-                      self.getter_service_name, self.setter_service_name)
+        if start:
+            self._getter_service = rospy.Service(self.getter_service_name,
+                                                 self.getter_service_class,
+                                                 self.getter)
+            self._setter_service = rospy.Service(self.setter_service_name,
+                                                 self.setter_service_class,
+                                                 self.setter)
+            rospy.loginfo('Services %s and %s started',
+                          self.getter_service_name, self.setter_service_name)
+
+            # Get the service clients.
+            self.getter_service_proxy = rospy.ServiceProxy(
+                self.getter_service_name,
+                self.getter_service_class)
+            self.setter_service_proxy = rospy.ServiceProxy(
+                self.setter_service_name,
+                self.setter_service_class)
+        else:
+            self._getter_service = None
+            self._setter_service = None
+            self.getter_service_proxy = None
+            self.setter_service_proxy = None
 
     @abstractproperty
     def interface_type(self):
@@ -135,10 +162,10 @@ class DBInterfaceAbstract(object):
                 result['interface_type'] != self.interface_type):
                 err = ('A table "{}" with message type "{}" and interface ' +
                        'type "{}" already exists, cannot change to ' +
-                       '"{}"/"{}"'.format(
+                       '"{}"/"{}"').format(
                            name,
                            result['message_type'], result['interface_type'],
-                           msg_type), self.interface_type)
+                           msg_type, self.interface_type)
                 rospy.logfatal(err)
                 raise ValueError(err)
 

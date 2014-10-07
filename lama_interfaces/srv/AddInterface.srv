@@ -2,7 +2,6 @@ string interface_name
 string get_service_message
 string set_service_message
 ---
-bool success
 string get_service_name
 string set_service_name 
  

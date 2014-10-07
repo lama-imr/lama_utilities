@@ -23,10 +23,10 @@ class DBInterface(DBInterfaceAbstract):
         response = self.getter_service_class._response_class()
 
         # Make the transaction.
-        connection = self.engine.connect()
-        transaction = connection.begin()
         id_ = msg.id
         query = self.table.select(whereclause=(self.table.c.id == id_))
+        connection = self.engine.connect()
+        transaction = connection.begin()
         result = connection.execute(query).fetchone()
         transaction.commit()
         connection.close()
@@ -45,13 +45,13 @@ class DBInterface(DBInterfaceAbstract):
         msg.serialize(buf)
 
         # Make the transaction.
+        insert_args = {'serialized_content': buf.getvalue()}
         connection = self.engine.connect()
         transaction = connection.begin()
-        insert_args = {'serialized_content': buf.getvalue()}
         result = connection.execute(self.table.insert(), insert_args)
-        return_id = result.inserted_primary_key[0]
         transaction.commit()
         connection.close()
+        return_id = result.inserted_primary_key[0]
 
         # Return a setter response instance with the descriptor identifier.
         response = self.setter_service_class._response_class()

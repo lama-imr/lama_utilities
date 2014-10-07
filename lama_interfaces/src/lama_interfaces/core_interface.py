@@ -103,6 +103,14 @@ class CoreDBInterface(object):
         # interface_name)
         self.descriptor_table = table
 
+    def has_table(self, table):
+        """Return true if table is in the database"""
+        if table in self.metadata.tables:
+            return True
+        # Tables can be created by other instances, update and check again.
+        self.metadata.reflect()
+        return table in self.metadata.tables
+
     def getter_callback(self, msg):
         """Get a LamaObject from the database
 
@@ -160,11 +168,9 @@ class CoreDBInterface(object):
         }
         action = msg.action.action
         if action not in callbacks:
-            # TODO: find a mechanism for non-implemented actions.
-            rospy.logerr('Action {} not implemented'.format(msg.action))
-            r = self.action_service_class._response_class()
-        else:
-            r = callbacks[action](msg)
+            raise rospy.ServiceException('Action {} not implemented'.format(
+                msg.action))
+        r = callbacks[action](msg)
         return r
 
     def _get_lama_object(self, id_):
@@ -187,7 +193,6 @@ class CoreDBInterface(object):
         if not result:
             err = 'No element with id {} in database table {}'.format(
                 id_, self.core_table.name)
-            rospy.logerr(err)
             raise rospy.ServiceException(err)
 
         lama_object = LamaObject()
@@ -196,22 +201,33 @@ class CoreDBInterface(object):
         lama_object.name = result['name']
         lama_object.type = result['type']
 
-        # Make the transaction for the array 'references'.
         if lama_object.type == LamaObject.EDGE:
-            query = self.core_obj_ref_table.select(
-                whereclause=(self.core_obj_ref_table.parent_id == id_))
-            connection = self.engine.connect()
-            transaction = connection.begin()
-            refs = connection.execute(query).fetchall()
-            transaction.commit()
-            connection.close()
-            lama_object.references = [0] * 2
-            for ref in refs:
-                index = ref['seq_num']
-                val = ref['_value_']
-                lama_object.references[index] = val
+            lama_object.references = self._get_lama_object_references(id_)
+            if len(lama_object.references) != 2:
+                raise rospy.ServiceException('Corrupted database')
 
         return lama_object
+
+    def _get_lama_object_references(self, id_):
+        """Get the references of a LamaObject"""
+        # Make the transaction for the array 'references'.
+        query = self.core_obj_ref_table.select(
+            whereclause=(self.core_obj_ref_table.parent_id == id_))
+        connection = self.engine.connect()
+        transaction = connection.begin()
+        refs = connection.execute(query).fetchall()
+        transaction.commit()
+        connection.close()
+        if not refs:
+            return []
+        if len(refs) != 2:
+            raise rospy.ServiceException('Corrupted database')
+        references = [0] * 2
+        for ref in refs:
+            index = ref['seq_num']
+            val = ref['_value_']
+            references[index] = val
+        return references
 
     def _get_lama_objects(self, id_in_world):
         """Get a list of vertices or edges from their id_in_world
@@ -233,7 +249,6 @@ class CoreDBInterface(object):
         if not results:
             err = 'No element with id_in_world {} in database table {}'.format(
                 id_in_world, self.core_table.name)
-            rospy.logerr(err)
             raise rospy.ServiceException(err)
 
         lama_objects = []
@@ -244,21 +259,11 @@ class CoreDBInterface(object):
             lama_object.name = result['name']
             lama_object.type = result['type']
 
-            # Make the transaction for the array 'references'.
             if lama_object.type == LamaObject.EDGE:
-                connection = self.engine.connect()
-                transaction = connection.begin()
-                query = self.core_obj_ref_table.select(
-                    whereclause=(
-                        self.core_obj_ref_table.parent_id == result['id']))
-                refs = connection.execute(query).fetchall()
-                transaction.commit()
-                connection.close()
-                lama_object.references = [0] * 2
-                for ref in refs:
-                    index = ref['seq_num']
-                    val = ref['_value_']
-                    lama_object.references[index] = val
+                lama_object.references = self._get_lama_object_references(
+                    lama_object.id)
+                if len(lama_object.references) != 2:
+                    raise rospy.ServiceException('Corrupted database')
             lama_objects.append(lama_object)
 
         return lama_objects
@@ -279,26 +284,18 @@ class CoreDBInterface(object):
         """
         desc_links = []
         # Make the transaction from the descriptor table.
-        connection = self.engine.connect()
-        transaction = connection.begin()
         table = self.descriptor_table
         query = table.select()
         query = query.where(table.c.object_id == id_)
         if interface_name and interface_name != '*':
             query = query.where(table.c.interface_name == interface_name)
+        connection = self.engine.connect()
+        transaction = connection.begin()
         results = connection.execute(query).fetchall()
         transaction.commit()
         connection.close()
         if not results:
-            if interface_name and interface_name != '*':
-                err = ('No lama object with id {} associated with' +
-                       ' interface {} in database table {}').format(
-                           id_, interface_name, self.descriptor_table.name)
-            else:
-                err = 'No lama object with id {} in database table {}'.format(
-                    id_, self.descriptor_table.name)
-            rospy.logerr(err)
-            raise rospy.ServiceException(err)
+            return []
         for result in results:
             desc_link = DescriptorLink()
             desc_link.object_id = id_
@@ -398,15 +395,13 @@ class CoreDBInterface(object):
         if not result:
             err = 'No lama object with id {} in database table {}'.format(
                 object_id, self.core_table.name)
-            rospy.logerr(err)
             raise rospy.ServiceException(err)
 
         # Ensure that the descriptor exists in the database.
         table_name = msg.interface_name
-        if table_name not in self.metadata.tables:
+        if not self.has_table(table_name):
             err = 'No interface {} in the database'.format(
                 msg.interface_name)
-            rospy.logerr(err)
             raise rospy.ServiceException(err)
         table = self.metadata.tables[table_name]
         desc_id = msg.descriptor_id
@@ -420,7 +415,6 @@ class CoreDBInterface(object):
         if not result:
             err = 'No descriptor with id {} in database table {}'.format(
                 desc_id, table.name)
-            rospy.logerr(err)
             raise rospy.ServiceException(err)
 
         # Add the descriptor to the descriptor table.
@@ -460,7 +454,7 @@ class CoreDBInterface(object):
         response = self.action_service_class._response_class()
         if results:
             for result in results:
-                lama_object = self._get_lama_objects(result['id'])
+                lama_object = self._get_lama_object(result['id'])
                 response.objects.append(lama_object)
         return response
 
@@ -487,8 +481,12 @@ class CoreDBInterface(object):
         return self.get_lama_object_list(msg, LamaObject.EDGE)
 
     def get_descriptor_links(self, msg):
-        return self._get_lama_object_descriptor_links(msg.object.id,
-                                                      msg.interface_name)
+        response = self.action_service_class._response_class()
+        response.objects.append(msg.object)
+        response.descriptor_links = self._get_lama_object_descriptor_links(
+            msg.object.id,
+            msg.interface_name)
+        return response
 
     def get_neighbor_vertices(self, msg):
         """Retrieve all neighbor vertices from the database
@@ -529,11 +527,10 @@ class CoreDBInterface(object):
         if not results:
             err = 'No lama object with id {} in database table {}'.format(
                 msg.object.id, self.core_table.name)
-            rospy.logerr(err)
             raise rospy.ServiceException(err)
         response = self.action_service_class._response_class()
         for result in results:
-            edge = self._get_lama_objects(result['id'])
+            edge = self._get_lama_object(result['id'])
             response.objects.append(edge)
         return response
 

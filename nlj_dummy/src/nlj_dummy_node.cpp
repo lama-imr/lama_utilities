@@ -24,12 +24,7 @@ int main(int argc, char **argv)
   srv.request.set_service_message = "nlj_dummy/SetDummyDescriptor";
   if (!client.call(srv))
   {
-    ROS_ERROR("Failed to call service AddInterface");
-    return 1;
-  }
-  if (!srv.response.success)
-  {
-    ROS_ERROR("Failed to create the Lama interface");
+    ROS_ERROR("Failed to create the Lama interface %s", srv.request.interface_name.c_str());
     return 1;
   }
 

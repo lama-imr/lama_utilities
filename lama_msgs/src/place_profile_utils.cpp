@@ -89,15 +89,6 @@ inline void reduceSegmentCount(PlaceProfile& profile)
   // Check if the segment count can be reduced (i.e. if there is at least one excluded point and
   // no doubled value in exlude_segments).
   bool doit = false;
-  // Check for excluded points.
-  for (size_t i = 0; i < profile.polygon.points.size(); ++i)
-  {
-    if (pointIsExcluded(profile, i))
-    {
-      doit = true;
-      break;
-    }
-  }
   // Check for doubles in exclude_segments.
   for (int i = 0; i < ((int) profile.exclude_segments.size()) - 1; ++i)
   {
@@ -105,6 +96,18 @@ inline void reduceSegmentCount(PlaceProfile& profile)
     {
       doit = true;
       break;
+    }
+  }
+  if (!doit)
+  {
+    // Check for excluded points.
+    for (size_t i = 0; i < profile.polygon.points.size(); ++i)
+    {
+      if (pointIsExcluded(profile, i))
+      {
+        doit = true;
+        break;
+      }
     }
   }
   if (!doit)
@@ -157,6 +160,7 @@ inline bool pointOrder(const vector<AngularPoint>& angular_points)
  *
  * profile[out] PlaceProfile
  * sort[in] If true, the polygon points will be sorted according to their angle.
+ *   If false, the output PlaceProfile is not guaranteed to be normalized.
  */
 void normalizePlaceProfile(PlaceProfile& profile, const bool sort)
 {
@@ -639,6 +643,54 @@ PlaceProfile simplifiedPlaceProfile(const PlaceProfile& profile, const double mi
  */
 void curtailPlaceProfile(PlaceProfile& profile, const double max_distance)
 {
+  const size_t size = profile.polygon.points.size();
+  const double dist2 = max_distance * max_distance;
+  vector<bool> in_range(size, false);
+  for (size_t i = 0; i < size; ++i)
+  {
+    if ((profile.polygon.points[i].x * profile.polygon.points[i].x +
+          profile.polygon.points[i].y * profile.polygon.points[i].y) < dist2)
+    {
+      in_range[i] = true;
+    }
+  }
+
+  PlaceProfile old_profile = profile;
+  profile.polygon.points.clear();
+  profile.exclude_segments.clear();
+  for (int i = 0; i != size; ++i)
+  {
+    if (pointIsExcluded(old_profile, i))
+    {
+      continue;
+    }
+
+    if (in_range[i] && in_range[circular_index(i + 1, size)])
+    {
+      // point i and next point are included.
+      profile.polygon.points.push_back(old_profile.polygon.points[i]);
+    }
+    else if (in_range[i] && !in_range[circular_index(i + 1, size)])
+    {
+      // point i is included, next point (which will not be part of
+      // profile.polygon) is excluded.
+      profile.polygon.points.push_back(old_profile.polygon.points[i]);
+      profile.exclude_segments.push_back(profile.polygon.points.size() - 1);
+    }
+  }
+  
+  if (profile.polygon.points.size() < 3)
+  {
+    profile.exclude_segments.clear();
+  }
+  else if (!profile.exclude_segments.empty() && (profile.exclude_segments.front() == -1))
+  {
+    // If segment between last point and point 0 is excluded.
+    // This happens if the first range(s) is(are) out of range.
+    profile.exclude_segments[0] = profile.polygon.points.size() - 1;
+  }
+
+  normalizePlaceProfile(profile, false);
 }
 
 /* Return a PlaceProfile only containing points withing a certain distance.

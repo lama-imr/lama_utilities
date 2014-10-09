@@ -207,6 +207,40 @@ PlaceProfile profile_circle_cw()
   return new_profile;
 }
 
+PlaceProfile profile_circle_growing()
+{
+  PlaceProfile profile;
+  double angle;
+  double radius;
+  Point32 point;
+
+  angle = -3 * M_PI_4;
+  radius = 3;
+  point.x = radius * std::cos(angle);
+  point.y = radius * std::sin(angle);
+  profile.polygon.points.push_back(point);
+
+  angle = -M_PI_4;
+  radius = 4;
+  point.x = radius * std::cos(angle);
+  point.y = radius * std::sin(angle);
+  profile.polygon.points.push_back(point);
+
+  angle = M_PI_4;
+  radius = 5;
+  point.x = radius * std::cos(angle);
+  point.y = radius * std::sin(angle);
+  profile.polygon.points.push_back(point);
+
+  angle = 3 * M_PI_4;
+  radius = 5;
+  point.x = radius * std::cos(angle);
+  point.y = radius * std::sin(angle);
+  profile.polygon.points.push_back(point);
+
+  return profile;
+}
+
 PlaceProfile loadFromFile(std::string filename)
 {
   PlaceProfile profile;
@@ -840,6 +874,64 @@ TEST(TestSuite, TestRealDataSimplify)
   out_profile_2 = simplifiedPlaceProfile(profile, 0.1);
   EXPECT_GE(out_profile_1.polygon.points.size(), out_profile_2.polygon.points.size());
   saveToFile("corridor130a-1-0.1.txt", out_profile_2);
+}
+
+TEST(TestSuite, TestCurtailPlaceProfile)
+{
+  PlaceProfile profile = profile_circle_growing();
+  PlaceProfile mod_profile;
+
+  mod_profile = profile;
+  curtailPlaceProfile(mod_profile, 2.5);
+  EXPECT_EQ(0, mod_profile.polygon.points.size());
+  EXPECT_EQ(0, mod_profile.exclude_segments.size());
+
+  mod_profile = profile;
+  curtailPlaceProfile(mod_profile, 3.5);
+  ASSERT_EQ(1, mod_profile.polygon.points.size());
+  EXPECT_EQ(0, mod_profile.exclude_segments.size());
+  EXPECT_TRUE(pointEqual(profile.polygon.points[0], mod_profile.polygon.points[0]));
+
+  mod_profile = profile;
+  curtailPlaceProfile(mod_profile, 4.5);
+  ASSERT_EQ(2, mod_profile.polygon.points.size());
+  EXPECT_EQ(0, mod_profile.exclude_segments.size());
+  EXPECT_TRUE(pointEqual(profile.polygon.points[0], mod_profile.polygon.points[0]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[1], mod_profile.polygon.points[1]));
+
+  mod_profile = profile;
+  curtailPlaceProfile(mod_profile, 5.5);
+  ASSERT_EQ(4, mod_profile.polygon.points.size());
+  EXPECT_EQ(0, mod_profile.exclude_segments.size());
+  EXPECT_TRUE(pointEqual(profile.polygon.points[0], mod_profile.polygon.points[0]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[1], mod_profile.polygon.points[1]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[2], mod_profile.polygon.points[2]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[3], mod_profile.polygon.points[3]));
+
+  profile = profile_circle_ccw();
+  mod_profile = profile;
+  mod_profile.polygon.points[5].x *= 2;
+  mod_profile.polygon.points[5].y *= 2;
+  curtailPlaceProfile(mod_profile, 6);
+  ASSERT_EQ(profile.polygon.points.size() - 1, mod_profile.polygon.points.size());
+  ASSERT_EQ(1, mod_profile.exclude_segments.size());
+  EXPECT_TRUE(pointEqual(profile.polygon.points[4], mod_profile.polygon.points[4]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[6], mod_profile.polygon.points[5]));
+  EXPECT_EQ(4, mod_profile.exclude_segments[0]);
+
+  mod_profile = profile;
+  mod_profile.polygon.points[5].x *= 2;
+  mod_profile.polygon.points[5].y *= 2;
+  mod_profile.polygon.points[7].x *= 2;
+  mod_profile.polygon.points[7].y *= 2;
+  curtailPlaceProfile(mod_profile, 6);
+  ASSERT_EQ(profile.polygon.points.size() - 2, mod_profile.polygon.points.size());
+  ASSERT_EQ(2, mod_profile.exclude_segments.size());
+  EXPECT_TRUE(pointEqual(profile.polygon.points[4], mod_profile.polygon.points[4]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[6], mod_profile.polygon.points[5]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[8], mod_profile.polygon.points[6]));
+  EXPECT_EQ(4, mod_profile.exclude_segments[0]);
+  EXPECT_EQ(5, mod_profile.exclude_segments[1]);
 }
 
 TEST(TestSuite, TestLaserScanToPlaceProfile)

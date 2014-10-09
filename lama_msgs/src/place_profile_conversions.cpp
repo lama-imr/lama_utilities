@@ -71,19 +71,19 @@ PlaceProfile laserScanToPlaceProfile(const sensor_msgs::LaserScan& scan, const d
     }
   }
 
-  const double greater_than_longest = 2 * (*(std::max_element(scan.ranges.begin(), scan.ranges.end())));
+  const double greater_than_longest = *(std::max_element(scan.ranges.begin(), scan.ranges.end())) + 1;
   sensor_msgs::PointCloud cloud;
   projector.projectLaser(scan, cloud, greater_than_longest, laser_geometry::channel_option::None);
 
   if (scan.ranges.size() != cloud.points.size())
   {
-    // We cannot guarantee otherwise than using a modified copy of scan that
-    // all beams are kept in cloud. This is because beams smaller than
-    // scan.min_range do not belong to the resulting cloud.
-    // A solution would be to use channel_option::Index to keep trace of the
-    // point in the scan.
-    ROS_ERROR("Some scan ranges where smaller than min_range and this is not implemented");
-    return profile;
+    // projectLaser removes beams smaller than scan.min_range from the
+    // resulting cloud but we need that the point count is the same. We achieve
+    // this by modifying a copy of scan.
+    sensor_msgs::LaserScan copy_of_scan = scan;
+    const double smaller_than_shortest = *(std::min_element(scan.ranges.begin(), scan.ranges.end())) - 1;
+    copy_of_scan.range_min = smaller_than_shortest;
+    projector.projectLaser(copy_of_scan, cloud, greater_than_longest, laser_geometry::channel_option::None);
   }
 
   int idx_start;

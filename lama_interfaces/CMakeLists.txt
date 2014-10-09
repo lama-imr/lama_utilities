@@ -52,7 +52,6 @@ catkin_python_setup()
 add_message_files(
 	FILES
 	DescriptorLink.msg
-	MapAction.msg
 	LamaObject.msg
 )
 

@@ -14,7 +14,6 @@ import rospy
 import roslib.msgs
 import roslib.message
 
-from lama_interfaces.msg import MapAction
 from lama_interfaces.msg import LamaObject
 from lama_interfaces.msg import DescriptorLink
 
@@ -152,25 +151,24 @@ class CoreDBInterface(object):
         - msg: an instance of ActOnMap request.
         """
         callbacks = {
-            MapAction.PUSH_VERTEX: self.push_lama_object,
-            MapAction.PULL_VERTEX: self.pull_lama_object,
-            MapAction.ASSIGN_DESCRIPTOR_VERTEX: (
+            msg.PUSH_VERTEX: self.push_lama_object,
+            msg.PULL_VERTEX: self.pull_lama_object,
+            msg.ASSIGN_DESCRIPTOR_VERTEX: (
                 self.assign_descriptor_to_lama_object),
-            MapAction.PUSH_EDGE: self.push_lama_object,
-            MapAction.PULL_EDGE: self.pull_lama_object,
-            MapAction.ASSIGN_DESCRIPTOR_EDGE: (
+            msg.PUSH_EDGE: self.push_lama_object,
+            msg.PULL_EDGE: self.pull_lama_object,
+            msg.ASSIGN_DESCRIPTOR_EDGE: (
                 self.assign_descriptor_to_lama_object),
-            MapAction.GET_VERTEX_LIST: self.get_vertex_list,
-            MapAction.GET_EDGE_LIST: self.get_edge_list,
-            MapAction.GET_DESCRIPTOR_LINKS: self.get_descriptor_links,
-            MapAction.GET_NEIGHBOR_VERTICES: self.get_neighbor_vertices,
-            MapAction.GET_OUTGOING_EDGES: self.get_outgoing_edges,
+            msg.GET_VERTEX_LIST: self.get_vertex_list,
+            msg.GET_EDGE_LIST: self.get_edge_list,
+            msg.GET_DESCRIPTOR_LINKS: self.get_descriptor_links,
+            msg.GET_NEIGHBOR_VERTICES: self.get_neighbor_vertices,
+            msg.GET_OUTGOING_EDGES: self.get_outgoing_edges,
         }
-        action = msg.action.action
-        if action not in callbacks:
+        if msg.action not in callbacks:
             raise rospy.ServiceException('Action {} not implemented'.format(
                 msg.action))
-        r = callbacks[action](msg)
+        r = callbacks[msg.action](msg)
         return r
 
     def _get_lama_object(self, id_):

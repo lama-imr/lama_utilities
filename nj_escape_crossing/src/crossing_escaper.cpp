@@ -226,7 +226,7 @@ bool CrossingEscaper::getCrossing()
   if (goal_.edge.id != 0)
   {
     lama_interfaces::ActOnMap map_action;
-    map_action.request.action.action = lama_interfaces::MapAction::GET_DESCRIPTOR_LINKS;
+    map_action.request.action = lama_interfaces::ActOnMapRequest::GET_DESCRIPTOR_LINKS;
     ROS_INFO("%s: DEBUG 10", jockey_name_.c_str()); // DEBUG
     map_action.request.object.id = goal_.edge.references[0];
     ROS_INFO("%s: DEBUG 11: %d", jockey_name_.c_str(), goal_.edge.references[0]); // DEBUG
@@ -280,7 +280,7 @@ bool CrossingEscaper::retrieveCrossingFromMap(const int32_t descriptor_id)
 bool CrossingEscaper::getExitAngle()
 {
   lama_interfaces::ActOnMap map_action;
-  map_action.request.action.action = lama_interfaces::MapAction::GET_DESCRIPTOR_LINKS;
+  map_action.request.action = lama_interfaces::ActOnMapRequest::GET_DESCRIPTOR_LINKS;
   map_action.request.object.id = goal_.edge.id;
   map_action.request.interface_name = exit_angle_interface_name_;
   map_agent_.call(map_action);

@@ -39,7 +39,7 @@ class CrossingDetector
 {
   public:
 
-    CrossingDetector(const double frontier_width, const double max_frontier_angle=0.785);
+    CrossingDetector(const double frontier_width, const double max_frontier_angle=1.0);
 
     Crossing crossingDescriptor(const PlaceProfile& profile, const bool normalize=false);
     vector<Frontier> frontiers(const PlaceProfile& profile, const bool normalize=false);

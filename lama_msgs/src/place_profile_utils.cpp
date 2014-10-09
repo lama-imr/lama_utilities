@@ -1,6 +1,7 @@
 #include <lama_msgs/place_profile_utils.h>
 
 #include <iostream> // DEBUG
+
 namespace lama {
 
 /* A pair (index, angle) constructed from a Point32, to get the permutation used for sorting.
@@ -81,6 +82,52 @@ inline void removeWrongSegments(PlaceProfile& profile)
   }
 }
 
+/* Modify a PlaceProfile so that the length of exclude_segments will be minimized.
+ */
+inline void reduceSegmentCount(PlaceProfile& profile)
+{
+  // Check if the segment count can be reduced (i.e. if there is at least one excluded point and
+  // no doubled value in exlude_segments).
+  bool doit = false;
+  // Check for excluded points.
+  for (size_t i = 0; i < profile.polygon.points.size(); ++i)
+  {
+    if (pointIsExcluded(profile, i))
+    {
+      doit = true;
+      break;
+    }
+  }
+  // Check for doubles in exclude_segments.
+  for (int i = 0; i < ((int) profile.exclude_segments.size()) - 1; ++i)
+  {
+    if (profile.exclude_segments[i] == profile.exclude_segments[i + 1])
+    {
+      doit = true;
+      break;
+    }
+  }
+  if (!doit)
+  {
+    return;
+  }
+
+  PlaceProfile old_profile = profile;
+  profile.polygon.points.clear();
+  profile.exclude_segments.clear();
+  for (size_t i = 0; i < old_profile.polygon.points.size(); ++i)
+  {
+    if (!pointIsExcluded(old_profile, i))
+    {
+      profile.polygon.points.push_back(old_profile.polygon.points[i]);
+      if (pointIsBeforeExclusion(old_profile, i))
+      {
+        profile.exclude_segments.push_back(profile.polygon.points.size() - 1);
+      }
+    }
+  }
+}
+
 /* Return true if points are in counterclockwise order
  */
 inline bool pointOrder(const vector<AngularPoint>& angular_points)
@@ -99,76 +146,88 @@ inline bool pointOrder(const vector<AngularPoint>& angular_points)
 
 /* Change point order in place so that point angles are sorted.
  *
- * Angles within [-pi,pi[ will be sorted.
+ * Angles within [-pi,pi[ will be sorted from smallest to greatest (i.e.
+ * counterclock-wise), optionally.
+ * Points fully excluded will be removed.
+ * invalid exclude_sements will be removed.
+ * exclude_segments will be sorted from smallest index to greatest.
+ * exclude_segments will contain the miminum number of values.
  *
  * The algorithm is not robust against non-simple polygons.
+ *
+ * profile[out] PlaceProfile
+ * sort[in] If true, the polygon points will be sorted according to their angle.
  */
-void normalizePlaceProfile(PlaceProfile& profile)
+void normalizePlaceProfile(PlaceProfile& profile, const bool sort)
 {
-  vector<AngularPoint> angular_points;
-  size_t point_count = profile.polygon.points.size();
-  angular_points.reserve(point_count);
-  for (size_t i = 0; i < point_count; ++i)
+  if (sort)
   {
-    angular_points.push_back(AngularPoint(profile.polygon.points[i], i));
+    vector<AngularPoint> angular_points;
+    size_t point_count = profile.polygon.points.size();
+    angular_points.reserve(point_count);
+    for (size_t i = 0; i < point_count; ++i)
+    {
+      angular_points.push_back(AngularPoint(profile.polygon.points[i], i));
+    }
+
+    if (!is_sorted(angular_points.begin(), angular_points.end()))
+    {
+      // If points are clock-wise, exclude_segments needs to be changed because
+      // after with clock-wise direction means before with counterclock-wise direction.
+      const bool counterclockwise = pointOrder(angular_points);
+
+      // TODO: Improve sort performance.
+      // Appart from the position of the step from +pi to -pi (CCW) which can be in
+      // the middle of the array instead of being absent, angular_points
+      // should be sorted. Use a circular_iterator, if this exists.
+      std::sort(angular_points.begin(), angular_points.end());
+
+      PlaceProfile old_profile = profile;
+      for (size_t i = 0; i < point_count; ++i)
+      {
+        profile.polygon.points[i] = old_profile.polygon.points[angular_points[i].index];
+      }
+
+      vector<int32_t> inverse_permutation;
+      if (!profile.exclude_segments.empty())
+      {
+        inverse_permutation.resize(point_count);
+        for (size_t i = 0; i < point_count; ++i)
+        {
+          inverse_permutation[angular_points[i].index] = i;
+        }
+      }
+      if (!counterclockwise)
+      {
+        // v[i] = v[i]+1, does the trick to get the correct renumbering.
+        for (size_t i = 0; i < old_profile.exclude_segments.size(); ++i)
+        {
+          old_profile.exclude_segments[i] = circular_index(old_profile.exclude_segments[i] + 1, point_count);
+        }
+      }
+      for (size_t i = 0; i < profile.exclude_segments.size(); ++i)
+      {
+        profile.exclude_segments[i] = inverse_permutation[old_profile.exclude_segments[i]];
+      }
+    }
   }
-  const bool counterclockwise = pointOrder(angular_points);
 
   removeWrongSegments(profile);
 
-  if (is_sorted(angular_points.begin(), angular_points.end()))
-  {
-    return;
-  }
-
-  // TODO: Improve sort performance.
-  // Appart from the position of the step from +pi to -pi (CCW) which can be in
-  // the middle of the array instead of being absent, angular_points
-  // should be sorted. Use a circular_iterator, if this exists.
-  std::sort(angular_points.begin(), angular_points.end());
-
-  PlaceProfile old_profile = profile;
-  for (size_t i = 0; i < point_count; ++i)
-  {
-    profile.polygon.points[i] = old_profile.polygon.points[angular_points[i].index];
-  }
-
-  vector<int32_t> inverse_permutation;
-  if (!profile.exclude_segments.empty())
-  {
-    inverse_permutation.resize(point_count);
-    for (size_t i = 0; i < point_count; ++i)
-    {
-      inverse_permutation[angular_points[i].index] = i;
-    }
-  }
-  if (!counterclockwise)
-  {
-    // [i] --> [i+1], does the trick to get the correct renumbering.
-    for (size_t i = 0; i < profile.exclude_segments.size(); ++i)
-    {
-      old_profile.exclude_segments[i] = old_profile.exclude_segments[(i + 1) % point_count];
-    }
-  }
-  for (size_t i = 0; i < profile.exclude_segments.size(); ++i)
-  {
-    profile.exclude_segments[i] = inverse_permutation[old_profile.exclude_segments[i]];
-  }
-  // Sort the segments.
-  if (!is_sorted(profile.exclude_segments.begin(), profile.exclude_segments.end()))
-  {
-    std::sort(profile.exclude_segments.begin(), profile.exclude_segments.end());
-  }
+  reduceSegmentCount(profile);
 }
 
 /* Return a copy of a PlaceProfile message where point angles are sorted.
  *
  * Angles within [-pi,pi[ will be sorted.
+ *
+ * profile[in] PlaceProfile
+ * sort[in] if true, the polygon points will be sorted according to their angle.
  */
-PlaceProfile normalizedPlaceProfile(const PlaceProfile& profile)
+PlaceProfile normalizedPlaceProfile(const PlaceProfile& profile, const bool sort)
 {
   PlaceProfile new_profile = profile;
-  normalizePlaceProfile(new_profile);
+  normalizePlaceProfile(new_profile, sort);
   return new_profile;
 }
 
@@ -559,7 +618,7 @@ void simplifyPlaceProfile(PlaceProfile& profile, const double min_relevance)
 
 }
 
-/* Return a PlaceProfile with reduced number of points
+/* Return a PlaceProfile with reduced number of points.
  *
  * A relevance filter is used.
  *
@@ -570,6 +629,27 @@ PlaceProfile simplifiedPlaceProfile(const PlaceProfile& profile, const double mi
 {
   PlaceProfile new_profile = profile;
   simplifyPlaceProfile(new_profile, min_relevance);
+  return new_profile;
+}
+
+/* Remove points farther than a certain distance.
+ *
+ * profile[out] PlaceProfile
+ * max_distance[in] range cutoff
+ */
+void curtailPlaceProfile(PlaceProfile& profile, const double max_distance)
+{
+}
+
+/* Return a PlaceProfile only containing points withing a certain distance.
+ *
+ * profile[in] PlaceProfile
+ * max_distance[in] range cutoff
+ */
+PlaceProfile curtailedPlaceProfile(const PlaceProfile& profile, const double max_distance)
+{
+  PlaceProfile new_profile = profile;
+  curtailPlaceProfile(new_profile, max_distance);
   return new_profile;
 }
 

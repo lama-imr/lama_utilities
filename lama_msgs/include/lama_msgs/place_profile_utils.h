@@ -87,8 +87,8 @@ size_t firstIncludedPointFrom(const PlaceProfile& profile, const int32_t index);
 
 size_t lastIncludedPointFrom(const PlaceProfile& profile, const int32_t index);
 
-void normalizePlaceProfile(PlaceProfile& profile);
-PlaceProfile normalizedPlaceProfile(const PlaceProfile& profile);
+void normalizePlaceProfile(PlaceProfile& profile, const bool sort=true);
+PlaceProfile normalizedPlaceProfile(const PlaceProfile& profile, const bool sort=true);
 
 bool isClosed(const PlaceProfile& profile, const double max_frontier_width);
 void closePlaceProfile(PlaceProfile& profile, const double max_frontier_width);
@@ -98,6 +98,9 @@ vector<Point32> simplifyPath(const vector<Point32>& points, const size_t begin, 
 
 void simplifyPlaceProfile(PlaceProfile& profile, const double min_relevance);
 PlaceProfile simplifiedPlaceProfile(const PlaceProfile& profile, const double min_relevance);
+
+void curtailPlaceProfile(PlaceProfile& profile, const double max_distance);
+PlaceProfile curtailedPlaceProfile(const PlaceProfile& profile, const double max_distance);
 
 } // namespace lama
 

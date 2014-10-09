@@ -72,7 +72,7 @@
 			<param name="min_linear_velocity" value="0" />
 			<param name="min_angular_velocity" value="0" />
 			<param name="max_frontier_distance" value="3.5" />
-			<param name="max_frontier_angle" value ="1.2" />
+			<param name="max_frontier_angle" value ="1.3" />
 			<remap from="navigating_jockey/cmd_vel" to="/cmd_vel" />
 			<remap from="navigating_jockey/base_scan" to="/base_scan" />
 		</node>

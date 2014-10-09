@@ -1,4 +1,4 @@
-MapAction action
+uint32 action
 
 # Possible actions.
 # Add vertex (defined in "object").

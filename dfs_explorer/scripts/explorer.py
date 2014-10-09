@@ -121,7 +121,7 @@ class ExplorerNode(object):
         """Retrieve the graph from the map"""
         # TODO: implement
         # map_action = ActOnMapRequest()
-        # map_action.action.action = map_action.action.GET_VERTEX_LIST
+        # map_action.action = map_action.GET_VERTEX_LIST
         return {}
 
     def move_to_crossing(self):
@@ -222,15 +222,15 @@ class ExplorerNode(object):
         if vertex_is_new:
             # Add vertex to map.
             map_action = ActOnMapRequest()
-            map_action.action.action = map_action.action.PUSH_VERTEX
+            map_action.action = map_action.PUSH_VERTEX
             response = self.map_agent(map_action)
             new_vertex = response.objects[0].id
             debug('new vertex {}'.format(new_vertex))
             # Assign descriptors.
             map_action = ActOnMapRequest()
             map_action.object.id = new_vertex
-            map_action.action.action = (
-                map_action.action.ASSIGN_DESCRIPTOR_VERTEX)
+            map_action.action = (
+                map_action.ASSIGN_DESCRIPTOR_VERTEX)
             for link in descriptor_links:
                 map_action.descriptor_id = link.descriptor_id
                 map_action.interface_name = link.interface_name
@@ -301,7 +301,7 @@ class ExplorerNode(object):
         debug('adding edge ({}, {})'.format(
             rospy.get_name(), v0, v1))
         map_action = ActOnMapRequest()
-        map_action.action.action = map_action.action.PUSH_EDGE
+        map_action.action = map_action.PUSH_EDGE
         map_action.object.type = map_action.object.EDGE
         map_action.object.references.append(v0)
         map_action.object.references.append(v1)
@@ -315,7 +315,7 @@ class ExplorerNode(object):
         debug('assigining descriptor {} to edge {}'.format(
             desc_response.id, edge_response.id))
         map_action = ActOnMapRequest()
-        map_action.action.action = map_action.action.ASSIGN_DESCRIPTOR_EDGE
+        map_action.action = map_action.ASSIGN_DESCRIPTOR_EDGE
         map_action.object.id = edge_response.id
         map_action.descriptor_id = desc_response.id
         self.map_agent(map_action)
@@ -387,7 +387,7 @@ class ExplorerNode(object):
     def edge_id(self, v0, v1):
         """Return the id of edge from v0 to v1"""
         map_action = ActOnMapRequest()
-        map_action.action.action = map_action.action.GET_EDGE_LIST
+        map_action.action = map_action.GET_EDGE_LIST
         response = self.map_agent(map_action)
         for o in response.objects:
             if (o.references[0] == v0) and (o.references[1] == v1):
@@ -455,7 +455,7 @@ class ExplorerNode(object):
     def get_crossing_desc_id(self, vertex):
         """Return the first Crossing descriptor associated with a vertex"""
         map_action = ActOnMapRequest()
-        map_action.action.action = map_action.action.GET_DESCRIPTOR_LINKS
+        map_action.action = map_action.GET_DESCRIPTOR_LINKS
         map_action.object.id = vertex
         map_action.interface_name = self.crossing_interface_name
         response = self.map_agent(map_action)

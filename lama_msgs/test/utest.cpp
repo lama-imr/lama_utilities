@@ -177,19 +177,34 @@ PlaceProfile profile10()
   return profile;
 }
 
-PlaceProfile profile_circle()
+PlaceProfile profile_circle_ccw()
 {
   PlaceProfile profile;
   const double radius = 5;
   const size_t point_count = 40;
+  const double start_angle = -M_PI + 1e-5;
   for (size_t i = 0; i < point_count; ++i)
   {
     Point32 point;
-    point.x = radius * std::cos(-M_PI + ((double)i) / point_count * 2 * M_PI);
-    point.y = radius * std::sin(-M_PI + ((double)i) / point_count * 2 * M_PI);
+    point.x = radius * std::cos(start_angle + ((double)i) / point_count * 2 * M_PI);
+    point.y = radius * std::sin(start_angle + ((double)i) / point_count * 2 * M_PI);
     profile.polygon.points.push_back(point);
   }
   return profile;
+}
+
+/* Exact same points as profile_circle_ccw but clock-wise
+ */
+PlaceProfile profile_circle_cw()
+{
+  PlaceProfile profile = profile_circle_ccw();
+  PlaceProfile new_profile;
+  vector<Point32>::const_reverse_iterator pt = profile.polygon.points.rbegin();
+  for (; pt != profile.polygon.points.rend(); ++pt)
+  {
+    new_profile.polygon.points.push_back(*pt);
+  }
+  return new_profile;
 }
 
 PlaceProfile loadFromFile(std::string filename)
@@ -461,11 +476,74 @@ TEST(TestSuite, TestLastIncludedPointFrom)
   EXPECT_EQ(1, lastIncludedPointFrom(profile, 0));
 }
 
+TEST(TestSuite, TestNormalizedPlaceProfile)
+{
+  PlaceProfile profile;
+  PlaceProfile mod_profile;
+
+  // From CW to CCW.
+  profile = profile_circle_ccw();
+  mod_profile = profile_circle_cw();
+  normalizePlaceProfile(mod_profile);
+
+  ASSERT_EQ(profile.polygon.points.size(), mod_profile.polygon.points.size());
+  ASSERT_EQ(profile.exclude_segments.size(), mod_profile.exclude_segments.size());
+  for (size_t i = 0; i < profile.polygon.points.size(); ++i)
+  {
+    EXPECT_TRUE(pointEqual(profile.polygon.points[i], mod_profile.polygon.points[i]));
+  }
+
+  // exclude_segments minimization (1 excluded point).
+  mod_profile = profile;
+  mod_profile.exclude_segments.push_back(10);
+  mod_profile.exclude_segments.push_back(11);
+  normalizePlaceProfile(mod_profile);
+  ASSERT_EQ(profile.polygon.points.size() - 1, mod_profile.polygon.points.size());
+  EXPECT_TRUE(pointEqual(profile.polygon.points[10], mod_profile.polygon.points[10]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[12], mod_profile.polygon.points[11]));
+  ASSERT_EQ(1, mod_profile.exclude_segments.size());
+  EXPECT_EQ(10, mod_profile.exclude_segments[0]);
+
+  // exclude_segments minimization (2 excluded points).
+  mod_profile = profile;
+  mod_profile.exclude_segments.push_back(10);
+  mod_profile.exclude_segments.push_back(11);
+  mod_profile.exclude_segments.push_back(12);
+  normalizePlaceProfile(mod_profile);
+  ASSERT_EQ(profile.polygon.points.size() - 2, mod_profile.polygon.points.size());
+  EXPECT_TRUE(pointEqual(profile.polygon.points[10], mod_profile.polygon.points[10]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[13], mod_profile.polygon.points[11]));
+  ASSERT_EQ(1, mod_profile.exclude_segments.size());
+  EXPECT_EQ(10, mod_profile.exclude_segments[0]);
+
+  // From CW to CCW with 1 excluded segment.
+  mod_profile = profile_circle_cw();
+  mod_profile.exclude_segments.push_back(1);
+  normalizePlaceProfile(mod_profile);
+  ASSERT_EQ(profile.polygon.points.size(), mod_profile.polygon.points.size());
+  EXPECT_TRUE(pointEqual(profile.polygon.points[37], mod_profile.polygon.points[37]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[38], mod_profile.polygon.points[38]));
+  ASSERT_EQ(1, mod_profile.exclude_segments.size());
+  EXPECT_EQ(37, mod_profile.exclude_segments[0]);
+
+  // From CW to CCW with 3 excluded segments (one twice).
+  mod_profile = profile_circle_cw();
+  mod_profile.exclude_segments.push_back(1);
+  mod_profile.exclude_segments.push_back(1);
+  mod_profile.exclude_segments.push_back(2);
+  normalizePlaceProfile(mod_profile);
+  ASSERT_EQ(profile.polygon.points.size() - 1, mod_profile.polygon.points.size());
+  EXPECT_TRUE(pointEqual(profile.polygon.points[36], mod_profile.polygon.points[36]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[38], mod_profile.polygon.points[37]));
+  ASSERT_EQ(1, mod_profile.exclude_segments.size());
+  EXPECT_EQ(36, mod_profile.exclude_segments[0]);
+}
+
 TEST(TestSuite, TestClosePlaceProfile)
 {
   PlaceProfile profile;
 
-  profile = profile_circle();
+  profile = profile_circle_ccw();
   PlaceProfile old_profile = profile;
   // saveToFile("open_profile.txt", profile);
   closePlaceProfile(profile, 0.05);
@@ -479,7 +557,7 @@ TEST(TestSuite, TestClosedPlaceProfile)
 {
   PlaceProfile old_profile;
 
-  old_profile = profile_circle();
+  old_profile = profile_circle_ccw();
   PlaceProfile profile = closedPlaceProfile(old_profile, 0.05);
   // saveToFile("open_profile.txt", old_profile);
   // saveToFile("closed_profile.txt", profile);

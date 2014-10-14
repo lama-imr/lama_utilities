@@ -44,90 +44,64 @@ inline bool is_sorted(ForwardIt first, ForwardIt last)
   return true;
 }
 
-/* Remove out-of-bound exclude_segments
+/* Remove out-of-bound exclude_segments and doubles in exclude_segments.
  */
-inline void removeWrongSegments(PlaceProfile& profile)
+inline void normalizeExcludeSegments(PlaceProfile& profile)
 {
   if (profile.exclude_segments.empty())
   {
     return;
   }
 
-  // Sort the segments.
-  if (!is_sorted(profile.exclude_segments.begin(), profile.exclude_segments.end()))
+  if (is_sorted(profile.exclude_segments.begin(), profile.exclude_segments.end()))
   {
-    std::sort(profile.exclude_segments.begin(), profile.exclude_segments.end());
-  }
-
-  if (profile.exclude_segments[0] < 0)
-  {
-    // Remove negative elements and too large elements.
-    vector<int32_t> old_exclude_segments = profile.exclude_segments;
-    profile.exclude_segments.clear();
-    for (size_t i = 0; i < old_exclude_segments.size(); ++i)
+    bool need_erase = false;
+    for (int i = 0; i < ((int) profile.exclude_segments.size()) - 1; ++i)
     {
-      if (0 <= old_exclude_segments[i] && old_exclude_segments[i] < profile.polygon.points.size())
+      // Check for doubles in exclude_segments.
+      if (profile.exclude_segments[i] == profile.exclude_segments[i + 1])
       {
-        profile.exclude_segments.push_back(old_exclude_segments[i]);
+        need_erase = true;
+        break;
       }
-    }
-  }
-  else
-  {
-    // Remove too large elements.
-    while (profile.exclude_segments.back() >= profile.polygon.points.size())
-    {
-      profile.exclude_segments.pop_back();
-    }
-  }
-}
-
-/* Modify a PlaceProfile so that the length of exclude_segments will be minimized.
- */
-inline void reduceSegmentCount(PlaceProfile& profile)
-{
-  // Check if the segment count can be reduced (i.e. if there is at least one excluded point and
-  // no doubled value in exlude_segments).
-  bool doit = false;
-  // Check for doubles in exclude_segments.
-  for (int i = 0; i < ((int) profile.exclude_segments.size()) - 1; ++i)
-  {
-    if (profile.exclude_segments[i] == profile.exclude_segments[i + 1])
-    {
-      doit = true;
-      break;
-    }
-  }
-  if (!doit)
-  {
-    // Check for excluded points.
-    for (size_t i = 0; i < profile.polygon.points.size(); ++i)
-    {
-      if (pointIsExcluded(profile, i))
+      // Check for out-of-bound elements.
+      if ((profile.exclude_segments[i] < 0) || (profile.exclude_segments[i] >= profile.exclude_segments.size()))
       {
-        doit = true;
+        need_erase = true;
         break;
       }
     }
-  }
-  if (!doit)
-  {
-    return;
+    need_erase |= (profile.exclude_segments.back() < 0);
+    need_erase |= (profile.exclude_segments.back() >= profile.exclude_segments.size());
+    if (!need_erase)
+    {
+      return;
+    }
   }
 
-  PlaceProfile old_profile = profile;
-  profile.polygon.points.clear();
-  profile.exclude_segments.clear();
-  for (size_t i = 0; i < old_profile.polygon.points.size(); ++i)
+  std::sort(profile.exclude_segments.begin(), profile.exclude_segments.end());
+
+  for (vector<int32_t>::iterator s = profile.exclude_segments.begin(); s != profile.exclude_segments.end();)
   {
-    if (!pointIsExcluded(old_profile, i))
+    // Ignore negative elements and too large elements.
+    if ((*s < 0) || (*s >= profile.polygon.points.size()))
     {
-      profile.polygon.points.push_back(old_profile.polygon.points[i]);
-      if (pointIsBeforeExclusion(old_profile, i))
+      s = profile.exclude_segments.erase(s);
+      continue;
+    }
+
+    // Remove doubles.
+    std::vector<int32_t>::iterator last = --profile.exclude_segments.end();
+    if (s != last)
+    {
+      std::vector<int>::iterator next = s + 1;
+      if (*s == *next)
       {
-        profile.exclude_segments.push_back(profile.polygon.points.size() - 1);
+        s = profile.exclude_segments.erase(s);
+        continue;
       }
     }
+    ++s;
   }
 }
 
@@ -151,16 +125,16 @@ inline bool pointOrder(const vector<AngularPoint>& angular_points)
  *
  * Angles within [-pi,pi[ will be sorted from smallest to greatest (i.e.
  * counterclock-wise), optionally.
- * Points fully excluded will be removed.
- * invalid exclude_sements will be removed.
+ * invalid exclude_segments will be removed.
  * exclude_segments will be sorted from smallest index to greatest.
- * exclude_segments will contain the miminum number of values.
+ * exclude_segments will contain no doubles.
  *
  * The algorithm is not robust against non-simple polygons.
  *
  * profile[out] PlaceProfile
  * sort[in] If true, the polygon points will be sorted according to their angle.
  *   If false, the output PlaceProfile is not guaranteed to be normalized.
+ *   Defaults to true.
  */
 void normalizePlaceProfile(PlaceProfile& profile, const bool sort)
 {
@@ -206,7 +180,7 @@ void normalizePlaceProfile(PlaceProfile& profile, const bool sort)
         // v[i] = v[i]+1, does the trick to get the correct renumbering.
         for (size_t i = 0; i < old_profile.exclude_segments.size(); ++i)
         {
-          old_profile.exclude_segments[i] = circular_index(old_profile.exclude_segments[i] + 1, point_count);
+          old_profile.exclude_segments[i] = (old_profile.exclude_segments[i] + 1) % point_count;
         }
       }
       for (size_t i = 0; i < profile.exclude_segments.size(); ++i)
@@ -216,9 +190,7 @@ void normalizePlaceProfile(PlaceProfile& profile, const bool sort)
     }
   }
 
-  removeWrongSegments(profile);
-
-  reduceSegmentCount(profile);
+  normalizeExcludeSegments(profile);
 }
 
 /* Return a copy of a PlaceProfile message where point angles are sorted.
@@ -235,6 +207,10 @@ PlaceProfile normalizedPlaceProfile(const PlaceProfile& profile, const bool sort
   return new_profile;
 }
 
+/* Return true is a profile has no holes larger than max_frontier_width
+ *
+ * Holes can be an excluded segment or not.
+ */
 bool isClosed(const PlaceProfile& profile, const double max_frontier_width)
 {
   const size_t size = profile.polygon.points.size();
@@ -242,18 +218,8 @@ bool isClosed(const PlaceProfile& profile, const double max_frontier_width)
 
   for(size_t i = 0; i < size; ++i)
   {
-    if (pointIsExcluded(profile, i))
-    {
-      continue;
-    }
     Point32 a = profile.polygon.points[i];
-    size_t j = (i + 1) % size;
-    while (pointIsExcluded(profile, j))
-    {
-      j = (j + 1) % size;
-      continue;
-    }
-    Point32 b = profile.polygon.points[j];
+    Point32 b = profile.polygon.points[(i + 1) % size];
 
     const double dx = b.x - a.x;
     const double dy = b.y - a.y;
@@ -278,6 +244,11 @@ bool isClosed(const PlaceProfile& profile, const double max_frontier_width)
  */
 void closePlaceProfile(PlaceProfile& profile, const double max_frontier_width)
 {
+  if (isClosed(profile, max_frontier_width))
+  {
+    return;
+  }
+
   const size_t size = profile.polygon.points.size();
   const double width2 = max_frontier_width * max_frontier_width;
 
@@ -288,18 +259,8 @@ void closePlaceProfile(PlaceProfile& profile, const double max_frontier_width)
 
   for(size_t i = 0; i < size; ++i)
   {
-    if (pointIsExcluded(old_profile, i))
-    {
-      continue;
-    }
     Point32 a = old_profile.polygon.points[i];
-    size_t j = (i + 1) % size;
-    while (pointIsExcluded(old_profile, j))
-    {
-      j = (j + 1) % size;
-      continue;
-    }
-    Point32 b = old_profile.polygon.points[j];
+    Point32 b = old_profile.polygon.points[(i + 1) % size];
 
     const double dx = b.x - a.x;
     const double dy = b.y - a.y;
@@ -336,6 +297,11 @@ void closePlaceProfile(PlaceProfile& profile, const double max_frontier_width)
  */
 PlaceProfile closedPlaceProfile(const PlaceProfile& profile, const double max_frontier_width)
 {
+  if (isClosed(profile, max_frontier_width))
+  {
+    return profile;
+  }
+
   // closePlaceProfile is not used here to avoid an extra copy of the polygon points.
  
   PlaceProfile new_profile;
@@ -346,18 +312,8 @@ PlaceProfile closedPlaceProfile(const PlaceProfile& profile, const double max_fr
 
   for(size_t i = 0; i < size; ++i)
   {
-    if (pointIsExcluded(profile, i))
-    {
-      continue;
-    }
     Point32 a(profile.polygon.points[i]);
-    size_t j = (i + 1) % size;
-    while (pointIsExcluded(profile, j))
-    {
-      j = (j + 1) % size;
-      continue;
-    }
-    Point32 b(profile.polygon.points[j]);
+    Point32 b(profile.polygon.points[(i + 1) % size]);
 
     const double dx = b.x - a.x;
     const double dy = b.y - a.y;
@@ -452,9 +408,15 @@ vector<Point32> simplifyPath(const vector<Point32>& points, const size_t begin, 
 {
   assert(begin < points.size());
   assert(end <= points.size());
+  assert(begin <= end);
   if (end - begin < 3)
   {
+    // Two points or less, just copy the points.
     vector<Point32> filtered_points;
+    if ((end - begin) > 0)
+    {
+      filtered_points.reserve((end - begin) - 1);
+    }
     for (size_t i = begin; i < end; ++i)
     {
       filtered_points.push_back(points[i]);
@@ -530,41 +492,10 @@ vector<Point32> simplifyPath(const vector<Point32>& points, const size_t begin, 
 	return filtered_points;
 }
 
-/* Return the next included point (point with index index possibly)
- */
-size_t firstIncludedPointFrom(const PlaceProfile& profile, const int32_t index)
-{
-  for (size_t i = index; i < profile.polygon.points.size(); ++i)
-  {
-    if (!pointIsExcluded(profile, i))
-    {
-      return i;
-    }
-  }
-  return profile.polygon.points.size();
-}
-    
-/* Return the index after the last point of the next included segment
- */
-size_t lastIncludedPointFrom(const PlaceProfile& profile, const int32_t index)
-{
-  size_t first_included_from = firstIncludedPointFrom(profile, index);
-  
-  for (size_t i = first_included_from; i < profile.polygon.points.size(); ++i)
-  {
-    if (pointIsBeforeExclusion(profile, i))
-    {
-      return i + 1;
-    }
-  }
-  return profile.polygon.points.size();
-}
-
 /* Reduce the number of points in a PlaceProfile message
  *
- * A relevance filter is used for points of non-excluded segments. All points
- * with relevance smaller than the threshold are removed.
- * The number of excluded segments will also be minimized (no more exluded points).
+ * A relevance filter is used for points which are not at borders of excluded
+ * segments. All points with relevance smaller than the threshold are removed.
  *
  * profile[in] PlaceProfile
  * min_relevance[in] relevance threshold, points with relevance smaller than this are removed.
@@ -587,39 +518,23 @@ void simplifyPlaceProfile(PlaceProfile& profile, const double min_relevance)
   PlaceProfile old_profile = profile;
 
   // We need sorted excluded segments (points do not need to be sorted).
-  if (!is_sorted(old_profile.exclude_segments.begin(), old_profile.exclude_segments.end()))
-  {
-    std::sort(old_profile.exclude_segments.begin(), old_profile.exclude_segments.end());
-  }
+  normalizeExcludeSegments(old_profile);
 
   profile.polygon.points.clear();
+  profile.polygon.points.reserve(old_profile.polygon.points.size());
   profile.exclude_segments.clear();
-  size_t path_end = 0;
-  do
+  profile.exclude_segments.reserve(old_profile.exclude_segments.size());
+  
+  size_t path_start = 0;
+  for (size_t i = 0; i < old_profile.exclude_segments.size(); ++i)
   {
-    const size_t path_start = firstIncludedPointFrom(old_profile, path_end);
-    path_end = lastIncludedPointFrom(old_profile, path_start);
-    if (path_start < old_profile.polygon.points.size())
-    {
-      const vector<Point32> filtered_points = simplifyPath(old_profile.polygon.points, path_start, path_end, min_relevance);
-      for (size_t i = 0; i < filtered_points.size(); ++i)
-      {
-        profile.polygon.points.push_back(filtered_points[i]);
-      }
-      if (path_end < old_profile.polygon.points.size())
-      {
-        profile.exclude_segments.push_back(profile.polygon.points.size() - 1);
-      }
-    }
-  } while (path_end < old_profile.polygon.points.size());
-
-  if (pointIsBeforeExclusion(old_profile, old_profile.polygon.points.size() - 1) &&
-      !pointIsBeforeExclusion(profile, profile.polygon.points.size() -1))
-  {
-    // Last segment is excluded in old_profile.
-    profile.exclude_segments.push_back(profile.polygon.points.size() - 1);
+    const vector<Point32> filtered_points = simplifyPath(old_profile.polygon.points, path_start, old_profile.exclude_segments[i] + 1, min_relevance);
+    std::copy(filtered_points.begin(), filtered_points.end(), std::back_inserter(profile.polygon.points));
+    profile.exclude_segments.push_back(((int)profile.polygon.points.size()) - 1);
+    path_start = old_profile.exclude_segments[i] + 1;
   }
-
+  const vector<Point32> filtered_points = simplifyPath(old_profile.polygon.points, path_start, old_profile.polygon.points.size(), min_relevance);
+  std::copy(filtered_points.begin(), filtered_points.end(), std::back_inserter(profile.polygon.points));
 }
 
 /* Return a PlaceProfile with reduced number of points.
@@ -658,19 +573,14 @@ void curtailPlaceProfile(PlaceProfile& profile, const double max_distance)
   PlaceProfile old_profile = profile;
   profile.polygon.points.clear();
   profile.exclude_segments.clear();
-  for (int i = 0; i != size; ++i)
+  for (size_t i = 0; i < size; ++i)
   {
-    if (pointIsExcluded(old_profile, i))
-    {
-      continue;
-    }
-
-    if (in_range[i] && in_range[circular_index(i + 1, size)])
+    if (in_range[i] && in_range[(i + 1) % size])
     {
       // point i and next point are included.
       profile.polygon.points.push_back(old_profile.polygon.points[i]);
     }
-    else if (in_range[i] && !in_range[circular_index(i + 1, size)])
+    else if (in_range[i] && !in_range[(i + 1) % size])
     {
       // point i is included, next point (which will not be part of
       // profile.polygon) is excluded.
@@ -689,8 +599,6 @@ void curtailPlaceProfile(PlaceProfile& profile, const double max_distance)
     // This happens if the first range(s) is(are) out of range.
     profile.exclude_segments[0] = profile.polygon.points.size() - 1;
   }
-
-  normalizePlaceProfile(profile, false);
 }
 
 /* Return a PlaceProfile only containing points withing a certain distance.

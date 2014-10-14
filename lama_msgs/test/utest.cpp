@@ -331,185 +331,6 @@ inline double distance(Point32 point)
   return std::sqrt(point.x * point.x + point.y * point.y);
 }
 
-TEST(TestSuite, TestPointIsBeforeExclusion)
-{
-  PlaceProfile profile;
-
-  profile = profile2();
-  EXPECT_FALSE(pointIsBeforeExclusion(profile, 0));
-  EXPECT_FALSE(pointIsBeforeExclusion(profile, 1));
-
-  profile = profile3();
-  EXPECT_FALSE(pointIsBeforeExclusion(profile, 0));
-  EXPECT_TRUE(pointIsBeforeExclusion(profile, 1));
-  EXPECT_FALSE(pointIsBeforeExclusion(profile, 2));
-
-  profile = profile6();
-  EXPECT_FALSE(pointIsBeforeExclusion(profile, 0));
-  EXPECT_TRUE(pointIsBeforeExclusion(profile, 1));
-  EXPECT_TRUE(pointIsBeforeExclusion(profile, 2));
-  EXPECT_TRUE(pointIsBeforeExclusion(profile, 3));
-  EXPECT_FALSE(pointIsBeforeExclusion(profile, 4));
-  EXPECT_FALSE(pointIsBeforeExclusion(profile, 5));
-
-  profile = profile7();
-  EXPECT_FALSE(pointIsBeforeExclusion(profile, 4));
-  EXPECT_TRUE(pointIsBeforeExclusion(profile, 5));
-  EXPECT_TRUE(pointIsBeforeExclusion(profile, 6));
-}
-
-TEST(TestSuite, TestPointIsAfterExclusion)
-{
-  PlaceProfile profile;
-
-  profile = profile2();
-  EXPECT_FALSE(pointIsAfterExclusion(profile, 0));
-  EXPECT_FALSE(pointIsAfterExclusion(profile, 1));
-
-  profile = profile3();
-  EXPECT_FALSE(pointIsAfterExclusion(profile, 0));
-  EXPECT_FALSE(pointIsAfterExclusion(profile, 1));
-  EXPECT_TRUE(pointIsAfterExclusion(profile, 2));
-
-  profile = profile6();
-  EXPECT_FALSE(pointIsAfterExclusion(profile, 0));
-  EXPECT_FALSE(inList(profile.exclude_segments, 5));
-  EXPECT_FALSE(pointIsAfterExclusion(profile, 1));
-  EXPECT_TRUE(pointIsAfterExclusion(profile, 2));
-  EXPECT_TRUE(pointIsAfterExclusion(profile, 3));
-  EXPECT_TRUE(pointIsAfterExclusion(profile, 4));
-  EXPECT_FALSE(pointIsAfterExclusion(profile, 5));
-
-  profile = profile7();
-  EXPECT_TRUE(pointIsAfterExclusion(profile, 4));
-  EXPECT_FALSE(pointIsAfterExclusion(profile, 5));
-  EXPECT_TRUE(pointIsAfterExclusion(profile, 6));
-}
-
-TEST(TestSuite, TestPointIsExcluded)
-{
-  PlaceProfile profile;
-
-  profile = profile2();
-  EXPECT_FALSE(pointIsExcluded(profile, 0));
-  EXPECT_FALSE(pointIsExcluded(profile, 1));
-
-  profile = profile3();
-  EXPECT_FALSE(pointIsExcluded(profile, 0));
-  EXPECT_FALSE(pointIsExcluded(profile, 1));
-  EXPECT_FALSE(pointIsExcluded(profile, 2));
-
-  profile = profile6();
-  EXPECT_FALSE(pointIsExcluded(profile, 0));
-  EXPECT_FALSE(pointIsExcluded(profile, 1));
-  EXPECT_TRUE(pointIsExcluded(profile, 2));
-  EXPECT_TRUE(pointIsExcluded(profile, 3));
-  EXPECT_FALSE(pointIsExcluded(profile, 4));
-  EXPECT_FALSE(pointIsExcluded(profile, 5));
-
-  profile = profile7();
-  EXPECT_FALSE(pointIsExcluded(profile, 5));
-  EXPECT_TRUE(pointIsExcluded(profile, 6));
-}
-
-TEST(TestSuite, TestPointIsAtInclusionStart)
-{
-  PlaceProfile profile;
-
-  profile = profile2();
-  EXPECT_FALSE(pointIsAtInclusionStart(profile, 0));
-  EXPECT_FALSE(pointIsAtInclusionStart(profile, 1));
-
-  profile = profile3();
-  EXPECT_FALSE(pointIsAtInclusionStart(profile, 0));
-  EXPECT_FALSE(pointIsAtInclusionStart(profile, 1));
-  EXPECT_TRUE(pointIsAtInclusionStart(profile, 2));
-
-  profile = profile6();
-  EXPECT_FALSE(pointIsAtInclusionStart(profile, 0));
-  EXPECT_FALSE(pointIsAtInclusionStart(profile, 1));
-  EXPECT_FALSE(pointIsAtInclusionStart(profile, 2));
-  EXPECT_FALSE(pointIsAtInclusionStart(profile, 3));
-  EXPECT_TRUE(pointIsAtInclusionStart(profile, 4));
-  EXPECT_FALSE(pointIsAtInclusionStart(profile, 5));
-
-  profile = profile7();
-  EXPECT_TRUE(pointIsAtInclusionStart(profile, 0));
-  EXPECT_FALSE(pointIsAtInclusionStart(profile, 1));
-  EXPECT_TRUE(pointIsAtInclusionStart(profile, 4));
-  EXPECT_FALSE(pointIsAtInclusionStart(profile, 5));
-  EXPECT_FALSE(pointIsAtInclusionStart(profile, 6));
-}
-
-TEST(TestSuite, TestFirstIncludedPointFrom)
-{
-  PlaceProfile profile;
-
-  profile = profile2();
-  EXPECT_EQ(0, firstIncludedPointFrom(profile, 0));
-  EXPECT_EQ(1, firstIncludedPointFrom(profile, 1));
-
-  profile = profile3();
-  EXPECT_EQ(0, firstIncludedPointFrom(profile, 0));
-  EXPECT_EQ(1, firstIncludedPointFrom(profile, 1));
-  EXPECT_EQ(2, firstIncludedPointFrom(profile, 2));
-
-  profile = profile6();
-  EXPECT_EQ(0, firstIncludedPointFrom(profile, 0));
-  EXPECT_EQ(1, firstIncludedPointFrom(profile, 1));
-  EXPECT_EQ(4, firstIncludedPointFrom(profile, 2));
-  EXPECT_EQ(4, firstIncludedPointFrom(profile, 3));
-  EXPECT_EQ(4, firstIncludedPointFrom(profile, 4));
-  EXPECT_EQ(5, firstIncludedPointFrom(profile, 5));
-
-  profile = profile7();
-  EXPECT_EQ(5, firstIncludedPointFrom(profile, 5));
-  EXPECT_EQ(7, firstIncludedPointFrom(profile, 6));
-
-  // profile10 + first segment excluded.
-  profile = profile10();
-  profile.exclude_segments.clear();
-  profile.exclude_segments.push_back(0);
-  profile.exclude_segments.push_back(4);
-  EXPECT_EQ(0, firstIncludedPointFrom(profile, 0));
-}
-
-TEST(TestSuite, TestLastIncludedPointFrom)
-{
-  PlaceProfile profile;
-
-  profile = profile2();
-  EXPECT_EQ(2, lastIncludedPointFrom(profile, 0));
-  EXPECT_EQ(2, lastIncludedPointFrom(profile, 1));
-
-  profile = profile3();
-  EXPECT_EQ(2, lastIncludedPointFrom(profile, 0));
-  EXPECT_EQ(2, lastIncludedPointFrom(profile, 1));
-  EXPECT_EQ(3, lastIncludedPointFrom(profile, 2));
-
-  profile = profile6();
-  EXPECT_EQ(2, lastIncludedPointFrom(profile, 0));
-  EXPECT_EQ(2, lastIncludedPointFrom(profile, 1));
-  EXPECT_EQ(6, lastIncludedPointFrom(profile, 2));
-  EXPECT_EQ(6, lastIncludedPointFrom(profile, 3));
-  EXPECT_EQ(6, lastIncludedPointFrom(profile, 4));
-  EXPECT_EQ(6, lastIncludedPointFrom(profile, 5));
-
-  profile = profile7();
-  EXPECT_EQ(6, lastIncludedPointFrom(profile, 2));
-  EXPECT_EQ(6, lastIncludedPointFrom(profile, 3));
-  EXPECT_EQ(6, lastIncludedPointFrom(profile, 4));
-  EXPECT_EQ(6, lastIncludedPointFrom(profile, 5));
-  EXPECT_EQ(7, lastIncludedPointFrom(profile, 6));
-
-  // profile10 + first segment excluded.
-  profile = profile10();
-  profile.exclude_segments.clear();
-  profile.exclude_segments.push_back(0);
-  profile.exclude_segments.push_back(4);
-  EXPECT_EQ(1, lastIncludedPointFrom(profile, 0));
-}
-
 TEST(TestSuite, TestNormalizedPlaceProfile)
 {
   PlaceProfile profile;
@@ -527,28 +348,22 @@ TEST(TestSuite, TestNormalizedPlaceProfile)
     EXPECT_TRUE(pointEqual(profile.polygon.points[i], mod_profile.polygon.points[i]));
   }
 
-  // exclude_segments minimization (1 excluded point).
+  // exclude_segments minimization and sorting.
   mod_profile = profile;
   mod_profile.exclude_segments.push_back(10);
-  mod_profile.exclude_segments.push_back(11);
-  normalizePlaceProfile(mod_profile);
-  ASSERT_EQ(profile.polygon.points.size() - 1, mod_profile.polygon.points.size());
-  EXPECT_TRUE(pointEqual(profile.polygon.points[10], mod_profile.polygon.points[10]));
-  EXPECT_TRUE(pointEqual(profile.polygon.points[12], mod_profile.polygon.points[11]));
-  ASSERT_EQ(1, mod_profile.exclude_segments.size());
-  EXPECT_EQ(10, mod_profile.exclude_segments[0]);
-
-  // exclude_segments minimization (2 excluded points).
-  mod_profile = profile;
-  mod_profile.exclude_segments.push_back(10);
+  mod_profile.exclude_segments.push_back(12);
   mod_profile.exclude_segments.push_back(11);
   mod_profile.exclude_segments.push_back(12);
   normalizePlaceProfile(mod_profile);
-  ASSERT_EQ(profile.polygon.points.size() - 2, mod_profile.polygon.points.size());
+  ASSERT_EQ(profile.polygon.points.size(), mod_profile.polygon.points.size());
   EXPECT_TRUE(pointEqual(profile.polygon.points[10], mod_profile.polygon.points[10]));
-  EXPECT_TRUE(pointEqual(profile.polygon.points[13], mod_profile.polygon.points[11]));
-  ASSERT_EQ(1, mod_profile.exclude_segments.size());
+  EXPECT_TRUE(pointEqual(profile.polygon.points[11], mod_profile.polygon.points[11]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[12], mod_profile.polygon.points[12]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[13], mod_profile.polygon.points[13]));
+  ASSERT_EQ(3, mod_profile.exclude_segments.size());
   EXPECT_EQ(10, mod_profile.exclude_segments[0]);
+  EXPECT_EQ(11, mod_profile.exclude_segments[1]);
+  EXPECT_EQ(12, mod_profile.exclude_segments[2]);
 
   // From CW to CCW with 1 excluded segment.
   mod_profile = profile_circle_cw();
@@ -566,11 +381,13 @@ TEST(TestSuite, TestNormalizedPlaceProfile)
   mod_profile.exclude_segments.push_back(1);
   mod_profile.exclude_segments.push_back(2);
   normalizePlaceProfile(mod_profile);
-  ASSERT_EQ(profile.polygon.points.size() - 1, mod_profile.polygon.points.size());
+  ASSERT_EQ(profile.polygon.points.size(), mod_profile.polygon.points.size());
   EXPECT_TRUE(pointEqual(profile.polygon.points[36], mod_profile.polygon.points[36]));
-  EXPECT_TRUE(pointEqual(profile.polygon.points[38], mod_profile.polygon.points[37]));
-  ASSERT_EQ(1, mod_profile.exclude_segments.size());
+  EXPECT_TRUE(pointEqual(profile.polygon.points[37], mod_profile.polygon.points[37]));
+  EXPECT_TRUE(pointEqual(profile.polygon.points[38], mod_profile.polygon.points[38]));
+  ASSERT_EQ(2, mod_profile.exclude_segments.size());
   EXPECT_EQ(36, mod_profile.exclude_segments[0]);
+  EXPECT_EQ(37, mod_profile.exclude_segments[1]);
 }
 
 TEST(TestSuite, TestClosePlaceProfile)
@@ -772,42 +589,22 @@ TEST(TestSuite, TestSimplifyPlaceProfile)
   profile = profile6();
   old_profile = profile;
   simplifyPlaceProfile(profile, 0.01);
-  EXPECT_EQ(4, profile.polygon.points.size());
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[0], profile.polygon.points[0]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[1], profile.polygon.points[1]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[4], profile.polygon.points[2]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[5], profile.polygon.points[3]));
-  EXPECT_EQ(1, profile.exclude_segments.size());
+  EXPECT_TRUE(pointsEqual(old_profile.polygon.points, profile.polygon.points));
+  ASSERT_EQ(3, profile.exclude_segments.size());
   EXPECT_EQ(1, profile.exclude_segments[0]);
-
-  profile = profile6();
-  profile.polygon.points[2].y = 1;
-  old_profile = profile;
-  simplifyPlaceProfile(profile, 0.01);
-  EXPECT_EQ(4, profile.polygon.points.size());
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[0], profile.polygon.points[0]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[1], profile.polygon.points[1]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[4], profile.polygon.points[2]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[5], profile.polygon.points[3]));
-  EXPECT_EQ(1, profile.exclude_segments.size());
-  EXPECT_EQ(1, profile.exclude_segments[0]);
+  EXPECT_EQ(2, profile.exclude_segments[1]);
+  EXPECT_EQ(3, profile.exclude_segments[2]);
 
   profile = profile7();
   old_profile = profile;
   simplifyPlaceProfile(profile, 0.01);
-  EXPECT_EQ(4, profile.polygon.points.size());
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[0], profile.polygon.points[0]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[1], profile.polygon.points[1]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[4], profile.polygon.points[2]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[5], profile.polygon.points[3]));
-  EXPECT_EQ(2, profile.exclude_segments.size());
-  EXPECT_EQ(1, profile.exclude_segments[0]);
-  EXPECT_EQ(3, profile.exclude_segments[1]);
+  EXPECT_TRUE(pointsEqual(old_profile.polygon.points, profile.polygon.points));
+  EXPECT_EQ(old_profile.exclude_segments, profile.exclude_segments);
 
   profile = profile10();
   old_profile = profile;
   simplifyPlaceProfile(profile, 0.01);
-  EXPECT_EQ(8, profile.polygon.points.size());
+  ASSERT_EQ(8, profile.polygon.points.size());
   EXPECT_TRUE(pointEqual(old_profile.polygon.points[0], profile.polygon.points[0]));
   EXPECT_TRUE(pointEqual(old_profile.polygon.points[1], profile.polygon.points[1]));
   EXPECT_TRUE(pointEqual(old_profile.polygon.points[2], profile.polygon.points[2]));
@@ -816,46 +613,15 @@ TEST(TestSuite, TestSimplifyPlaceProfile)
   EXPECT_TRUE(pointEqual(old_profile.polygon.points[5], profile.polygon.points[5]));
   EXPECT_TRUE(pointEqual(old_profile.polygon.points[8], profile.polygon.points[6]));
   EXPECT_TRUE(pointEqual(old_profile.polygon.points[9], profile.polygon.points[7]));
-  EXPECT_EQ(1, profile.exclude_segments.size());
-  EXPECT_EQ(4, profile.exclude_segments[0]);
+  EXPECT_EQ(old_profile.exclude_segments, profile.exclude_segments);
 
-  // profile10 + first segment excluded.
+  // profile10 + segment 6 excluded.
   profile = profile10();
-  profile.exclude_segments.clear();
-  profile.exclude_segments.push_back(0);
-  profile.exclude_segments.push_back(4);
+  profile.exclude_segments.push_back(6);
   old_profile = profile;
   simplifyPlaceProfile(profile, 0.01);
-  EXPECT_EQ(8, profile.polygon.points.size());
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[0], profile.polygon.points[0]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[1], profile.polygon.points[1]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[2], profile.polygon.points[2]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[3], profile.polygon.points[3]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[4], profile.polygon.points[4]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[5], profile.polygon.points[5]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[8], profile.polygon.points[6]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[9], profile.polygon.points[7]));
-  EXPECT_EQ(2, profile.exclude_segments.size());
-  EXPECT_EQ(0, profile.exclude_segments[0]);
-  EXPECT_EQ(4, profile.exclude_segments[1]);
-
-  // profile10 + last segment excluded.
-  profile = profile10();
-  profile.exclude_segments.push_back(9);
-  old_profile = profile;
-  simplifyPlaceProfile(profile, 0.01);
-  EXPECT_EQ(8, profile.polygon.points.size());
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[0], profile.polygon.points[0]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[1], profile.polygon.points[1]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[2], profile.polygon.points[2]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[3], profile.polygon.points[3]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[4], profile.polygon.points[4]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[5], profile.polygon.points[5]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[8], profile.polygon.points[6]));
-  EXPECT_TRUE(pointEqual(old_profile.polygon.points[9], profile.polygon.points[7]));
-  EXPECT_EQ(2, profile.exclude_segments.size());
-  EXPECT_EQ(4, profile.exclude_segments[0]);
-  EXPECT_EQ(7, profile.exclude_segments[1]);
+  EXPECT_TRUE(pointsEqual(old_profile.polygon.points, profile.polygon.points));
+  EXPECT_EQ(old_profile.exclude_segments, profile.exclude_segments);
 }
 
 TEST(TestSuite, TestRealDataSimplify)
@@ -914,9 +680,9 @@ TEST(TestSuite, TestCurtailPlaceProfile)
   mod_profile.polygon.points[5].y *= 2;
   curtailPlaceProfile(mod_profile, 6);
   ASSERT_EQ(profile.polygon.points.size() - 1, mod_profile.polygon.points.size());
-  ASSERT_EQ(1, mod_profile.exclude_segments.size());
   EXPECT_TRUE(pointEqual(profile.polygon.points[4], mod_profile.polygon.points[4]));
   EXPECT_TRUE(pointEqual(profile.polygon.points[6], mod_profile.polygon.points[5]));
+  ASSERT_EQ(1, mod_profile.exclude_segments.size());
   EXPECT_EQ(4, mod_profile.exclude_segments[0]);
 
   mod_profile = profile;
@@ -926,10 +692,10 @@ TEST(TestSuite, TestCurtailPlaceProfile)
   mod_profile.polygon.points[7].y *= 2;
   curtailPlaceProfile(mod_profile, 6);
   ASSERT_EQ(profile.polygon.points.size() - 2, mod_profile.polygon.points.size());
-  ASSERT_EQ(2, mod_profile.exclude_segments.size());
   EXPECT_TRUE(pointEqual(profile.polygon.points[4], mod_profile.polygon.points[4]));
   EXPECT_TRUE(pointEqual(profile.polygon.points[6], mod_profile.polygon.points[5]));
   EXPECT_TRUE(pointEqual(profile.polygon.points[8], mod_profile.polygon.points[6]));
+  ASSERT_EQ(2, mod_profile.exclude_segments.size());
   EXPECT_EQ(4, mod_profile.exclude_segments[0]);
   EXPECT_EQ(5, mod_profile.exclude_segments[1]);
 }

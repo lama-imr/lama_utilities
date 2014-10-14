@@ -21,6 +21,15 @@ using lama_msgs::PlaceProfile;
 
 namespace lama {
 
+/* Return a positive modulo (as Python does, even with negative numbers)
+ * 
+ * index must be greater than (-size).
+ */
+inline int32_t circular_index(const int32_t index, const size_t size)
+{
+  return (index + size) % size;
+}
+
 geometry_msgs::Polygon placeProfileToPolygon(const PlaceProfile& profile);
 
 sensor_msgs::PointCloud placeProfileToPointCloud(const PlaceProfile& profile);

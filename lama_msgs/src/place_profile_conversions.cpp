@@ -5,9 +5,7 @@
 
 namespace lama {
 
-/* Return the polygon that correspond to the PlaceProfile
- *
- * Points surrounded by two excluded segments are excluded.
+/* Return the polygon corresponding to the PlaceProfile
  */
 geometry_msgs::Polygon placeProfileToPolygon(const PlaceProfile& profile)
 {
@@ -17,34 +15,23 @@ geometry_msgs::Polygon placeProfileToPolygon(const PlaceProfile& profile)
 
   for (size_t i = 0; i < polygon.points.size(); ++i)
   {
-    if (!pointIsExcluded(profile, i))
-    {
-      polygon.points.push_back(polygon.points[i]);
-    }
+    polygon.points.push_back(polygon.points[i]);
   }
 
   return polygon;
 }
 
+/* Return the point cloud corresponding to the PlaceProfile
+ */
 sensor_msgs::PointCloud placeProfileToPointCloud(const PlaceProfile& profile)
 {
   sensor_msgs::PointCloud cloud;
   cloud.header = profile.header;
   for (size_t i = 0; i < profile.polygon.points.size(); ++i)
   {
-    if (!pointIsExcluded(profile, i))
-    {
-      cloud.points.push_back(profile.polygon.points[i]);
-    }
+    cloud.points.push_back(profile.polygon.points[i]);
   }
   return cloud;
-}
-
-/* Return true if the point is surrounded by two excluded segments.
- */
-inline bool pointIsExcluded(const vector<bool>& in_range, const size_t i)
-{
-  return !in_range[circular_index(i - 1, in_range.size())] && !in_range[(i + 1) % in_range.size()];
 }
 
 /* Tranform a LaserScan into a PlaceProfile

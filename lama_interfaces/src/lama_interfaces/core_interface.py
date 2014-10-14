@@ -18,15 +18,26 @@ from lama_interfaces.msg import LamaObject
 from lama_interfaces.msg import DescriptorLink
 
 g_default_core_table_name = 'lama_objects'
-g_default_descriptor_table_name = 'lama_descriptor_ids'
+g_default_descriptor_table_name = 'lama_descriptor_links'
 
-# create engine
-# TODO according  the rosparam server
-_engine = create_engine('sqlite:///created.sql')
+# sqlalchemy engine (argument to sqlalchemy.create_engine)
+g_engine_name = rospy.get_param('/database_engine', 'sqlite:///created.sql')
 
 
 class CoreDBInterface(object):
-    def __init__(self, interface_name=None, descriptor_table_name=None):
+    def __init__(self, engine, interface_name=None, descriptor_table_name=None):
+        """Build the map interface for LamaObject
+
+        ROS services are not started.
+
+        Parameters
+        ----------
+        - engine: String, argument to sqlalchemy.create_engine.
+        - interface_name: string, name of the table containing LamaObject
+            messages (vertices and edges). Defaults to 'lama_objects'.
+        - descriptor_table_name: string, name of the table for DescriptorLink
+            messages. Defaults to 'lama_descriptor_links'.
+        """
         if not interface_name:
             interface_name = g_default_core_table_name
         if not descriptor_table_name:
@@ -52,7 +63,7 @@ class CoreDBInterface(object):
         self.descriptor_table_name = descriptor_table_name
 
         # Database related attributes.
-        self.engine = _engine
+        self.engine = create_engine(engine)
         self.metadata = MetaData()
         self.metadata.bind = self.engine
         # Read tables from the possibly existing database.
@@ -549,7 +560,7 @@ def core_interface():
       ---
       int32 id
     """
-    iface = CoreDBInterface()
+    iface = CoreDBInterface(g_engine_name)
     rospy.Service(iface.getter_service_name,
                   iface.getter_service_class,
                   iface.getter_callback)

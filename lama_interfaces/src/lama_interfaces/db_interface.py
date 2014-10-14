@@ -19,7 +19,7 @@ class DBInterfaceAbstract(object):
 
         Parameters
         ----------
-        - engine: sqlalchemy.engine.
+        - engine: String, argument to sqlalchemy.create_engine.
         - interface_name: string, name of the map interface.
         - getter_srv_msg: string, service message to write into the map.
         - setter_srv_msg: string, service message to read from the map.
@@ -58,7 +58,7 @@ class DBInterfaceAbstract(object):
         self.interface_name = interface_name
 
         # Database related attributes.
-        self.engine = engine
+        self.engine = sqlalchemy.create_engine(engine)
         self.metadata = sqlalchemy.MetaData()
         self.metadata.bind = self.engine
         # Read tables from the possibly existing database.

@@ -35,9 +35,8 @@ suffix_for_builtin = '_value_'
 
 _types_table_name = 'message_types'
 
-# create engine
-# TODO according  the rosparam server
-_engine = sqlalchemy.create_engine('sqlite:///created.sql')
+# sqlalchemy engine (argument to sqlalchemy.create_engine)
+g_engine_name = rospy.get_param('/database_engine', 'sqlite:///created.sql')
 
 # TODO: remove all occurences of roslib.msgs
 
@@ -833,6 +832,6 @@ def cleartext_interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
         getter_srv_msg = getter_srv_msg[:-4]
     if setter_srv_msg.endswith('.srv'):
         setter_srv_msg = setter_srv_msg[:-4]
-    iface = DBInterface(_engine, interface_name,
+    iface = DBInterface(g_engine_name, interface_name,
                         getter_srv_msg, setter_srv_msg)
     return iface

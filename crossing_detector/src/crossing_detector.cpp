@@ -180,7 +180,7 @@ Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const
   return crossing;
 }
 
-/* Return frontiers.
+/* Return frontiers computed from place_profile_.
  *
  * Frontiers can be an excluded segment (or a series of them) or a normal segment.
  * Uses place_profile_ as input.
@@ -203,18 +203,8 @@ vector<Frontier> CrossingDetector::frontiers_() const
   Frontier frontier;
   for(size_t i = 0; i < size; ++i)
   {
-    if (pointIsExcluded(place_profile_, i))
-    {
-      continue;
-    }
     geometry_msgs::Point32 a(place_profile_.polygon.points[i]);
-    size_t j = (i + 1) % size;
-    while (pointIsExcluded(place_profile_, j))
-    {
-      j = (j + 1) % size;
-      continue;
-    }
-    geometry_msgs::Point32 b(place_profile_.polygon.points[j]);
+    geometry_msgs::Point32 b(place_profile_.polygon.points[(i + 1) % size]);
 
     const double dist2 = (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 

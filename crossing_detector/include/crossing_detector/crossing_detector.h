@@ -55,10 +55,15 @@ class CrossingDetector
 
     PlaceProfile getPlaceProfile() const {return place_profile_;}
 
+  protected:
+
+    vector<Frontier> frontiers_() const;
+
+    PlaceProfile place_profile_;  //!> PlaceProfile used to compute the crossing.
+
   private:
 
     vector<Point> delaunayInput(const PlaceProfile& profile) const;
-    vector<Frontier> frontiers_() const;
 
     // Parameters shown outside (constructor and setter).
     double frontier_width_;  //!> Min. frontier width, i.e. space turough which a robot can go (m).
@@ -70,7 +75,6 @@ class CrossingDetector
 
     // Internals.
     char node_name_[31];
-    PlaceProfile place_profile_;  //!> PlaceProfile used to compute the crossing.
 };
 
 } // namespace crossing_detector

@@ -41,6 +41,7 @@
   <build_depend>cgal</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>lama_msgs</build_depend>
+  <build_depend>moveit_ros_planning_interface</build_depend>
   <build_depend>nav_msgs</build_depend>
   <build_depend>rosbag</build_depend>
   <build_depend>roscpp</build_depend>
@@ -49,6 +50,7 @@
   <run_depend>cgal</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>lama_msgs</run_depend>
+  <run_depend>moveit_ros_planning_interface</run_depend>
   <run_depend>nav_msgs</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>sensor_msgs</run_depend>

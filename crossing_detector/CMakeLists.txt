@@ -148,6 +148,7 @@ target_link_libraries(crossing_detector
 	)
 target_link_libraries(laser_crossing_detector crossing_detector ${catkin_LIBRARIES})
 target_link_libraries(costmap_crossing_detector crossing_detector ${catkin_LIBRARIES})
+
 target_link_libraries(crossing_detector_wrapper
 	crossing_detector
 	${catkin_LIBRARIES}

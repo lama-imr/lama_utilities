@@ -1,3 +1,4 @@
+#include <iostream> // DEBUG
 #include <boost/python.hpp>
 
 #include <moveit/py_bindings_tools/roscpp_initializer.h>
@@ -28,7 +29,14 @@ class CrossingDetectorWrapper : public CrossingDetector
     // }
     
     bool testCall0() {return true;}
-    bool testCall1(const PlaceProfile& profile) {return true;}
+    //bool testCall1(const PlaceProfileConstPtr profile) {return true;}
+    bool testCall1(const boost::python::object& profile)
+    {
+      profile.attr("exclude_segments");
+      profile.ptr()
+      std::cout << profile.attr("exclude_segments") << std::endl;
+
+      return true;}
 };
 
 class CrossingDetectorWrapperMoveit : protected moveit::py_bindings_tools::ROScppInitializer,

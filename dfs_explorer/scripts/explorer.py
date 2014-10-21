@@ -21,6 +21,8 @@ from lama_msgs.srv import GetCrossing
 from lama_interfaces.srv import ActOnMap
 from lama_interfaces.srv import ActOnMapRequest
 from lama_interfaces.interface_factory import interface_factory
+from lama_interfaces.graph_builder import get_oriented_graph
+from lama_interfaces.graph_builder import get_edge_with_vertices
 
 # TODO: add a mechanism for the robot not to come back to the vertex it comes
 # from.
@@ -105,7 +107,7 @@ class ExplorerNode(object):
         self.next_vertex = None
         self.next_exit = None
         # The graph is organized as a map
-        # vertex: list(list(vertex, exit_angle)).
+        # vertex: [[vertex, exit_angle], [vertex, exit_angle], ...].
         # Where the second vertex is the vertex that will be at the next
         # crossing center when traversing edge (corridor) at absolute and
         # exit_angle.
@@ -119,10 +121,15 @@ class ExplorerNode(object):
 
     def get_graph_from_map(self):
         """Retrieve the graph from the map"""
-        # TODO: implement
-        # map_action = ActOnMapRequest()
-        # map_action.action = map_action.GET_VERTEX_LIST
-        return {}
+
+        map_graph = get_oriented_graph()
+
+        # Fill the graph keys (vertices) and values (pairs [None, exit_angle]).
+        for vertex in map_graph.iterkeys():
+            self.get_current_descriptor()
+
+        graph = {}
+        return graph
 
     def move_to_crossing(self):
         """Move the robot to the first crossing
@@ -165,7 +172,7 @@ class ExplorerNode(object):
         while True:
             # 1. Get a new vertex descriptor when finished traversing.
             debug('getting descriptor')
-            if not self.get_descriptor():
+            if not self.get_current_descriptor():
                 rospy.logwarn('No descriptor, exiting')
                 break
 
@@ -188,7 +195,7 @@ class ExplorerNode(object):
             # 5. Let the navigating jockey move to the next crossing.
             self.move_to_crossing()
 
-    def get_descriptor(self):
+    def get_current_descriptor(self):
         """Get the descriptors from the current crossing center
 
         Get the descriptors.
@@ -386,13 +393,7 @@ class ExplorerNode(object):
 
     def edge_id(self, v0, v1):
         """Return the id of edge from v0 to v1"""
-        map_action = ActOnMapRequest()
-        map_action.action = map_action.GET_EDGE_LIST
-        response = self.map_agent(map_action)
-        for o in response.objects:
-            if (o.references[0] == v0) and (o.references[1] == v1):
-                return o.id
-        return None
+        return get_edge_with_vertices(v0, v1).id
 
     def find_path(self):
         """Return a list of (vertex, angle)

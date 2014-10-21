@@ -17,8 +17,7 @@ find_package(catkin REQUIRED
 	)
 
 ## System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED COMPONENTS python)
-find_package(PythonLibs 2.7 REQUIRED)
+#find_package(Boost REQUIRED COMPONENTS python)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -97,7 +96,6 @@ catkin_package(
 	crossing_visualization
 	place_profile_utils
 	place_profile_conversions
-	place_profile_wrapper
 
 	CATKIN_DEPENDS
 	angles
@@ -121,8 +119,6 @@ catkin_package(
 include_directories(
 	include
 	${catkin_INCLUDE_DIRS}
-	${Boost_INCLUDE_DIRS}
-	${PYTHON_INCLUDE_DIRS}
 	)
 
 ## Declare a cpp library
@@ -130,7 +126,6 @@ add_library(crossing_utils src/crossing_utils.cpp)
 add_library(crossing_visualization src/crossing_visualization.cpp)
 add_library(place_profile_utils src/place_profile_utils.cpp)
 add_library(place_profile_conversions src/place_profile_conversions.cpp)
-add_library(place_profile_wrapper src/place_profile_wrapper.cpp)
 
 ## Declare a cpp executable
 # add_executable(lama_msgs_node src/lama_msgs_node.cpp)
@@ -141,19 +136,13 @@ add_dependencies(crossing_utils lama_msgs_generate_messages_cpp)
 add_dependencies(crossing_visualization lama_msgs_generate_messages_cpp)
 add_dependencies(place_profile_utils lama_msgs_generate_messages_cpp)
 add_dependencies(place_profile_conversions lama_msgs_generate_messages_cpp)
-add_dependencies(place_profile_wrapper lama_msgs_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(crossing_utils ${catkin_LIBRARIES})
 target_link_libraries(crossing_visualization ${catkin_LIBRARIES})
 target_link_libraries(place_profile_utils ${catkin_LIBRARIES})
 target_link_libraries(place_profile_conversions ${catkin_LIBRARIES})
-target_link_libraries(place_profile_wrapper ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
-set_target_properties(place_profile_wrapper PROPERTIES
-	PREFIX ""
-	LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}
-	)
 #############
 ## Install ##
 #############

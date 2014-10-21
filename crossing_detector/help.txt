@@ -1,0 +1,2 @@
+https://github.com/ethz-asl/Schweizer-Messer/wiki/Adding-boost::python-exports-to-your-ROS-package
+https://github.com/ros/genpybindings

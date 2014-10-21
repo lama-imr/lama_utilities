@@ -1,6 +1,6 @@
 #include <crossing_detector/crossing_detector.h>
 
-#define DEBUG_CROSSDETECT
+//#define DEBUG_CROSSDETECT
 
 #ifdef DEBUG_CROSSDETECT
 #include <fstream>

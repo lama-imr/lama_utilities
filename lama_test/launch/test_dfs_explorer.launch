@@ -39,9 +39,9 @@
 		  _ki_w:=0 \
 		  _min_linear_velocity:=0 \
 		  _min_angular_velocity:=0 \
-		  nj_costmap/local_costmap:=costmap/local_map \
-		  nj_costmap/cmd_vel:=/cmd_vel \
-		  nj_costmap/base_scan:=/base_scan
+		  navigating_jockey/local_costmap:=/costmap/local_map \
+		  navigating_jockey/cmd_vel:=/cmd_vel \
+		  navigating_jockey/base_scan:=/base_scan
 		-->
 		<node name="navigating_jockey" pkg="nj_costmap" type="nj_costmap"
 				output="screen" >

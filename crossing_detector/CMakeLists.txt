@@ -20,11 +20,14 @@ find_package(CGAL REQUIRED COMPONENTS Core)
 set(CGAL_DONT_OVERRIDE_CMAKE_FLAGS TRUE CACHE BOOL "Don't override flags")
 include(${CGAL_USE_FILE})
 
+find_package(Boost REQUIRED COMPONENTS python)
+find_package(PythonLibs 2.7 REQUIRED)
+
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
 # We need this to export __init__.py to ${CATKIN_PACKAGE_PYTHON_DESTINATION}.
-# catkin_python_setup()
+catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -95,6 +98,7 @@ catkin_package(
 	crossing_detector
 	laser_crossing_detector
 	costmap_crossing_detector
+	crossing_detector_wrapper_cpp
 
 	CATKIN_DEPENDS
 	angles
@@ -120,12 +124,15 @@ include_directories(
 	include
 	${catkin_INCLUDE_DIRS}
 	${CGAL_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIRS}
+	${PYTHON_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
 add_library(crossing_detector src/crossing_detector.cpp)
 add_library(laser_crossing_detector src/laser_crossing_detector.cpp)
 add_library(costmap_crossing_detector src/costmap_crossing_detector.cpp)
+add_library(crossing_detector_wrapper_cpp src/crossing_detector_wrapper.cpp)
 
 ## Declare a cpp executable
 add_executable(crossing_detector_server src/crossing_detector_server.cpp)
@@ -146,6 +153,12 @@ target_link_libraries(laser_crossing_detector crossing_detector ${catkin_LIBRARI
 target_link_libraries(costmap_crossing_detector crossing_detector ${catkin_LIBRARIES})
 target_link_libraries(crossing_detector_server crossing_detector ${catkin_LIBRARIES})
 target_link_libraries(laser_crossing_detector_server laser_crossing_detector crossing_detector ${catkin_LIBRARIES})
+target_link_libraries(crossing_detector_wrapper_cpp crossing_detector ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+# Don't prepend wrapper library name with lib and add to Python libs.
+set_target_properties(crossing_detector_wrapper_cpp PROPERTIES
+	PREFIX ""
+	LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
 
 #############
 ## Install ##

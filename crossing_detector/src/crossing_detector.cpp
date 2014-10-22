@@ -109,6 +109,11 @@ CrossingDetector::CrossingDetector(const double frontier_width, const double max
   private_nh.getParamCached("frontier_width", frontier_width_);
 }
 
+/* Return a lama_msgs/Crossing message from analysis of a lama_msgs/PlaceProfile
+ *
+ * profile[in] PlaceProfile message.
+ * normalize[in] true if the PlaceProfile should be normalized in a first step.
+ */
 Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const bool normalize)
 {
   Crossing crossing;
@@ -233,7 +238,7 @@ vector<Frontier> CrossingDetector::frontiers_() const
   return frontiers;
 }
 
-/* Return frontiers.
+/* Return a list of frontiers.
  *
  * Frontiers can be an excluded segment (or a series of them) or a normal segment.
  *

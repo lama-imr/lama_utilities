@@ -1,0 +1,6 @@
+sensor_msgs/LaserScan scan
+float32 frontier_width
+float32 max_frontier_angle
+float32 min_relevance
+---
+lama_msgs/Crossing crossing

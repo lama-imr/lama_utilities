@@ -58,11 +58,11 @@ include(${CGAL_USE_FILE})
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  DetectCrossing.srv
+  LaserDetectCrossing.srv
+  )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -72,10 +72,11 @@ include(${CGAL_USE_FILE})
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   lama_msgs#   sensor_msgs
-# )
+generate_messages(
+	DEPENDENCIES
+	lama_msgs
+	sensor_msgs
+	)
 
 ###################################
 ## catkin specific configuration ##
@@ -127,11 +128,13 @@ add_library(laser_crossing_detector src/laser_crossing_detector.cpp)
 add_library(costmap_crossing_detector src/costmap_crossing_detector.cpp)
 
 ## Declare a cpp executable
-# add_executable(crossing_detector_node src/crossing_detector_node.cpp)
+add_executable(crossing_detector_server src/crossing_detector_server.cpp)
+add_executable(laser_crossing_detector_server src/laser_crossing_detector_server.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(crossing_detector_node crossing_detector_generate_messages_cpp)
+add_dependencies(crossing_detector_server crossing_detector_generate_messages_cpp)
+add_dependencies(laser_crossing_detector_server crossing_detector_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(crossing_detector
@@ -141,6 +144,8 @@ target_link_libraries(crossing_detector
 	)
 target_link_libraries(laser_crossing_detector crossing_detector ${catkin_LIBRARIES})
 target_link_libraries(costmap_crossing_detector crossing_detector ${catkin_LIBRARIES})
+target_link_libraries(crossing_detector_server crossing_detector ${catkin_LIBRARIES})
+target_link_libraries(laser_crossing_detector_server laser_crossing_detector crossing_detector ${catkin_LIBRARIES})
 
 #############
 ## Install ##

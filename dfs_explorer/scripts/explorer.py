@@ -20,9 +20,11 @@ from lama_jockeys.msg import LocalizeGoal
 from lama_msgs.srv import GetCrossing
 from lama_interfaces.srv import ActOnMap
 from lama_interfaces.srv import ActOnMapRequest
+from lama_interfaces.core_interface import CoreDBInterface
 from lama_interfaces.interface_factory import interface_factory
-from lama_interfaces.graph_builder import get_oriented_graph
 from lama_interfaces.graph_builder import get_edge_with_vertices
+
+from graph import GraphTransformer
 
 # TODO: add a mechanism for the robot not to come back to the vertex it comes
 # from.
@@ -71,7 +73,10 @@ class ExplorerNode(object):
         self.escape = jockey_client(escape_jockey_name, NavigateAction)
 
         # Map agent server.
-        self.map_agent = rospy.ServiceProxy('lama_map_agent', ActOnMap)
+        engine_name = rospy.get_param('/database_engine',
+                                      'sqlite:///created.sql')
+        iface = CoreDBInterface(engine_name)
+        self.map_agent = rospy.ServiceProxy(iface.action_service_name, ActOnMap)
 
         # Descriptor getter for Crossing.
         self.crossing_interface_name = rospy.get_param(
@@ -109,27 +114,19 @@ class ExplorerNode(object):
         # The graph is organized as a map
         # vertex: [[vertex, exit_angle], [vertex, exit_angle], ...].
         # Where the second vertex is the vertex that will be at the next
-        # crossing center when traversing edge (corridor) at absolute and
+        # crossing center when traversing edge (corridor) at absolute angle
         # exit_angle.
         # When starting to traverse an edge, vertex is set to None. A vertex
         # will be visited when all its neighbor vertices are not None.
         # The graph is then an oriented graph where the information for edge
         # a to b is the exit angle that was taken from a to reach b.
-        self.graph = self.get_graph_from_map()
+        self.graph_transformer = GraphTransformer(self.map_agent,
+                                                  self.crossing_getter,
+                                                  self.crossing_interface_name,
+                                                  self.exit_angles_getter,
+                                                  exit_angles_interface_name)
 
         debug('initialized')
-
-    def get_graph_from_map(self):
-        """Retrieve the graph from the map"""
-
-        map_graph = get_oriented_graph()
-
-        # Fill the graph keys (vertices) and values (pairs [None, exit_angle]).
-        for vertex in map_graph.iterkeys():
-            self.get_current_descriptor()
-
-        graph = {}
-        return graph
 
     def move_to_crossing(self):
         """Move the robot to the first crossing

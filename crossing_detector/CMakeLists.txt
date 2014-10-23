@@ -99,6 +99,7 @@ catkin_package(
 	laser_crossing_detector
 	costmap_crossing_detector
 	crossing_detector_wrapper_cpp
+	laser_crossing_detector_wrapper_cpp
 
 	CATKIN_DEPENDS
 	angles
@@ -133,6 +134,7 @@ add_library(crossing_detector src/crossing_detector.cpp)
 add_library(laser_crossing_detector src/laser_crossing_detector.cpp)
 add_library(costmap_crossing_detector src/costmap_crossing_detector.cpp)
 add_library(crossing_detector_wrapper_cpp src/crossing_detector_wrapper.cpp)
+add_library(laser_crossing_detector_wrapper_cpp src/laser_crossing_detector_wrapper.cpp)
 
 ## Declare a cpp executable
 add_executable(crossing_detector_server src/crossing_detector_server.cpp)
@@ -154,9 +156,14 @@ target_link_libraries(costmap_crossing_detector crossing_detector ${catkin_LIBRA
 target_link_libraries(crossing_detector_server crossing_detector ${catkin_LIBRARIES})
 target_link_libraries(laser_crossing_detector_server laser_crossing_detector crossing_detector ${catkin_LIBRARIES})
 target_link_libraries(crossing_detector_wrapper_cpp crossing_detector ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(laser_crossing_detector_wrapper_cpp crossing_detector laser_crossing_detector ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 # Don't prepend wrapper library name with lib and add to Python libs.
 set_target_properties(crossing_detector_wrapper_cpp PROPERTIES
+	PREFIX ""
+	LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
+
+set_target_properties(laser_crossing_detector_wrapper_cpp PROPERTIES
 	PREFIX ""
 	LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
 

@@ -1,4 +1,4 @@
-# Base class for database interface.
+# Base class for database interfaces.
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 import sqlalchemy
@@ -10,7 +10,7 @@ import roslib.message
 _interfaces_table_name = 'map_interfaces'
 
 
-class DBInterfaceAbstract(object):
+class AbstractDBInterface(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, engine, interface_name, getter_srv_msg, setter_srv_msg,

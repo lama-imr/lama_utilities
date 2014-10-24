@@ -5,13 +5,13 @@ import rospy
 import sqlalchemy
 from sqlalchemy.types import Integer, Binary
 
-from db_interface import DBInterfaceAbstract
+from abstract_db_interface import AbstractDBInterface
 
 # sqlalchemy engine (argument to sqlalchemy.create_engine)
 g_engine_name = rospy.get_param('/database_engine', 'sqlite:///created.sql')
 
 
-class DBInterface(DBInterfaceAbstract):
+class DBInterface(AbstractDBInterface):
     @property
     def interface_type(self):
         return "serialization"

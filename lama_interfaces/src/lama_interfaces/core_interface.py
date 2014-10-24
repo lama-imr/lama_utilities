@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+# Class for management of the map core functionalities.
+# This includes management of vertices, edges, and descriptor links.
 
 import copy
 

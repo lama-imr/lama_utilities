@@ -10,7 +10,7 @@ from genpy.rostime import Time
 import sqlalchemy
 from sqlalchemy import types
 
-from db_interface import DBInterfaceAbstract
+from abstract_db_interface import AbstractDBInterface
 
 # Mapping from python types to sqlalchemy types.
 type_map = {
@@ -755,7 +755,7 @@ class SqlMsg(object):
         return msg
 
 
-class DBInterface(DBInterfaceAbstract):
+class DBInterface(AbstractDBInterface):
     @property
     def interface_type(self):
         return "cleartext"

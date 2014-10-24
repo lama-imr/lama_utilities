@@ -3,6 +3,7 @@
 import rospy
 
 from lama_interfaces import core_interface
+from lama_interfaces.msg import LamaObject
 from lama_interfaces.srv import ActOnMap
 from lama_interfaces.srv import ActOnMapRequest
 
@@ -12,7 +13,7 @@ g_map_agent = rospy.ServiceProxy(g_iface.action_service_name, ActOnMap)
 
 
 def _get_graph_key(graph, id_):
-    """Return the key, a LamaObjec, that has id_ as id
+    """Return the key, a LamaObject, that has id_ as id
     """
     for lama_object in graph.iterkeys():
         if lama_object.id == id_:
@@ -60,3 +61,28 @@ def get_edge_with_vertices(v0, v1):
         if (edge.references[0] == v0) and (edge.references[1] == v1):
             return edge
     return None
+
+
+def get_descriptors(object_id, interface, getter):
+    """Retrieve the descriptors associated with LamaObject with id object_id
+
+    Return a list of descriptors associated with getter.
+
+    Parameters
+    ----------
+    - object_id: int, LamaObject's id
+    - interface: str, interface name associated with getter
+    - getter: ROS ServiceProxy for a ROS message type
+    """
+    map_action = ActOnMapRequest()
+    map_action.action = map_action.GET_DESCRIPTOR_LINKS
+    lama_object = LamaObject()
+    lama_object.id = object_id
+    map_action.object = lama_object
+    map_action.interface_name = interface
+    response = g_map_agent(map_action)
+    descriptors = []
+    for descriptor_link in response.descriptor_links:
+        descriptor = getter(descriptor_link.descriptor_id)
+        descriptors.append(descriptor)
+    return descriptors

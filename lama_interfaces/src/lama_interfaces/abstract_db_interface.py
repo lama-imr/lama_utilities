@@ -7,22 +7,22 @@ import rospy
 import roslib.message
 
 # Table name for type description
-_interfaces_table_name = 'map_interfaces'
+g_interfaces_table_name = 'map_interfaces'
 
 
 class AbstractDBInterface(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, engine, interface_name, getter_srv_msg, setter_srv_msg,
-                 start=True):
+    def __init__(self, engine, interface_name,
+                 getter_srv_type, setter_srv_type, start=False):
         """Build the map interface and possibly start ROS services
 
         Parameters
         ----------
         - engine: String, argument to sqlalchemy.create_engine.
         - interface_name: string, name of the map interface.
-        - getter_srv_msg: string, service message to write into the map.
-        - setter_srv_msg: string, service message to read from the map.
+        - getter_srv_type: string, service message to write into the map.
+        - setter_srv_type: string, service message to read from the map.
         - start: {True|False}, defaults to True. The ROS services for getter and
             setter will be started only if start is True. If start is False, the
             clients proxies will be None.
@@ -31,12 +31,12 @@ class AbstractDBInterface(object):
             rospy.logerr('@ not allowd in interface name')
             raise ValueError('@ not allowd in interface name')
 
-        get_srv_class = roslib.message.get_service_class(getter_srv_msg)
-        set_srv_class = roslib.message.get_service_class(setter_srv_msg)
+        get_srv_class = roslib.message.get_service_class(getter_srv_type)
+        set_srv_class = roslib.message.get_service_class(setter_srv_type)
 
         rospy.loginfo('Map interface: {} ({},{})'.format(interface_name,
-                                                         getter_srv_msg,
-                                                         setter_srv_msg))
+                                                         getter_srv_type,
+                                                         setter_srv_type))
         rospy.logdebug('Getter class {}'.format(get_srv_class))
         rospy.logdebug('Getter request slots: {}'.format(
             get_srv_class._request_class.__slots__))
@@ -64,19 +64,19 @@ class AbstractDBInterface(object):
         # Read tables from the possibly existing database.
         self.metadata.reflect()
         # Add the table for type description.
-        self.interface_table = self._interfaceTable()
+        self.interface_table = self._interface_table()
         self.metadata.create_all()
         # Create new tables.
-        self._generateSchema()
+        self._generate_schema()
 
         # Start the services.
         if start:
             self._getter_service = rospy.Service(self.getter_service_name,
                                                  self.getter_service_class,
-                                                 self.getter)
+                                                 self.getter_callback)
             self._setter_service = rospy.Service(self.setter_service_name,
                                                  self.setter_service_class,
-                                                 self.setter)
+                                                 self.setter_callback)
             rospy.loginfo('Services %s and %s started',
                           self.getter_service_name, self.setter_service_name)
 
@@ -98,25 +98,25 @@ class AbstractDBInterface(object):
         pass
 
     @abstractmethod
-    def _generateSchema():
+    def _generate_schema():
         pass
 
     @abstractmethod
-    def getter(self):
+    def getter_callback(self):
         pass
 
     @abstractmethod
-    def setter(self):
+    def setter_callback(self):
         pass
 
-    def _interfaceTable(self):
+    def _interface_table(self):
         """Return the table for the type description (may already exists).
 
         Return a table with columns ('interface_name', 'message_type',
         interface_type, timestamp_secs, timestamp_nsecs). If the
         table already exists, it will be returned.
         """
-        table = sqlalchemy.Table(_interfaces_table_name,
+        table = sqlalchemy.Table(g_interfaces_table_name,
                                  self.metadata,
                                  sqlalchemy.Column('interface_name',
                                                    sqlalchemy.String,
@@ -133,7 +133,7 @@ class AbstractDBInterface(object):
 
         return table
 
-    def _addInterfaceDescription(self):
+    def _add_interface_description(self):
         """Add the inteface description if not already existing
 
         Add the inteface description with unconflicting
@@ -148,16 +148,16 @@ class AbstractDBInterface(object):
         name = self.interface_name
         msg_type = self.getter_service_class._response_class._slot_types[0]
 
+        query = table.select(whereclause=(table.c.interface_name == name))
         connection = self.engine.connect()
         transaction = connection.begin()
-        query = table.select(whereclause=(table.c.interface_name == name))
         result = connection.execute(query).fetchone()
         transaction.commit()
         connection.close()
 
-        table_exists = False
+        add_interface = True
         if result:
-            table_exists = True
+            add_interface = False
             if (result['message_type'] != msg_type or
                 result['interface_type'] != self.interface_type):
                 err = ('A table "{}" with message type "{}" and interface ' +
@@ -167,17 +167,67 @@ class AbstractDBInterface(object):
                            result['message_type'], result['interface_type'],
                            msg_type, self.interface_type)
                 rospy.logfatal(err)
-                raise ValueError(err)
+                raise rospy.ROSException(err)
 
-        # Add the table description if necessary.
-        if not table_exists:
-            connection = self.engine.connect()
-            transaction = connection.begin()
+        # Add the table description.
+        if add_interface:
             insert_args = {
                 'interface_name': name,
                 'message_type': msg_type,
                 'interface_type': self.interface_type,
             }
+            connection = self.engine.connect()
+            transaction = connection.begin()
             connection.execute(table.insert(), insert_args)
             transaction.commit()
             connection.close()
+
+    def _get_last_modified(self):
+        """Return the date of last modification for this interface
+
+        Return a rospy.Time instance.
+        """
+        table = self.interface_table
+        name = self.interface_name
+        query = table.select(whereclause=(table.c.interface_name == name))
+        connection = self.engine.connect()
+        transaction = connection.begin()
+        result = connection.execute(query).fetchone()
+        transaction.commit()
+        connection.close()
+
+        if not result:
+            raise rospy.ServiceException('Corrupted database')
+        time = rospy.Time(0)
+        if result['timestamp_secs'] is None:
+            return time
+        time.secs = result['timestamp_secs']
+        time.nsecs = result['timestamp_nsecs']
+
+    def _set_timestamp(self, time):
+        """Set the timestamp to the given time for this interface
+
+        Parameters
+        ----------
+        - time: a rospy.Time instance.
+        """
+        table = self.interface_table
+        name = self.interface_name
+        update_args = {
+            'timestamp_secs': time.secs,
+            'timestamp_nsecs': time.nsecs,
+        }
+        update = table.update().where(table.c.interface_name == name)
+        connection = self.engine.connect()
+        transaction = connection.begin()
+        connection.execute(table.update(), update_args)
+        transaction.commit()
+        connection.close()
+
+    def has_table(self, table):
+        """Return true if table is in the database"""
+        if table in self.metadata.tables:
+            return True
+        # Tables can be created by other instances, update and check again.
+        self.metadata.reflect()
+        return table in self.metadata.tables

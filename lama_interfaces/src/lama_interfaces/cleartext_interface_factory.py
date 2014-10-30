@@ -36,7 +36,7 @@ suffix_for_builtin = '_value_'
 _types_table_name = 'message_types'
 
 # sqlalchemy engine (argument to sqlalchemy.create_engine)
-g_engine_name = rospy.get_param('/database_engine', 'sqlite:///created.sql')
+g_engine_name = rospy.get_param('/database_engine', 'sqlite:///created.sqlite')
 
 # TODO: remove all occurences of roslib.msgs
 
@@ -760,24 +760,7 @@ class DBInterface(AbstractDBInterface):
     def interface_type(self):
         return "cleartext"
 
-    def setter(self, msg):
-        """Execute the setter service and return the reponse"""
-        # Create an instance of response.
-        response = self.setter_service_class._response_class()
-        id_ = self.sqlmsg.setter(self.engine, msg.descriptor)
-        # Return the descriptor identifier.
-        response.id = id_
-        return response
-
-    def getter(self, msg):
-        """Execute the getter service and return the response"""
-        # Create an instance of response.
-        response = self.getter_service_class._response_class()
-        result = self.sqlmsg.getter(self.engine, msg.id)
-        response.descriptor = result
-        return response
-
-    def _generateSchema(self):
+    def _generate_schema(self):
         """Generate schema from response class
 
         Recusrively generate tables for the type of the 'descriptor' variable
@@ -793,13 +776,31 @@ class DBInterface(AbstractDBInterface):
             return
 
         # Add the type description.
-        self._addInterfaceDescription()
+        self._add_interface_description()
 
         self.sqlmsg = SqlMsg(interface_name=self.interface_name, type_=type_)
         self.sqlmsg.createAllTables(self.metadata)
 
         # Create the tables in database.
         self.metadata.create_all()
+
+    def getter_callback(self, msg):
+        """Execute the getter service and return the response"""
+        # Create an instance of response.
+        response = self.getter_service_class._response_class()
+        result = self.sqlmsg.getter(self.engine, msg.id)
+        response.descriptor = result
+        return response
+
+    def setter_callback(self, msg):
+        """Execute the setter service and return the reponse"""
+        # Create an instance of response.
+        response = self.setter_service_class._response_class()
+        id_ = self.sqlmsg.setter(self.engine, msg.descriptor)
+        # Return the descriptor identifier.
+        response.id = id_
+        self._set_timestamp(rospy.Time.now())
+        return response
 
 
 def cleartext_interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
@@ -827,11 +828,16 @@ def cleartext_interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
             * descriptor
             ---
             int32 id
+
+    This function should be called only once with each parameter set because
+    it starts ROS services and an error is raised if services are started
+    twice.
     """
     if getter_srv_msg.endswith('.srv'):
         getter_srv_msg = getter_srv_msg[:-4]
     if setter_srv_msg.endswith('.srv'):
         setter_srv_msg = setter_srv_msg[:-4]
     iface = DBInterface(g_engine_name, interface_name,
-                        getter_srv_msg, setter_srv_msg)
+                        getter_srv_msg, setter_srv_msg,
+                        start=True)
     return iface

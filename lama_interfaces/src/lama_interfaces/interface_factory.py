@@ -8,7 +8,7 @@ from sqlalchemy.types import Integer, Binary
 from abstract_db_interface import AbstractDBInterface
 
 # sqlalchemy engine (argument to sqlalchemy.create_engine)
-g_engine_name = rospy.get_param('/database_engine', 'sqlite:///created.sql')
+g_engine_name = rospy.get_param('/database_engine', 'sqlite:///created.sqlite')
 
 
 class DBInterface(AbstractDBInterface):
@@ -16,7 +16,7 @@ class DBInterface(AbstractDBInterface):
     def interface_type(self):
         return "serialization"
 
-    def getter(self, msg):
+    def getter_callback(self, msg):
         """Execute the getter service and return the response"""
         # Create an instance of response.
         response = self.getter_service_class._response_class()
@@ -38,7 +38,7 @@ class DBInterface(AbstractDBInterface):
         response.deserialize(result['serialized_content'])
         return response
 
-    def setter(self, msg):
+    def setter_callback(self, msg):
         """Execute the setter service and return the reponse"""
         buf = StringIO()
         msg.serialize(buf)
@@ -55,16 +55,17 @@ class DBInterface(AbstractDBInterface):
         # Return a setter response instance with the descriptor identifier.
         response = self.setter_service_class._response_class()
         response.id = return_id
+        self._set_timestamp(rospy.Time.now())
         return response
 
-    def _generateSchema(self):
+    def _generate_schema(self):
         """Generate schema from response class
 
         Recusrively generate tables for the type of the 'descriptor' variable
         in the response class.
         """
         # Add the type description and check for conflicting interface+type.
-        self._addInterfaceDescription()
+        self._add_interface_description()
 
         column_id = sqlalchemy.Column('id', Integer,
                                       primary_key=True,
@@ -105,11 +106,16 @@ def interface_factory(interface_name, getter_srv_msg, setter_srv_msg):
             * descriptor
             ---
             int32 id
+
+    This function should be called only once with each parameter set because
+    it starts ROS services and an error is raised if services are started
+    twice.
     """
     if getter_srv_msg.endswith('.srv'):
         getter_srv_msg = getter_srv_msg[:-4]
     if setter_srv_msg.endswith('.srv'):
         setter_srv_msg = setter_srv_msg[:-4]
     iface = DBInterface(g_engine_name, interface_name,
-                        getter_srv_msg, setter_srv_msg)
+                        getter_srv_msg, setter_srv_msg,
+                        start=True)
     return iface

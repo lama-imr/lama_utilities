@@ -20,6 +20,7 @@ int main(int argc, char **argv)
   client.waitForExistence();
   lama_interfaces::AddInterface srv;
   srv.request.interface_name = "dummy_descriptor";
+  srv.request.interface_type = lama_interfaces::AddInterfaceRequest::SERIALIZED;
   srv.request.get_service_message = "nlj_dummy/GetDummyDescriptor";
   srv.request.set_service_message = "nlj_dummy/SetDummyDescriptor";
   if (!client.call(srv))

@@ -4,16 +4,21 @@ import rospy
 
 from lama_interfaces.core_interface import core_interface
 from lama_interfaces.interface_factory import interface_factory
+from lama_interfaces.cleartext_interface_factory import cleartext_interface_factory
 from lama_interfaces.srv import AddInterface
 from lama_interfaces.srv import AddInterfaceResponse
 
 
 def handle_add_interface(req):
     response = AddInterfaceResponse()
+    if req.interface_type == req.SERIALIZED:
+        factory = interface_factory
+    else:
+        factory = cleartext_interface_factory
     try:
-        iface = interface_factory(req.interface_name,
-                                  req.get_service_message,
-                                  req.set_service_message)
+        iface = factory(req.interface_name,
+                        req.get_service_message,
+                        req.set_service_message)
     except ValueError, e:
         raise rospy.ServiceException('Cannot add interface {}: {}'.format(
             req.interface_name, e))

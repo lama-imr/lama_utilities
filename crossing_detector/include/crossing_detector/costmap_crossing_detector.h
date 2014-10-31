@@ -22,8 +22,8 @@ class CostmapCrossingDetector : public CrossingDetector
     
     CostmapCrossingDetector(const double frontier_width, const double max_frontier_angle=0.785);
 
-    Crossing crossingDescriptor(const OccupancyGrid& map, const bool normalize=false);
-    vector<Frontier> frontiers(const OccupancyGrid& map, const bool normalize=false);
+    Crossing crossingDescriptor(const OccupancyGrid& map);
+    vector<Frontier> frontiers(const OccupancyGrid& map);
 
   private:
     

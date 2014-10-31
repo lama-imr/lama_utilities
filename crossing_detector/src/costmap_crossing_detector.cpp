@@ -8,18 +8,18 @@ CostmapCrossingDetector::CostmapCrossingDetector(const double frontier_width, co
 {
 }
 
-Crossing CostmapCrossingDetector::crossingDescriptor(const OccupancyGrid& map, const bool normalize)
+Crossing CostmapCrossingDetector::crossingDescriptor(const OccupancyGrid& map)
 {
   PlaceProfile profile = costmapToPlaceProfile(map);
 
-  return CrossingDetector::crossingDescriptor(profile, normalize);
+  return CrossingDetector::crossingDescriptor(profile);
 }
 
-vector<Frontier> CostmapCrossingDetector::frontiers(const OccupancyGrid& map, const bool normalize)
+vector<Frontier> CostmapCrossingDetector::frontiers(const OccupancyGrid& map)
 {
   PlaceProfile profile = costmapToPlaceProfile(map);
 
-  return CrossingDetector::frontiers(profile, normalize);
+  return CrossingDetector::frontiers(profile);
 }
 
 } // namespace crossing_detector

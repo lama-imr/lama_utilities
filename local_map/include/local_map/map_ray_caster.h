@@ -23,7 +23,7 @@ class MapRayCaster
 
     const std::vector<size_t>& getRayCastToMapBorder(const double angle, const size_t nrow, const size_t ncol, const double tolerance = 0);
 
-    size_t lookupSize() const {return raycast_lookup_.size();} // DEBUG
+    size_t lookupSize() const {return raycast_lookup_.size();}
 
   private :
 

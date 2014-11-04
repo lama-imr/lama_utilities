@@ -189,21 +189,20 @@ inline void updatePointsOccupancy(const bool occupied, const vector<size_t>& ind
 }
 
 MapBuilder::MapBuilder(const int width, const int height, const double resolution) :
-	m_has_frame_id(false)
+	has_frame_id_(false)
 {
-	m_map_frame_id = ros::this_node::getName() + "/local_map";
-	m_map.header.frame_id = m_map_frame_id;
-	m_map.info.width = width;
-	m_map.info.height = height;
-	m_map.info.resolution = resolution;
-	m_map.info.origin.position.x = -((double) width) / 2 * resolution;
-	m_map.info.origin.position.y = -((double) height) / 2 * resolution;
-	m_map.info.origin.orientation.w = 1.0;
-	m_map.data.assign(width * height, -1);  // Fill with "unknown" occupancy.
+	map_frame_id_ = ros::this_node::getName() + "/local_map";
+	map_.header.frame_id = map_frame_id_;
+	map_.info.width = width;
+	map_.info.height = height;
+	map_.info.resolution = resolution;
+	map_.info.origin.position.x = -((double) width) / 2 * resolution;
+	map_.info.origin.position.y = -((double) height) / 2 * resolution;
+	map_.info.origin.orientation.w = 1.0;
+	map_.data.assign(width * height, -1);  // Fill with "unknown" occupancy.
 	// log_odds = log(occupancy / (1 - occupancy); prefill with
 	// occupancy = 0.5, equiprobability between occupied and free.
-	m_log_odds.assign(width * height, 0);
-
+	log_odds_.assign(width * height, 0);
 
   // Fill in the lookup cache.
   const double angle_start = -M_PI;
@@ -212,12 +211,11 @@ MapBuilder::MapBuilder(const int width, const int height, const double resolutio
   {
     ray_caster_.getRayCastToMapBorder(a, height, width, 0.9 * angle_resolution);
   }
-  ROS_DEBUG("Lookup size: %zu", ray_caster_.lookupSize());
 }
 
 nav_msgs::OccupancyGrid MapBuilder::getMap() const
 {
-	return m_map;
+	return map_;
 }
 
 /* Update (geometrical transformation + probability update) the map with the current scan
@@ -226,44 +224,44 @@ void MapBuilder::grow(const sensor_msgs::LaserScan& scan)
 {
 	static tf::TransformBroadcaster br;
 
-	if (!m_has_frame_id)
+	if (!has_frame_id_)
 	{
 		// Wait for a parent.
 		std::string parent;
-		bool has_parent = m_tfListener.getParent(scan.header.frame_id, ros::Time(0), parent);
+		bool has_parent = tf_listerner_.getParent(scan.header.frame_id, ros::Time(0), parent);
 		if (!has_parent)
 		{
 			return;
 		}
-		m_world_frame_id = getWorldFrame(m_tfListener, scan.header.frame_id);
-		m_has_frame_id = true;
+		world_frame_id_ = getWorldFrame(tf_listerner_, scan.header.frame_id);
+		has_frame_id_ = true;
 
 		// Initialize saved positions.
 		tf::StampedTransform transform;
-		m_tfListener.waitForTransform(m_world_frame_id, scan.header.frame_id,
+		tf_listerner_.waitForTransform(world_frame_id_, scan.header.frame_id,
 				scan.header.stamp, ros::Duration(5.0));
-		m_tfListener.lookupTransform(m_world_frame_id, scan.header.frame_id,
+		tf_listerner_.lookupTransform(world_frame_id_, scan.header.frame_id,
 				scan.header.stamp, transform);
-		m_xinit = transform.getOrigin().x();
-		m_yinit = transform.getOrigin().y();
-		m_last_xmap = lround(m_xinit / m_map.info.resolution);
-		m_last_ymap = lround(m_yinit / m_map.info.resolution);
+		xinit_ = transform.getOrigin().x();
+		yinit_ = transform.getOrigin().y();
+		last_xmap_ = lround(xinit_ / map_.info.resolution);
+		last_ymap_ = lround(yinit_ / map_.info.resolution);
 
 		// Send a map frame with identity transform.
 		tf::Transform map_transform;
 		map_transform.setOrigin(tf::Vector3(0.0, 0.0, 0.0));
 		map_transform.setRotation(tf::Quaternion(1, 0, 0, 0));
 		br.sendTransform(tf::StampedTransform(map_transform,
-					scan.header.stamp, scan.header.frame_id, m_map_frame_id));
+					scan.header.stamp, scan.header.frame_id, map_frame_id_));
 	}
 
 	// Get the displacement.
 	tf::StampedTransform new_tr;
 	try
 	{
-		m_tfListener.waitForTransform(m_world_frame_id, scan.header.frame_id,
+		tf_listerner_.waitForTransform(world_frame_id_, scan.header.frame_id,
 				scan.header.stamp, ros::Duration(1.0));
-		m_tfListener.lookupTransform(m_world_frame_id, scan.header.frame_id,
+		tf_listerner_.lookupTransform(world_frame_id_, scan.header.frame_id,
 				scan.header.stamp, new_tr);
 	}
 	catch (tf::TransformException ex)
@@ -272,15 +270,15 @@ void MapBuilder::grow(const sensor_msgs::LaserScan& scan)
 	}
 
 	// Map position relative to initialization.
-	double x = new_tr.getOrigin().x() - m_xinit;
-	double y = new_tr.getOrigin().y() - m_yinit;
+	double x = new_tr.getOrigin().x() - xinit_;
+	double y = new_tr.getOrigin().y() - yinit_;
 	double theta = angleFromQuaternion(new_tr.getRotation());
 
 	// Get the pixel displacement of the map.
-	long int xmap = lround(x / m_map.info.resolution);
-	long int ymap = lround(y / m_map.info.resolution);
-	long int map_dx = xmap - m_last_xmap;
-	long int map_dy = ymap - m_last_ymap;
+	long int xmap = lround(x / map_.info.resolution);
+	long int ymap = lround(y / map_.info.resolution);
+	long int map_dx = xmap - last_xmap_;
+	long int map_dy = ymap - last_ymap_;
 
 	// Update the map
 	bool move = updateMap(scan, map_dx, map_dy, theta);
@@ -288,45 +286,45 @@ void MapBuilder::grow(const sensor_msgs::LaserScan& scan)
 	{
 		//ROS_INFO("Displacement: %ld, %ld pixels", map_dx, map_dy);
 		// Record the position only if the map moves.
-		m_last_xmap = xmap;
-		m_last_ymap = ymap;
+		last_xmap_ = xmap;
+		last_ymap_ = ymap;
 	}
 
-	// Update the map frame, so that it's oriented like frame named "m_world_frame_id".
+	// Update the map frame, so that it's oriented like frame named "world_frame_id_".
 	tf::Transform map_transform;
 	map_transform.setOrigin(tf::Vector3(0.0, 0.0, 0.0));
 	tf::Quaternion q;
 	q.setRPY(0, 0, -theta);
 	map_transform.setRotation(q);
-	br.sendTransform(tf::StampedTransform(map_transform, scan.header.stamp, scan.header.frame_id, m_map_frame_id));
+	br.sendTransform(tf::StampedTransform(map_transform, scan.header.stamp, scan.header.frame_id, map_frame_id_));
 }
 
 bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, const long int dx, const long int dy, const double theta)
 {
 	bool has_moved = (dx != 0 || dy != 0);
-	const int ncol = m_map.info.width;
+	const int ncol = map_.info.width;
 	if (has_moved)
 	{
-		// Move the map and m_log_odds.
-		moveAndCopyImage(-1, dx, dy, ncol, m_map.data);
-		moveAndCopyImage(0, dx, dy, ncol, m_log_odds);
+		// Move the map and log_odds_.
+		moveAndCopyImage(-1, dx, dy, ncol, map_.data);
+		moveAndCopyImage(0, dx, dy, ncol, log_odds_);
 	}
 
-	// Update occupancy
-	vector<size_t> pts;
+	// Update occupancy.
 	for (size_t i = 0; i < scan.ranges.size(); ++i)
 	{
 		const double angle = angles::normalize_angle(scan.angle_min + i * scan.angle_increment + theta);
-		const bool obstacle_in_map = getRayCastToObstacle(m_map, angle, scan.ranges[i], pts);
+    vector<size_t> pts;
+		const bool obstacle_in_map = getRayCastToObstacle(map_, angle, scan.ranges[i], pts);
 		if (obstacle_in_map)
 		{
 			// The last point is the point with obstacle.
 			const size_t last_pt = pts.back();
-			updatePointOccupancy(true, last_pt, m_map.data, m_log_odds);
+			updatePointOccupancy(true, last_pt, map_.data, log_odds_);
 			pts.pop_back();
 		}
 		// The remaining points are in free space.
-		updatePointsOccupancy(false, pts, m_map.data, m_log_odds);
+		updatePointsOccupancy(false, pts, map_.data, log_odds_);
 	}
 	return has_moved;
 }
@@ -398,10 +396,10 @@ bool MapBuilder::saveMap(const std::string& name) const
 		return false;
 	}
 
-	for (uint i = 0; i < m_map.data.size(); ++i)
+	for (uint i = 0; i < map_.data.size(); ++i)
 	{
-		ofs << (int) m_map.data[i];
-		if ((i % m_map.info.width) == (m_map.info.width - 1))
+		ofs << (int) map_.data[i];
+		if ((i % map_.info.width) == (map_.info.width - 1))
 		{
 			ofs << "\n";
 		}

@@ -37,17 +37,17 @@ class MapBuilder
 		bool updateMap(const sensor_msgs::LaserScan& scan, const long int dx, const long int dy, const double theta);
     bool getRayCastToObstacle(const nav_msgs::OccupancyGrid& map, const double angle, const double range, vector<size_t>& raycast);
 
-		tf::TransformListener m_tfListener;
-		std::string m_world_frame_id; //!> frame_id of the world frame
-		bool m_has_frame_id;  //!> true if map frame_id was already set
-		std::string m_map_frame_id;  //!> map frame id in tf
-		double m_xinit;  //!> Map x position at initialization
-		double m_yinit;  //!> Map y position at initialization
-		long int m_last_xmap;  //!> Map integer x position at last map move
-		long int m_last_ymap;  //!> Map integer y position at last map move
+		tf::TransformListener tf_listerner_;
+		std::string world_frame_id_; //!> frame_id of the world frame
+		bool has_frame_id_;  //!> true if map frame_id was already set
+		std::string map_frame_id_;  //!> map frame id in tf
+		double xinit_;  //!> Map x position at initialization
+		double yinit_;  //!> Map y position at initialization
+		long int last_xmap_;  //!> Map integer x position at last map move
+		long int last_ymap_;  //!> Map integer y position at last map move
 
-		nav_msgs::OccupancyGrid m_map; //!> local map with fixed orientation
-		std::vector<double> m_log_odds;  //>! log odds ratios for the binary Bayes filter
+		nav_msgs::OccupancyGrid map_; //!> local map with fixed orientation
+		std::vector<double> log_odds_;  //>! log odds ratios for the binary Bayes filter
 		                                 //>! log_odd = log(p(x) / (1 - p(x)))
     MapRayCaster ray_caster_;  //!> Ray casting with cache
 };

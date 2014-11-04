@@ -107,7 +107,6 @@ add_library(map_ray_caster src/map_ray_caster.cpp)
 
 ## Declare a cpp executable
 set(SRC ${SRC} src/map_builder.cpp)
-set(SRC ${SRC} src/map_ray_caster.cpp)
 add_executable(local_map src/local_map_node.cpp ${SRC})
 
 ## Add cmake target dependencies of the executable/library
@@ -115,7 +114,7 @@ add_executable(local_map src/local_map_node.cpp ${SRC})
 add_dependencies(local_map local_map_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(local_map ${catkin_LIBRARIES})
+target_link_libraries(local_map map_ray_caster ${catkin_LIBRARIES})
 target_link_libraries(map_ray_caster ${catkin_LIBRARIES})
 
 #############

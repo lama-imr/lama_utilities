@@ -7,21 +7,20 @@
 
 #include "local_map/map_builder.h"
 
+namespace lama {
+namespace local_map {
+
+// Angle resolution for the ray cast lookup.
+const double angle_resolution = M_PI / 720;  // 0.25 deg
+
 // Probability that a point is occupied when the laser ranger says so.
-const double p_occupied_when_laser = 0.70;
+const double p_occupied_when_laser = 0.90;
 // Probability that a point is occupied when the laser ranger says it's free.
-const double p_occupied_when_no_laser = 0.05;
+const double p_occupied_when_no_laser = 0.3;
 // Large log odds used with probability 0 and 1. The greater, the more inertia.
 const double large_log_odds = 1000;
 // Max log odds used to compute the belief (exp(max_log_odds_for_belief) should not overflow).
 const double max_log_odds_for_belief = 20;
-
-using std::vector;
-using std::abs;
-using std::max;
-
-// A map to store ray castings
-typedef std::map<double, vector<size_t> > raycast_dict;
 
 std::string getWorldFrame(const tf::Transformer& tfTransformer, const std::string& child)
 {
@@ -54,214 +53,6 @@ double angleFromQuaternion(const tf::Quaternion& q)
 				axis.x(), axis.y(), axis.z());
 	}
 	return 2 * std::atan2(q.z(), q.w());
-}
-
-/* Return the list of pixel indexes from map origin to pixel at map border and given angle
- *
- * The Bresenham algorithm is used for rendering.
- *
- * map[in] occupancy grid
- * angle[in] beam angle
- * nrow[in] image height
- * ncol[in] image width
- */
-vector<size_t> getRayCastToMapBorder(const nav_msgs::OccupancyGrid& map, const double angle)
-{
-	vector<size_t> pts;
-
-	// Pixel coordinates of map origin.
-	int row_center = lround(-map.info.origin.position.y / map.info.resolution);
-	int col_center = lround(-map.info.origin.position.x / map.info.resolution);
-	// Diagonal length.
-	const size_t nrow = map.info.height;
-	const size_t ncol = map.info.width;
-	const double r = std::sqrt((double) nrow * nrow + ncol * ncol);
-	// Start point, map origin.
-	int x0 = col_center;
-	int y0 = row_center;
-	// End point, outside the map.
-	int x1 = (int) lround(x0 + r * std::cos(angle)); // Can be negative
-	int y1 = (int) lround(y0 + r * std::sin(angle));
-	int dx = x1 - x0;
-	int dy = y1 - y0;
-	pts.reserve(max(abs(dx), abs(dy)) + 1);
-	bool steep = (abs(dy) >= abs(dx));
-	if (steep)
-	{
-		swap(x0, y0);
-		swap(x1, y1);
-		// recompute Dx, Dy after swap
-		dx = x1 - x0;
-		dy = y1 - y0;
-	}
-	int xstep = 1;
-	if (dx < 0)
-	{
-		xstep = -1;
-		dx = -dx;
-	}
-	int ystep = 1;
-	if (dy < 0)
-	{
-		ystep = -1;
-		dy = -dy;
-	}
-	int twoDy = 2 * dy;
-	int twoDyTwoDx = twoDy - 2 * dx; // 2*Dy - 2*Dx
-	int e = twoDy - dx; //2*Dy - Dx
-	int y = y0;
-	int xDraw, yDraw;
-	for (int x = x0; x != x1; x += xstep)
-	{
-		if (steep)
-		{
-			xDraw = y;
-			yDraw = x;
-		}
-		else
-		{
-			xDraw = x;
-			yDraw = y;
-		}
-		if (pointInMap(yDraw, xDraw, map))
-		{
-			pts.push_back(offsetFromRowCol(yDraw, xDraw, ncol));
-		}
-		else
-		{
-			// We exit when the first point outside the map is encountered.
-			return pts;
-		}
-		// next
-		if (e > 0)
-		{
-			e += twoDyTwoDx; //E += 2*Dy - 2*Dx;
-			y = y + ystep;
-		}
-		else
-		{
-			e += twoDy; //E += 2*Dy;
-		}
-	}
-}
-
-/* Return the pixel representation of the nearest ray
- *
- * raycast_lookup[in] map (ray angle --> pixel list)
- * angle[in] laser beam angle
- * raycast[out] list of pixel indexes touched by the laser beam
- */
-void rayLookup(const raycast_dict& raycast_lookup, const double angle, vector<size_t>& raycast)
-{
-	double dangle_lower;
-	double dangle_upper;
-
-  raycast_dict::const_iterator upper_bound = raycast_lookup.upper_bound(angle);
-	if (upper_bound == raycast_lookup.begin())
-	{
-
-		raycast = upper_bound->second;
-		return;
-	}
-	else if (upper_bound == raycast_lookup.end())
-	{
-		dangle_upper = raycast_lookup.begin()->first - angle + 2 * M_PI;
-		upper_bound--;
-		dangle_lower = upper_bound->first - angle;
-		if (dangle_lower < dangle_upper)
-		{
-			raycast = upper_bound->second;
-			return;
-		}
-		else
-		{
-			raycast = raycast_lookup.begin()->second;
-			return;
-		}
-	}
-	else
-	{
-		dangle_upper = upper_bound->first - angle;
-    raycast_dict::const_iterator lower_bound = upper_bound;
-		lower_bound--;
-		dangle_lower = angle - lower_bound->first;
-		if (dangle_lower < dangle_upper)
-		{
-			raycast = lower_bound->second;
-			return;
-		}
-		else
-		{
-			raycast = upper_bound->second;
-			return;
-		}
-	}
-}
-
-/* Return the pixel list by ray casting from map origin to map border
- *
- * map[in] occupancy grid
- * angle[in] laser beam angle
- * raycast[out] list of pixel indexes touched by the laser beam
- */
-void getRayCast(const nav_msgs::OccupancyGrid& map, const double angle, vector<size_t>& raycast)
-{
-	// Store the ray casting up to the map border into a look-up table. Ray
-	// casting exclusively depends on the ray angle.
-	static std::map<double, vector<size_t> > raycast_lookup;
-	static bool raycast_lookup_cached;
-
-	if (!raycast_lookup_cached)
-	{
-		const double angle_start = -M_PI;
-		const double angle_end = angle_start + 2 * M_PI;
-		const double angle_resolution = M_PI / 720;  // 0.25 deg
-		for (double a = angle_start; a <= angle_end; a += angle_resolution)
-		{
-			raycast_lookup[a] = getRayCastToMapBorder(map, a);
-		}
-		raycast_lookup_cached = true;
-	}
-	return rayLookup(raycast_lookup, angle, raycast);
-}
-
-/* Render a line as bitmap.
- *
- * The points are ordered from (x0, y0) to (x1, y1).
- *
- * map[in] occupancy grid
- * angle[in] laser beam angle
- * range[in] laser beam range
- * raycast[out] list of pixel indexes touched by the laser beam
- */
-bool bresenham(const nav_msgs::OccupancyGrid& map, const double angle, const double range, vector<size_t>& raycast)
-{
-	bool obstacle_in_map;
-
-	vector<size_t> ray_to_map_border;
-	getRayCast(map, angle, ray_to_map_border);
-	// range in pixel length. The ray length in pixels corresponds to the number
-	// of pixels in the bresenham algorithm.
-	const size_t pixel_range = lround(range * max(abs(std::cos(angle)), abs(std::sin(angle))) / map.info.resolution);
-	size_t raycast_size;
-	if (pixel_range < ray_to_map_border.size())
-	{
-		obstacle_in_map = true;
-		raycast_size = pixel_range;
-	}
-	else
-	{
-		obstacle_in_map = false;
-		raycast_size = ray_to_map_border.size();
-	}
-	raycast.clear();
-	raycast.reserve(raycast_size);
-	for (size_t i = 0; i < raycast_size; ++i)
-	{
-		raycast.push_back(ray_to_map_border[i]);
-	}
-
-	return obstacle_in_map;
 }
 
 /* In-place move an image represented as a 1D array
@@ -412,6 +203,16 @@ MapBuilder::MapBuilder(const int width, const int height, const double resolutio
 	// log_odds = log(occupancy / (1 - occupancy); prefill with
 	// occupancy = 0.5, equiprobability between occupied and free.
 	m_log_odds.assign(width * height, 0);
+
+
+  // Fill in the lookup cache.
+  const double angle_start = -M_PI;
+  const double angle_end = angle_start + 2 * M_PI - 1e-6;
+  for (double a = angle_start; a <= angle_end; a += angle_resolution)
+  {
+    ray_caster_.getRayCastToMapBorder(a, height, width, 0.9 * angle_resolution);
+  }
+  ROS_DEBUG("Lookup size: %zu", ray_caster_.lookupSize());
 }
 
 nav_msgs::OccupancyGrid MapBuilder::getMap() const
@@ -502,11 +303,10 @@ void MapBuilder::grow(const sensor_msgs::LaserScan& scan)
 
 bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, const long int dx, const long int dy, const double theta)
 {
-	bool has_moved = false;
-	int ncol = m_map.info.width;
-	if (dx != 0 || dy != 0)
+	bool has_moved = (dx != 0 || dy != 0);
+	const int ncol = m_map.info.width;
+	if (has_moved)
 	{
-		has_moved = true;
 		// Move the map and m_log_odds.
 		moveAndCopyImage(-1, dx, dy, ncol, m_map.data);
 		moveAndCopyImage(0, dx, dy, ncol, m_log_odds);
@@ -516,12 +316,12 @@ bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, const long int dx
 	vector<size_t> pts;
 	for (size_t i = 0; i < scan.ranges.size(); ++i)
 	{
-		double angle = scan.angle_min + i * scan.angle_increment + theta;
-		bool obstacle_in_map = bresenham(m_map, angle, scan.ranges[i], pts);
+		const double angle = angles::normalize_angle(scan.angle_min + i * scan.angle_increment + theta);
+		const bool obstacle_in_map = getRayCastToObstacle(m_map, angle, scan.ranges[i], pts);
 		if (obstacle_in_map)
 		{
-			// Last point is the point with obstacle.
-			size_t last_pt = pts.back();
+			// The last point is the point with obstacle.
+			const size_t last_pt = pts.back();
 			updatePointOccupancy(true, last_pt, m_map.data, m_log_odds);
 			pts.pop_back();
 		}
@@ -531,9 +331,46 @@ bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, const long int dx
 	return has_moved;
 }
 
+/* Return the pixel list by ray casting from map origin to map border, first obstacle.
+ *
+ * Return the pixel list by ray casting from map origin to map border or first obstacle, whichever comes first.
+ * Return true if the last point of the pixel list is an obstacle (end of laser beam).
+ *
+ * map[in] occupancy grid
+ * angle[in] laser beam angle
+ * range[in] laser beam range
+ * raycast[out] list of pixel indexes touched by the laser beam
+ */
+bool MapBuilder::getRayCastToObstacle(const nav_msgs::OccupancyGrid& map, const double angle, const double range, vector<size_t>& raycast)
+{
+	const vector<size_t>& ray_to_map_border = ray_caster_.getRayCastToMapBorder(angle,
+      map.info.height, map.info.width, 1.1 * angle_resolution);
+	// range in pixel length. The ray length in pixels corresponds to the number
+	// of pixels in the bresenham algorithm.
+	const size_t pixel_range = lround(range * max(abs(std::cos(angle)), abs(std::sin(angle))) / map.info.resolution);
+	size_t raycast_size;
+	bool obstacle_in_map = pixel_range < ray_to_map_border.size();
+	if (obstacle_in_map)
+	{
+		raycast_size = pixel_range;
+	}
+	else
+	{
+		raycast_size = ray_to_map_border.size();
+	}
+	raycast.clear();
+	raycast.reserve(raycast_size);
+	for (size_t i = 0; i < raycast_size; ++i)
+	{
+		raycast.push_back(ray_to_map_border[i]);
+	}
+
+	return obstacle_in_map;
+}
+
 bool MapBuilder::saveMap(const std::string& name) const
 {
-	ros::Time time = ros::Time::now();
+	const ros::Time time = ros::Time::now();
 	const int sec = time.sec;
 	const int nsec = time.nsec;
 
@@ -576,4 +413,7 @@ bool MapBuilder::saveMap(const std::string& name) const
 	ofs.close();
   return true;
 }
+
+} // namespace local_map
+} // namespace lama
 

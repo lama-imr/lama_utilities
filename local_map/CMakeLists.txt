@@ -6,12 +6,14 @@ project(local_map)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED
 	COMPONENTS
-	message_generation
-	roscpp
-	tf
-	sensor_msgs
-	nav_msgs
+	angles
 	geometry_msgs
+	lama_msgs
+	message_generation
+	nav_msgs
+	roscpp
+	sensor_msgs
+	tf
 	)
 
 ## System dependencies are found with CMake's conventions
@@ -84,9 +86,9 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 	INCLUDE_DIRS include
-#  LIBRARIES local_map
-	CATKIN_DEPENDS roscpp tf message_runtime sensor_msgs nav_msgs geometry_msgs
-#  DEPENDS system_lib
+	LIBRARIES map_ray_caster
+	CATKIN_DEPENDS angles roscpp tf message_runtime sensor_msgs nav_msgs geometry_msgs
+	#  DEPENDS system_lib
 )
 
 ###########
@@ -97,23 +99,24 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 	include
-	${catkin_INCLUDE_DIRS})
+	${catkin_INCLUDE_DIRS}
+	)
 
 ## Declare a cpp library
-add_library(map_builder
-	src/map_builder.cpp
-)
+add_library(map_ray_caster src/map_ray_caster.cpp)
 
 ## Declare a cpp executable
-add_executable(${PROJECT_NAME} src/local_map.cpp src/map_builder.cpp)
+set(SRC ${SRC} src/map_builder.cpp)
+set(SRC ${SRC} src/map_ray_caster.cpp)
+add_executable(local_map src/local_map_node.cpp ${SRC})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-add_dependencies(${PROJECT_NAME} local_map_generate_messages_cpp)
+add_dependencies(local_map local_map_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
-target_link_libraries(map_builder ${catkin_LIBRARIES})
+target_link_libraries(local_map ${catkin_LIBRARIES})
+target_link_libraries(map_ray_caster ${catkin_LIBRARIES})
 
 #############
 ## Install ##

@@ -2,7 +2,8 @@
  * Local map builder
  * The local_map node takes as input a LaserScan message and outputs
  * a local map as OccupancyGrid. The local map orientation is the same
- * as the one of the global frame.
+ * as the one of the global frame. The position of the map is the same
+ * as the one of the LaserScan.
  *
  * Parameters:
  * - map_width, float, 200, map pixel width (x-direction)
@@ -19,18 +20,18 @@
 #include "local_map/SaveMap.h"
 
 ros::Publisher mapPub;
-MapBuilder* mapBuilderPtr;
+lama::local_map::MapBuilder* map_builder_ptr;
 
 void handleLaserScan(sensor_msgs::LaserScan msg)
 {
-	mapBuilderPtr->grow(msg);
-	mapPub.publish(mapBuilderPtr->getMap());
+	map_builder_ptr->grow(msg);
+	mapPub.publish(map_builder_ptr->getMap());
 }
 
 bool save_map(local_map::SaveMap::Request& req,
 		local_map::SaveMap::Response& res)
 {
-	return mapBuilderPtr->saveMap(req.name);
+	return map_builder_ptr->saveMap(req.name);
 }
 
 int main(int argc, char **argv)
@@ -44,8 +45,8 @@ int main(int argc, char **argv)
   nh.param<double>("map_width", map_width, 200);
   nh.param<double>("map_height", map_height, 200);
   nh.param<double>("map_resolution", map_resolution, 0.020);
-	MapBuilder mapBuilder(map_width, map_height, map_resolution);
-	mapBuilderPtr = &mapBuilder;
+  lama::local_map::MapBuilder map_builder(map_width, map_height, map_resolution);
+	map_builder_ptr = &map_builder;
 
 	ros::Subscriber scanHandler = nh.subscribe<sensor_msgs::LaserScan>("scan", 1, handleLaserScan);
 	mapPub = nh.advertise<nav_msgs::OccupancyGrid>("local_map", 1, true);

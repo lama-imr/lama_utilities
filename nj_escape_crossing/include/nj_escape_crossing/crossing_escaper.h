@@ -19,8 +19,9 @@
  * - Getter: float64, "exit_angle"
  *
  * Subscribers (other than map-related):
- * - nav_msgs::Odometry, "~/odometry", robot position
- * - std_msgs::Float32, "~/direction", absolute direction in which to escape.
+ * - nav_msgs::Odometry, "~odometry", robot position
+ * - std_msgs::Float32, "~direction", direction in which to escape.
+ *     The direction must be in the same reference frame as ~odometry.
  *     This topic is used only if the requested edge does not exist or if it
  *     has no exit angle descriptor.
  *
@@ -64,7 +65,7 @@
 namespace lama {
 namespace nj_escape_crossing {
 
-class CrossingEscaper : public lama::NavigatingJockey
+class CrossingEscaper : public NavigatingJockey
 {
   public:
 
@@ -105,18 +106,16 @@ class CrossingEscaper : public lama::NavigatingJockey
     // Hard-coded parameters.
     const static double reach_angular_distance_;  //!> dtheta to reach when turning (rad).
     const static double threshold_w_only_;  //!> If dtheta is greater than this, only turn, do not go forward (rad).
-    const static ros::Duration max_data_time_delta_;  //!> Max time interval between reception of odometry_ and direction_.
     const static ros::Duration max_odometry_age_;  //!> If Odometry is not received, set null Twist.
 
     // Internals.
-    double traveled_distance_;  //!> Distance traveled since start (m)
     bool angle_reached_;
     bool goal_reached_;
     bool has_odometry_;
     lama_msgs::Crossing crossing_;
     nav_msgs::Odometry odometry_;
-    bool has_odometry_and_direction_;
     double direction_;
+    bool has_direction_;
     nav_msgs::Odometry start_position_;
     double distance_to_escape_;  //!> Either escape_distance_ or crossing_.radius.
     std::string crossing_interface_name_;  // Name of the map interface for crossing.

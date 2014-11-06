@@ -10,6 +10,7 @@ find_package(catkin REQUIRED
 	geometry_msgs
 	lama_interfaces
 	laser_geometry
+	map_ray_caster
 	message_generation
 	roscpp
 	sensor_msgs
@@ -62,6 +63,8 @@ add_service_files(
   FILES
   GetCrossing.srv
   SetCrossing.srv
+  GetPlaceProfile.srv
+  SetPlaceProfile.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -102,6 +105,7 @@ catkin_package(
 	geometry_msgs
 	laser_geometry
 	lama_interfaces
+	map_ray_caster
 	message_runtime
 	roscpp
 	sensor_msgs

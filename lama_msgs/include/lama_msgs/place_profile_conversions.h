@@ -16,6 +16,8 @@
 #include <lama_msgs/PlaceProfile.h>
 #include <lama_msgs/place_profile_utils.h>
 
+#include <map_ray_caster/map_ray_caster.h>
+
 using std::vector;
 using lama_msgs::PlaceProfile;
 

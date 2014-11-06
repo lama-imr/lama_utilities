@@ -38,7 +38,6 @@ bool initMapInterface(const std::string& interface_name,
   client.waitForExistence();
   lama_interfaces::AddInterface srv;
   srv.request.interface_name = interface_name;
-  srv.request.interface_type = lama_interfaces::AddInterfaceRequest::SERIALIZED;
   srv.request.get_service_message = get_service_message;
   srv.request.set_service_message = set_service_message;
   if (!client.call(srv))

@@ -1,12 +1,9 @@
 <?xml version="1.0"?>
 <package>
-  <name>local_map</name>
-  <version>0.1.0</version>
-  <description>The local_map package
-	  The local_map package takes as input a LaserScan message and outputs
-	  a local map as OccupancyGrid. The local map orientation is the same
-	  as the one of the global frame.
-  </description>
+  <name>map_ray_caster</name>
+  <version>0.0.0</version>
+  <description>The map_ray_caster package provides a class for cached ray casting
+  on maps.</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <maintainer email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</maintainer>
@@ -19,34 +16,30 @@
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/local_map</url> -->
+  <!-- <url type="website">http://wiki.ros.org/map_ray_caster</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
+  <!-- Authors do not have to be maintianers, but could be -->
   <author email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</author>
 
 
   <!-- The *_depend tags are used to specify dependencies -->
   <!-- Dependencies can be catkin packages or system dependencies -->
+  <!-- Examples: -->
+  <!-- Use build_depend for packages you need at compile time: -->
+  <!--   <build_depend>message_generation</build_depend> -->
+  <!-- Use buildtool_depend for build tool packages: -->
+  <!--   <buildtool_depend>catkin</buildtool_depend> -->
+  <!-- Use run_depend for packages you need at runtime: -->
+  <!--   <run_depend>message_runtime</run_depend> -->
+  <!-- Use test_depend for packages you need only for testing: -->
+  <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>angles</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>lama_msgs</build_depend>
-  <build_depend>map_ray_caster</build_depend>
-  <build_depend>message_generation</build_depend>
   <build_depend>nav_msgs</build_depend>
   <build_depend>roscpp</build_depend>
-  <build_depend>sensor_msgs</build_depend>
-  <build_depend>tf</build_depend>
-  <run_depend>angles</run_depend>
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>lama_msgs</run_depend>
-  <run_depend>map_ray_caster</run_depend>
-  <run_depend>message_runtime</run_depend>
   <run_depend>nav_msgs</run_depend>
   <run_depend>roscpp</run_depend>
-  <run_depend>sensor_msgs</run_depend>
-  <run_depend>tf</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

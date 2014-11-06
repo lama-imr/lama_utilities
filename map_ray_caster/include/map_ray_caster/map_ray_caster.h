@@ -1,3 +1,5 @@
+#include <math.h> // for lround, not in C++99.
+#include <cmath>
 #include <map>
 #include <vector>
 
@@ -7,10 +9,10 @@
 
 #include <lama_msgs/PlaceProfile.h>
 
-#include <local_map/map_utils.h>
+#include <map_ray_caster/ray_caster_utils.h>
 
 namespace lama {
-namespace local_map {
+namespace map_ray_caster {
 
 typedef std::map<double, std::vector<size_t> > RayLookup;
 
@@ -18,8 +20,9 @@ class MapRayCaster
 {
   public :
 
+    MapRayCaster(const int occupied_threshold = 60);
+
     void laserScanCast(const nav_msgs::OccupancyGrid& map, sensor_msgs::LaserScan& scan);
-    void placeProfileCaster(const nav_msgs::OccupancyGrid& map, lama_msgs::PlaceProfile& profile);
 
     const std::vector<size_t>& getRayCastToMapBorder(const double angle, const size_t nrow, const size_t ncol, const double tolerance = 0);
 
@@ -29,11 +32,12 @@ class MapRayCaster
 
     RayLookup::const_iterator angleLookup(const double angle, const double tolerance);
 
+    int occupied_threshold_;
     size_t ncol_; //!> Map width used in the cache.
     size_t nrow_; //!> Map height used in the cache.
     RayLookup raycast_lookup_;
 };
 
-} // namespace local_map
+} // namespace map_ray_caster
 } // namespace lama
 

@@ -1,18 +1,50 @@
-#include <local_map/map_ray_caster.h>
+#include <map_ray_caster/map_ray_caster.h>
 
 namespace lama {
-namespace local_map {
+namespace map_ray_caster {
+
+MapRayCaster::MapRayCaster(const int occupied_threshold) :
+  occupied_threshold_(occupied_threshold)
+{
+}
+
+/* Return true if the map point is occupied.
+ */
+inline bool pointOccupied(const nav_msgs::OccupancyGrid& map, const int index, const int occupied_threshold)
+{
+  return (map.data[index] > occupied_threshold) || (map.data[index] == -1);
+}
 
 void MapRayCaster::laserScanCast(const nav_msgs::OccupancyGrid& map, sensor_msgs::LaserScan& scan)
 {
   scan.ranges.clear();
-  for (double angle = scan.angle_min; angle <= scan.angle_max; angle += scan.angle_increment)
+  for (double angle = scan.angle_min; angle <= scan.angle_max + 1e-6; angle += scan.angle_increment)
   {
+    // Max pixel count for scan.range_max if it were "bitmapped".
+    const size_t pixel_range = lround(scan.range_max / map.info.resolution) + 1;
+    const std::vector<size_t>& ray = getRayCastToMapBorder(angle,
+	map.info.height, map.info.width, scan.angle_increment / 2);
+    const size_t max_size = std::min(ray.size(), pixel_range);
+    geometry_msgs::Point32 p;
+    indexToReal(map, ray.back(), p);
+    double range = std::min(0.99 * scan.range_max, (double)std::sqrt(p.x * p.x + p.y * p.y));
+    for (size_t i = 0; i < max_size; ++i)
+    {
+      const size_t idx = ray[i];
+      if (pointOccupied(map, idx, occupied_threshold_))
+      {
+	geometry_msgs::Point32 p;
+	indexToReal(map, idx, p);
+	range = std::sqrt(p.x * p.x + p.y * p.y);
+	break;
+      }
+    }
+    if (range > scan.range_max)
+    {
+      range = 0.99 * scan.range_max;
+    }
+    scan.ranges.push_back(range);
   }
-}
-
-void MapRayCaster::placeProfileCaster(const nav_msgs::OccupancyGrid& map, lama_msgs::PlaceProfile& profile)
-{
 }
 
 /* Return the list of pixel indexes from map center to pixel at map border and given angle
@@ -184,5 +216,5 @@ RayLookup::const_iterator MapRayCaster::angleLookup(const double angle, const do
 	}
 }
 
-} // namespace local_map
+} // namespace map_ray_caster
 } // namespace lama

@@ -13,7 +13,7 @@ class NJDummy : public lama::NavigatingJockey
 {
   public:
 
-    NJDummy(std::string name, std::string get_service_name);
+    NJDummy(const std::string& name, const std::string& get_service_name);
 
     virtual void onTraverse();
     virtual void onStop();

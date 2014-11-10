@@ -13,7 +13,7 @@
 	<node name="map_node" pkg="lama_interfaces" type="map_node.py" />
 
 	<node name="jockey" pkg="nj_oa_laser" type="nj_oa_laser" output="screen">
-		<param name="robot_width" value="0.7" />
+		<param name="robot_radius" value="0.45" />
 		<param name="long_distance" value="1.5" />
 		<remap from="jockey/base_scan" to="/base_scan" />
 		<remap from="jockey/cmd_vel" to="/cmd_vel" />

@@ -35,7 +35,7 @@
 	</node>
 
 	<node name="jockey" pkg="nj_oa_costmap" type="nj_oa_costmap" output="screen" >
-		<param name="robot_width" value="0.9" />
+		<param name="robot_radius" value="0.45" />
 		<param name="long_distance" value="1.5" />
 		<param name="turnrate_collide" value="0.4" />
 		<param name="max_vel" value="0.6" />

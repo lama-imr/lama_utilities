@@ -1,0 +1,30 @@
+<launch>
+
+	<arg name="model" default="$(find lama_test)/worlds/stage-360.world" />
+
+	<!-- END OF THE CONFIGURATION PART -->
+
+	<remap from="jockey/base_scan" to="base_scan" />
+	<remap from="jockey/cmd_vel" to="cmd_vel" />
+	<remap from="/jockey/crossing_marker" to="cross_marker" />
+	<remap from="/jockey/exits_marker" to="cross_line_marker" />
+	<remap from="/jockey/place_profile_cloud" to="place_profile" />
+
+	<node name="stage" pkg="stage_ros" type="stageros"
+			args="$(arg model)" />
+
+	<node name="rviz" pkg="rviz" type="rviz"
+			args="-d $(find lama_test)/worlds/nj_laser.rviz" />
+
+	<node name="map_node" pkg="lama_interfaces" type="map_node.py" />
+
+	<node name="jockey" pkg="nj_laser" type="nj_laser" output="screen">
+		<param name="frontier_width" value="1" />
+		<param name="max_frontier_distance" value="3" />
+		<param name="robot_radius" value="0.45" />
+	</node>
+
+	<node name="service_caller" pkg="lama_test" type="test_nj_oa.py"  output="screen" />
+
+</launch>
+

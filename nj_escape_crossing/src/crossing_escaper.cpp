@@ -11,35 +11,28 @@ const ros::Duration CrossingEscaper::max_odometry_age_ = ros::Duration(0.1);
 
 CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
   NavigatingJockey(name),
+  kp_v_(0.05),
+  kp_w_(0.2),
+  min_linear_velocity_(0.050),
+  min_angular_velocity_(0.1),
   escape_distance_(escape_distance),
+  exit_angle_topic_name_("exit_angle"),
   angle_reached_(false),
   goal_reached_(false),
   has_odometry_(false),
-  has_direction_(false)
+  has_direction_(false),
+  crossing_interface_name_("crossing"),
+  exit_angle_interface_name_("exit_angle")
 {
   ros::NodeHandle private_nh("~");
-  if (!private_nh.getParamCached("kp_v", kp_v_))
-    kp_v_ = 0.05;
-
-  if (!private_nh.getParamCached("kp_w", kp_w_))
-    kp_w_ = 0.2;
-
-  if (!private_nh.getParamCached("min_linear_velocity", min_linear_velocity_))
-    min_linear_velocity_ = 0.020;
-
-  if (!private_nh.getParamCached("min_angular_velocity", min_angular_velocity_))
-    min_linear_velocity_ =  0.1;
-
+  private_nh.getParamCached("kp_v", kp_v_);
+  private_nh.getParamCached("kp_w", kp_w_);
+  private_nh.getParamCached("min_linear_velocity", min_linear_velocity_);
+  private_nh.getParamCached("min_angular_velocity", min_angular_velocity_);
   private_nh.getParamCached("escape_distance", escape_distance_);
-
-  if (!private_nh.getParam("crossing_interface_name", crossing_interface_name_))
-    crossing_interface_name_ = "crossing";
-
-  if (!private_nh.getParam("exit_angle_interface_name", exit_angle_interface_name_))
-    exit_angle_interface_name_ = "exit_angle";
-
-  if (!private_nh.getParam("exit_angle_topic_name", exit_angle_topic_name_))
-    exit_angle_topic_name_ = "exit_angle";
+  private_nh.getParam("crossing_interface_name", crossing_interface_name_);
+  private_nh.getParam("exit_angle_interface_name", exit_angle_interface_name_);
+  private_nh.getParam("exit_angle_topic_name", exit_angle_topic_name_);
 
   crossing_getter_ = nh_.serviceClient<lama_msgs::GetCrossing>(crossing_interface_name_ + "_getter");
   exit_angle_getter_ = nh_.serviceClient<lama_interfaces::GetDouble>(exit_angle_interface_name_ + "_getter");
@@ -121,7 +114,7 @@ void CrossingEscaper::onTraverse()
   geometry_msgs::Twist twist;
 
   ros::Rate r(50);
-  while (true)
+  while (ros::ok())
   {
     if (server_.isPreemptRequested() && !ros::ok())
     {
@@ -346,7 +339,6 @@ bool CrossingEscaper::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::
   double distance = std::sqrt(goal.x * goal.x + goal.y * goal.y);
 
   double dtheta = std::atan2(goal.y, goal.x);
-  ROS_DEBUG("distance to goal: %f, dtheta to goal: %f", distance, dtheta);
 
   if (std::fabs(dtheta) > threshold_w_only_)
   {
@@ -358,10 +350,22 @@ bool CrossingEscaper::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::
   
   double vx = kp_v_ * distance; 
   double wz = kp_w_ * dtheta;
-  if (vx < min_linear_velocity_)
+
+  // Dead-zone management (not need if ki_v_ and ki_w_ non null).
+  if ((vx < min_linear_velocity_) && (std::abs(distance) > 1e-10) && (std::abs(wz) < min_angular_velocity_))
   {
     vx = min_linear_velocity_;
   }
+  if ((wz > 0) && (wz < min_angular_velocity_) && (vx < min_linear_velocity_))
+  {
+    wz = min_angular_velocity_;
+  }
+  else if ((wz < 0) && (wz > -min_angular_velocity_) && (vx < min_linear_velocity_))
+  {
+    wz = -min_angular_velocity_;
+  }
+  ROS_DEBUG("%s: distance to goal: %f, dtheta to goal: %f, vx: %f, wz: %f", ros::this_node::getName().c_str(),
+      distance, dtheta, vx, wz);
 
   twist.linear.x = vx;
   twist.angular.z = wz;

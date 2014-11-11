@@ -19,25 +19,25 @@
 #include "local_map/map_builder.h"
 #include "local_map/SaveMap.h"
 
-ros::Publisher mapPub;
+ros::Publisher map_publisher;
 lama::local_map::MapBuilder* map_builder_ptr;
 
 void handleLaserScan(sensor_msgs::LaserScan msg)
 {
-	map_builder_ptr->grow(msg);
-	mapPub.publish(map_builder_ptr->getMap());
+  map_builder_ptr->grow(msg);
+  map_publisher.publish(map_builder_ptr->getMap());
 }
 
 bool save_map(local_map::SaveMap::Request& req,
-		local_map::SaveMap::Response& res)
+    local_map::SaveMap::Response& res)
 {
-	return map_builder_ptr->saveMap(req.name);
+  return map_builder_ptr->saveMap(req.name);
 }
 
 int main(int argc, char **argv)
 {
-	ros::init(argc, argv, "local_map");
-	ros::NodeHandle nh("~");
+  ros::init(argc, argv, "local_map");
+  ros::NodeHandle nh("~");
 
   double map_width;
   double map_height;
@@ -46,12 +46,12 @@ int main(int argc, char **argv)
   nh.param<double>("map_height", map_height, 200);
   nh.param<double>("map_resolution", map_resolution, 0.020);
   lama::local_map::MapBuilder map_builder(map_width, map_height, map_resolution);
-	map_builder_ptr = &map_builder;
+  map_builder_ptr = &map_builder;
 
-	ros::Subscriber scanHandler = nh.subscribe<sensor_msgs::LaserScan>("scan", 1, handleLaserScan);
-	mapPub = nh.advertise<nav_msgs::OccupancyGrid>("local_map", 1, true);
-	ros::ServiceServer service = nh.advertiseService("save_map", save_map);
+  ros::Subscriber scanHandler = nh.subscribe<sensor_msgs::LaserScan>("scan", 1, handleLaserScan);
+  map_publisher = nh.advertise<nav_msgs::OccupancyGrid>("local_map", 1, true);
+  ros::ServiceServer service = nh.advertiseService("save_map", save_map);
 
-	ros::spin();
+  ros::spin();
 }
 

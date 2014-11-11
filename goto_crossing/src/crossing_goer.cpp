@@ -6,6 +6,13 @@ namespace goto_crossing {
 const double CrossingGoer::threshold_w_only_ = 1.0;  // (rad), ~60 deg.
 
 CrossingGoer::CrossingGoer() :
+  kp_v_(0.1),
+  kp_w_(0.2),
+  ki_v_(0),
+  ki_w_(0),
+  min_linear_velocity_(0.020),
+  min_angular_velocity_(0.1),
+  reach_distance_(0.050),
   last_t_(ros::Time::now()),
   sum_v_(0),
   sum_w_(0)
@@ -17,20 +24,13 @@ CrossingGoer::CrossingGoer() :
   }
 
   ros::NodeHandle private_nh("~");
-  if (!private_nh.getParamCached("kp_v", kp_v_))
-    kp_v_ = 0.1;
-  if (!private_nh.getParamCached("kp_w", kp_w_))
-    kp_w_ = 0.2;
-  if (!private_nh.getParamCached("ki_v", ki_v_))
-    ki_v_ = 0.00;
-  if (!private_nh.getParamCached("ki_w", ki_w_))
-    ki_w_ = 0.00;
-  if (!private_nh.getParamCached("min_linear_velocity", min_linear_velocity_))
-    min_linear_velocity_ = 0.020;
-  if (!private_nh.getParamCached("min_angular_velocity", min_angular_velocity_))
-    min_angular_velocity_ = 0.1;
-  if (!private_nh.getParamCached("reach_distance", reach_distance_))
-    reach_distance_ = 0.050;
+  private_nh.getParamCached("kp_v", kp_v_);
+  private_nh.getParamCached("kp_w", kp_w_);
+  private_nh.getParamCached("ki_v", ki_v_);
+  private_nh.getParamCached("ki_w", ki_w_);
+  private_nh.getParamCached("min_linear_velocity", min_linear_velocity_);
+  private_nh.getParamCached("min_angular_velocity", min_angular_velocity_);
+  private_nh.getParamCached("reach_distance", reach_distance_);
 
   twist_publisher_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   goal_reached_publisher_ = nh_.advertise<std_msgs::Bool>("goal_reached", 1);
@@ -135,7 +135,6 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
   }
 
   double dtheta = std::atan2(goal.y, goal.x);
-  ROS_DEBUG("%s: distance to goal: %f, dtheta to goal: %f", ros::this_node::getName().c_str(), distance, dtheta);
 
   if (std::abs(dtheta) > threshold_w_only_)
   {
@@ -159,7 +158,7 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
   double wz = kp_w_ * dtheta + ki_w_ * sum_w_;
 
   // Dead-zone management (not need if ki_v_ and ki_w_ non null).
-  if ((vx < min_linear_velocity_) && (distance != 0) && (std::abs(wz) < min_angular_velocity_))
+  if ((vx < min_linear_velocity_) && (std::abs(distance) > 1e-10) && (std::abs(wz) < min_angular_velocity_))
   {
     vx = min_linear_velocity_;
   }
@@ -171,6 +170,8 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
   {
     wz = -min_angular_velocity_;
   }
+  ROS_DEBUG("%s: distance to goal: %f, dtheta to goal: %f, vx: %f, wz: %f", ros::this_node::getName().c_str(),
+      distance, dtheta, vx, wz);
 
   twist.linear.x = vx;
   twist.angular.z = wz;

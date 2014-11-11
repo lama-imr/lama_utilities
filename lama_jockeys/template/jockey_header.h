@@ -27,7 +27,7 @@
  *    compare all known places with the current place
  *
  * Parameters:
- * - name, type, default name, description
+ * - name, type, default value, description
  */
 
 

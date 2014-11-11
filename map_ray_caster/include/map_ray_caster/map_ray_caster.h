@@ -1,3 +1,6 @@
+#ifndef MAP_RAY_CASTER_MAP_RAY_CASTER_H
+#define MAP_RAY_CASTER_MAP_RAY_CASTER_H
+
 #include <math.h> // for lround, not in C++99.
 #include <cmath>
 #include <map>
@@ -41,3 +44,4 @@ class MapRayCaster
 } // namespace map_ray_caster
 } // namespace lama
 
+#endif // MAP_RAY_CASTER_MAP_RAY_CASTER_H

@@ -31,7 +31,7 @@ void NJDummy::onTraverse()
   ROS_INFO("dummy descriptor is %i", dg.response.descriptor.value);
 
   // start navigating.
-  while (true)
+  while (ros::ok())
   {
     // update the feedback every 0.5 s.
     ros::Duration(0.5).sleep();

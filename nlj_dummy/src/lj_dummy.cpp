@@ -30,7 +30,7 @@ void LJDummy::onGetEdgesDescriptors()
 
   // Start the computer intensive localizing (uninterruptable).
   double last_feedback_update = 0.0;
-  while (true)
+  while (ros::ok())
   {
     ros::Time current_time = ros::Time::now();
     double time_elapsed = current_time.toSec() - start_time.toSec();

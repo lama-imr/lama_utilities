@@ -5,6 +5,8 @@
 #ifndef _CROSSING_DETECTOR_LASER_CROSSING_DETECTOR_H_
 #define _CROSSING_DETECTOR_LASER_CROSSING_DETECTOR_H_
 
+#include <cmath> // for std::abs
+
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 

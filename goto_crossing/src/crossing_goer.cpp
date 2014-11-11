@@ -3,7 +3,7 @@
 namespace lama {
 namespace goto_crossing {
 
-const double CrossingGoer::threshold_w_only_ = 1.0;  // (rad), ~60 deg.
+const double CrossingGoer::threshold_w_only_ = 0.35;  // (rad), ~20 deg.
 
 CrossingGoer::CrossingGoer() :
   kp_v_(0.1),
@@ -32,8 +32,8 @@ CrossingGoer::CrossingGoer() :
   private_nh.getParamCached("min_angular_velocity", min_angular_velocity_);
   private_nh.getParamCached("reach_distance", reach_distance_);
 
-  twist_publisher_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);
-  goal_reached_publisher_ = nh_.advertise<std_msgs::Bool>("goal_reached", 1);
+  twist_publisher_ = private_nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+  goal_reached_publisher_ = private_nh.advertise<std_msgs::Bool>("goal_reached", 1);
   
   ROS_INFO("%s: CrossingGoer initialized", ros::this_node::getName().c_str());
 }
@@ -48,8 +48,9 @@ CrossingGoer::CrossingGoer() :
 bool CrossingGoer::goto_crossing(const lama_msgs::Crossing& crossing, geometry_msgs::Twist& twist)
 {
   geometry_msgs::Point goal;
-  //!> can only reach the goal if at least 3 exits.
-  bool can_reach = false;
+
+  // Can only reach the goal if at least 3 exits.
+  bool can_reach = (crossing.frontiers.size() >= 3);
 
   if (crossing.frontiers.size() == 0)
   {
@@ -90,16 +91,17 @@ bool CrossingGoer::goto_crossing(const lama_msgs::Crossing& crossing, geometry_m
   }
   else
   {
-    can_reach = true;
     // Move to the crossing center.
     goal.x = crossing.center.x;
     goal.y = crossing.center.y;
   }
-  ROS_DEBUG("%s: goal = (%.3f, %.3f)", ros::this_node::getName().c_str(), goal.x, goal.y);
+  ROS_DEBUG("%s: goal: (%.3f, %.3f)", ros::this_node::getName().c_str(), goal.x, goal.y);
   return goToGoal(goal, twist) && can_reach;
 }
 
 /* Callback for the Crossing topic.
+ *
+ * Compute and publish the Twist and Bool messages.
  */
 void CrossingGoer::goto_crossing_callback(const lama_msgs::Crossing& crossing)
 {
@@ -139,6 +141,7 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
   if (std::abs(dtheta) > threshold_w_only_)
   {
     // Do no go forward because the goal is not well in front of the robot.
+    ROS_DEBUG("%s: Goal angle too large, just turning...", ros::this_node::getName().c_str());
     distance = 0.0;
   }
 
@@ -157,7 +160,7 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
   double vx = kp_v_ * distance + ki_v_ * sum_v_; 
   double wz = kp_w_ * dtheta + ki_w_ * sum_w_;
 
-  // Dead-zone management (not need if ki_v_ and ki_w_ non null).
+  // Dead-zone management (not needed if ki_v_ and ki_w_ non null).
   if ((vx < min_linear_velocity_) && (std::abs(distance) > 1e-10) && (std::abs(wz) < min_angular_velocity_))
   {
     vx = min_linear_velocity_;
@@ -170,7 +173,7 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
   {
     wz = -min_angular_velocity_;
   }
-  ROS_DEBUG("%s: distance to goal: %f, dtheta to goal: %f, vx: %f, wz: %f", ros::this_node::getName().c_str(),
+  ROS_DEBUG("%s: distance to goal: %f, dtheta to goal: %f, twist: (%f, %f)", ros::this_node::getName().c_str(),
       distance, dtheta, vx, wz);
 
   twist.linear.x = vx;

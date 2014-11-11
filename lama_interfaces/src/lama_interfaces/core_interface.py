@@ -24,7 +24,7 @@ g_default_descriptor_table_name = 'lama_descriptor_link'
 g_default_map_agent_name = '/lama_map_agent'
 
 # sqlalchemy engine (argument to sqlalchemy.create_engine)
-g_engine_name = rospy.get_param('/database_engine', 'sqlite:///created.sqlite')
+g_engine_name = rospy.get_param('/database_engine', 'sqlite:///lama.sqlite')
 
 
 class CoreDBInterface(AbstractDBInterface):

@@ -8,7 +8,7 @@ from sqlalchemy.types import Integer, Binary
 from abstract_db_interface import AbstractDBInterface
 
 # sqlalchemy engine (argument to sqlalchemy.create_engine)
-g_engine_name = rospy.get_param('/database_engine', 'sqlite:///created.sqlite')
+g_engine_name = rospy.get_param('/database_engine', 'sqlite:///lama.sqlite')
 
 
 class DBInterface(AbstractDBInterface):

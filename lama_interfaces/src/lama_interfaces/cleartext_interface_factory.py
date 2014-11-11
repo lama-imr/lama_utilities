@@ -36,7 +36,7 @@ suffix_for_builtin = '_value_'
 _types_table_name = 'message_types'
 
 # sqlalchemy engine (argument to sqlalchemy.create_engine)
-g_engine_name = rospy.get_param('/database_engine', 'sqlite:///created.sqlite')
+g_engine_name = rospy.get_param('/database_engine', 'sqlite:///lama.sqlite')
 
 # TODO: remove all occurences of roslib.msgs
 

@@ -1,0 +1,27 @@
+<launch>
+	<remap from="goto_crossing/cmd_vel" to="cmd_vel" />
+	<remap from="test_goto_crossing/goal_reached" to="goto_crossing/goal_reached" />
+	<remap from="test_goto_crossing/odom" to="/odom" />
+	<remap from="test_goto_crossing/crossing" to="goto_crossing/crossing" />
+
+	<node name="stage" pkg="stage_ros" type="stageros"
+			args="$(find lama_test)/worlds/test_goto_crossing.world" />
+
+	<node name="rviz" pkg="rviz" type="rviz"
+			args="-d $(find lama_test)/worlds/goto_crossing.rviz" />
+
+	<node name="goto_crossing" pkg="goto_crossing" type="goto_crossing" output="screen">
+		<param name="kp_v" value="0.1" />
+		<param name="kp_w" value="0.2" />
+		<param name="ki_v" value="0" />
+		<param name="ki_w" value="0" />
+		<param name="min_linear_velocity" value="0.020" />
+		<param name="min_angular_velocity" value="0.1" />
+		<param name="reach_distance" value="0.050" />
+	</node>
+
+	<node name="test_goto_crossing" pkg="lama_test" type="test_goto_crossing.py" output="screen" >
+	</node>
+
+</launch>
+

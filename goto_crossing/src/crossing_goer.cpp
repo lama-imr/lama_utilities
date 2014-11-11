@@ -161,15 +161,15 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
   double wz = kp_w_ * dtheta + ki_w_ * sum_w_;
 
   // Dead-zone management (not needed if ki_v_ and ki_w_ non null).
-  if ((vx < min_linear_velocity_) && (std::abs(distance) > 1e-10) && (std::abs(wz) < min_angular_velocity_))
+  if ((vx < min_linear_velocity_) && (std::abs(distance) > 1e-10) && (std::abs(wz) <= min_angular_velocity_))
   {
     vx = min_linear_velocity_;
   }
-  if ((wz > 0) && (wz < min_angular_velocity_) && (vx < min_linear_velocity_))
+  if ((wz > 0) && (wz < min_angular_velocity_) && (vx <= min_linear_velocity_))
   {
     wz = min_angular_velocity_;
   }
-  else if ((wz < 0) && (wz > -min_angular_velocity_) && (vx < min_linear_velocity_))
+  else if ((wz < 0) && (wz > -min_angular_velocity_) && (vx <= min_linear_velocity_))
   {
     wz = -min_angular_velocity_;
   }

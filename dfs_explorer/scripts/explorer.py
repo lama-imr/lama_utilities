@@ -20,11 +20,11 @@ from lama_jockeys.msg import LocalizeGoal
 from lama_msgs.srv import GetCrossing
 from lama_interfaces.srv import ActOnMap
 from lama_interfaces.srv import ActOnMapRequest
-from lama_interfaces.core_interface import CoreDBInterface
+from lama_interfaces.core_interface import MapAgentInterface
 from lama_interfaces.interface_factory import interface_factory
 from lama_interfaces.graph_builder import get_edge_with_vertices
 
-from graph import GraphTransformer
+from graph_transformer import GraphTransformer
 
 # TODO: add a mechanism for the robot not to come back to the vertex it comes
 # from.
@@ -45,11 +45,31 @@ def debug(msg):
 def jockey_client(jockey_name, action_type):
     client = actionlib.SimpleActionClient(jockey_name, action_type)
     while not client.wait_for_server(rospy.Duration(5)):
-        rospy.loginfo('Waiting for the jockey action ' +
-                      'server ({})'.format(jockey_name))
+        rospy.loginfo(('{}: waiting for the jockey action ' +
+                      'server ({})').format(rospy.get_name(), jockey_name))
     debug('communicating with the jockey ' +
           'action server {}'.format(jockey_name))
     return client
+
+
+class Edge:
+    def __init__(self, id_, preceeding):
+        """An edge with link to its predecessor
+
+        Parameters
+        ----------
+        id_: vertex id
+        preceeding: Edge instance of preceeding edge
+        """
+        self.id = id_
+        self.preceeding = preceeding
+
+    def path_to_start(self):
+        if self.preceeding is None:
+            # We return an empty list because the start node should not be
+            # part of the final path.
+            return []
+        return self.preceeding.path_to_start() + [self.id]
 
 
 class ExplorerNode(object):
@@ -73,23 +93,24 @@ class ExplorerNode(object):
         self.escape = jockey_client(escape_jockey_name, NavigateAction)
 
         # Map agent server.
-        engine_name = rospy.get_param('/database_engine',
-                                      'sqlite:///created.sql')
-        iface = CoreDBInterface(engine_name)
-        self.map_agent = rospy.ServiceProxy(iface.action_service_name, ActOnMap)
+        iface = MapAgentInterface(start=False)
+        self.map_agent = rospy.ServiceProxy(iface.action_service_name,
+                                            ActOnMap)
 
         # Descriptor getter for Crossing.
-        self.crossing_interface_name = rospy.get_param(
-            '~crossing_interface', 'crossing')
+        self.crossing_interface_name = rospy.get_param('~crossing_interface',
+                                                       'crossing')
         crossing_getter_name = self.crossing_interface_name + '_getter'
         self.crossing_getter = rospy.ServiceProxy(crossing_getter_name,
                                                   GetCrossing)
+        debug('waiting for service {}'.format(crossing_getter_name))
         self.crossing_getter.wait_for_service()
+        debug('service {} available'.format(crossing_getter_name))
 
         # Exit angles getter and setter (double).
         exit_angles_interface_name = rospy.get_param(
-            'exit_angles_interface_name',
-            'dfs_explorer_exit_angles')
+            '~exit_angles_interface_name',
+            'dfs_explorer_exit_angle')
         exits_iface = interface_factory(
             exit_angles_interface_name,
             'lama_interfaces/GetDouble',
@@ -98,12 +119,8 @@ class ExplorerNode(object):
         self.exit_angles_setter = exits_iface.setter_service_proxy
 
         # Exit angle topic advertiser.
-        exit_angle_topic_name = rospy.get_param("exit_angle_topic",
-                                                "exit_angle")
-        self.exit_angle_publisher = rospy.Publisher(exit_angle_topic_name,
-                                                    Float32,
-                                                    queue_size=1,
-                                                    latch=True)
+        self.exit_angle_topic_name = rospy.get_param("exit_angle_topic",
+                                                     "~exit_angle")
 
         self.first_crossing_reached = False
         self.first_vertex = None
@@ -195,9 +212,9 @@ class ExplorerNode(object):
     def get_current_descriptor(self):
         """Get the descriptors from the current crossing center
 
-        Get the descriptors.
-        Push the vertex.
-        Add vertices to the graph.
+        Get the descriptors (i.e. write them into the database).
+        Push the vertex if not already existant.
+        Assign the descriptors to this vertex.
 
         Parameters
         ----------
@@ -242,21 +259,15 @@ class ExplorerNode(object):
                 if link.interface_name == self.crossing_interface_name:
                     self.current_crossing_id = link.descriptor_id
             # Get the exit_angles from map.
-            # TODO: Don't use magic numbers (modify and rename
-            # get_crossing_desc_id to return (desc, desc_id).
-            # Crossing is the 2nd descriptor.
-            crossing = self.crossing_getter(descriptor_links[1].descriptor_id)
+            crossing_resp = self.crossing_getter(self.current_crossing_id)
             rospy.logdebug('Exit count: {}'.format(
-                len(crossing.descriptor.frontiers)))
-            # Add vertex and associate the sorted list of [None, angle].
-            nodes = [[None, f.angle] for f in crossing.descriptor.frontiers]
-            self.graph[new_vertex] = sorted(nodes)
-            self.add_edge_to_graph(new_vertex)
+                len(crossing_resp.descriptor.frontiers)))
             self.last_vertex = new_vertex
         else:
+            # TODO: delete the redundant descriptors (quality-based
+            # if possible)
             index_vertex_same = dissimilarities.index(min(dissimilarities))
             vertex_same = vertices[index_vertex_same]
-            self.add_edge_to_graph(vertex_same)
             self.last_vertex = vertex_same
             self.current_crossing_id = self.get_crossing_desc_id(vertex_same)
         if not self.first_vertex:
@@ -274,26 +285,6 @@ class ExplorerNode(object):
             return None, None
         debug('received {} dissimilarities'.format(len(loc_result.idata)))
         return loc_result.idata, loc_result.fdata
-
-    def add_edge_to_graph(self, vertex):
-        """Add an edge from self.last_vertex to vertex
-
-        This means replace None with vertex for the adjacent vertex of
-        self.last_vertex for which the edge information is self.exit_taken.
-        """
-        # TODO: rebuild the graph from the map...
-        # so that several robots can be used simultaneously.
-        if not self.last_vertex:
-            return
-        old_nodes = self.graph[self.last_vertex]
-        new_nodes = []
-        for v, a in old_nodes:
-            if a == self.exit_taken:
-                new_nodes.append([vertex, a])
-                self.add_edge_to_map(self.last_vertex, vertex, self.exit_taken)
-            else:
-                new_nodes.append([v, a])
-        self.graph[self.last_vertex] = new_nodes
 
     def add_edge_to_map(self, v0, v1, exit_angle):
         """Add an edge and its associated descriptor to the map
@@ -340,11 +331,12 @@ class ExplorerNode(object):
                     return v, a
             return None
 
-        rospy.logdebug('graph: {}'.format(self.graph))
+        graph = self.graph_transformer.graph_from_map()
+        rospy.logdebug('graph: {}'.format(graph))
         stack = [self.first_vertex]
         discovered = []
         while stack:
-            nodes = self.graph[stack[-1]]
+            nodes = graph[stack[-1]]
             v = next_known(nodes)
             if v is None:
                 if first_unknown(nodes) is None:
@@ -356,9 +348,8 @@ class ExplorerNode(object):
     def move_to_next_crossing(self):
         if self.next_vertex is None:
             return
-        # TODO: remove angle from find_path output
-        path = self.find_path()
-        for vertex, angle in path:
+        path = self.find_path_to_next_vertex()
+        for vertex in path:
             # Escape from crossing center.
             goal = NavigateGoal()
             goal.action = goal.TRAVERSE
@@ -385,73 +376,41 @@ class ExplorerNode(object):
                 rospy.logerr(err)
                 return False
             self.last_vertex = vertex
-            self.exit_taken = angle
         return True
 
     def edge_id(self, v0, v1):
         """Return the id of edge from v0 to v1"""
         return get_edge_with_vertices(v0, v1).id
 
-    def find_path(self):
-        """Return a list of (vertex, angle)
+    def find_path_to_next_vertex(self):
+        """Return a list of vertices defining a path to self.next_vertex
 
+        Return a list of vertices defining a path from the robot current
+        position to self.next_vertex.
         self.last_vertex (the crossing the robot presently is in) will not be
         part of the path. The last vertex will be self.next_vertex.
         """
-        # TODO: remove angle from find_path output
-        def adjacent_vertices(vertex):
-            vertices = []
-            for v, a in self.graph[vertex]:
-                vertices.append(v)
-
-        def path_edges(edges, end):
-            edges = path_edges(edges, end)
-            for v1, v0 in edges:
-                if v1 == end:
-                    return path(edges, v1) + [v0]
-
-        def transform_graph(ingraph):
-            graph = {}
-            for k, node in ingraph.iteritems():
-                for v, a in node:
-                    graph[(k, v)] = a
-            return graph
-
-        def path(edges, end):
-            edges = path_edges(edges, end)
-            graph = transform_graph(self.graph)
-            v0 = edges.pop()
-            p = []
-            while edges:
-                v1 = edges.pop()
-                p.append((v1, graph[(v0, v1)]))
-            return p
-
-        # TODO: use a BrowseVertex that has as attributes the BrowseVertex
-        # it comes from during browsing and the associated angle so that
-        # after the dfs-tree is built, the path can be found by browsing the
-        # referenced vertices.
+        graph = self.graph_transformer.map_graph
         print('Start vertex: '.format(self.last_vertex)) # DEBUG
         start = self.last_vertex
         print('End vertex: '.format(self.next_vertex)) # DEBUG
         end = self.next_vertex
-        queue = [start]
+        queue = [Edge(start, None)]
         discovered = set()
-        discovered.add(start)
-        edges = []
         while queue:
-            vertex = queue.pop(0)
+            edge = queue.pop(0)
+            vertex = edge.id
             if vertex == end:
-                return path(edges, end)
-            for v in adjacent_vertices(vertex):
-                if v not in discovered:
-                    discovered.add(v)
-                    edges.add((v, vertex))
-                    queue.append(v)
+                print('Found path: [{}] {}'.format(start, edge.path_to_start())) # DEBUG
+                return edge.path_to_start()
+            if vertex not in discovered:
+                discovered.add(vertex)
+                for adjacent_vertex in graph[vertex]:
+                    queue.apppend(Edge(adjacent_vertex, edge))
         return None
 
     def get_crossing_desc_id(self, vertex):
-        """Return the first Crossing descriptor associated with a vertex"""
+        """Return the id of the first Crossing associated with a vertex"""
         map_action = ActOnMapRequest()
         map_action.action = map_action.GET_DESCRIPTOR_LINKS
         map_action.object.id = vertex
@@ -461,7 +420,11 @@ class ExplorerNode(object):
 
     def escape_from_crossing(self):
         """Escape from crossing towards an unknown edge and return when done"""
-        self.exit_angle_publisher.publish(self.next_exit)
+        exit_angle_publisher = rospy.Publisher(self.exit_angle_topic_name,
+                                               Float32,
+                                               queue_size=1,
+                                               latch=True)
+        exit_angle_publisher.publish(self.next_exit)
         nav_goal = NavigateGoal()
         nav_goal.action = nav_goal.TRAVERSE
         nav_goal.descriptor_link.descriptor_id = self.current_crossing_id
@@ -469,7 +432,7 @@ class ExplorerNode(object):
             nav_goal.descriptor_link.descriptor_id, self.next_exit))
         self.escape.send_goal_and_wait(nav_goal)
         escape_result = self.escape.get_result()
-        if escape_result != escape_result.DONE:
+        if escape_result.final_state != escape_result.DONE:
             err = 'Escape jockey did not succeed'
             rospy.logerr(err)
             raise Exception(err)

@@ -3,7 +3,7 @@
 from math import pi
 
 from lama_interfaces.graph_builder import get_descriptors
-from lama_interfaces.graph_builder import get_oriented_graph
+from lama_interfaces.graph_builder import get_directed_graph
 from lama_interfaces.graph_builder import get_edge_with_vertices
 
 
@@ -47,25 +47,30 @@ class GraphTransformer(object):
         self.crossing_interface = crossing_interface
         self.exit_angle_getter = exit_angle_getter
         self.exit_angle_interface = exit_angle_interface
+        # Graph as saved in the map
+        self.map_graph = None
 
     def graph_from_map(self):
         """Read the graph from the map
 
         Read the graph from the map and return a graph suitable for ExplorerNode
         """
-        map_graph = get_oriented_graph()
+        self.map_graph = get_directed_graph()
         graph = {}
         # Fill the graph keys (vertices) and values (pairs [None, exit_angle]).
-        for vertex, edges in map_graph.iteritems():
+        for vertex, edges in self.map_graph.iteritems():
             key = vertex.id
             end_vertex_ids = [e.references[1] for e in edges]
             crossing = self.get_crossing(key)
             graph[key] = []
             for frontier in crossing.frontiers:
+                print 'Frontier: {}'.format(frontier)
                 end_vertex = self._get_end_vertex(key,
                                                   end_vertex_ids,
                                                   frontier.angle)
-                graph[key].append(end_vertex, frontier.angle)
+                print 'end_vertex: {}'.format(end_vertex)
+                graph[key].append([end_vertex, frontier.angle])
+        return graph
 
     def get_crossing(self, object_id):
         """Retrieve the crossing associated with a LamaObject

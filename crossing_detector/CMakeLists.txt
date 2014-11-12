@@ -8,7 +8,6 @@ find_package(catkin REQUIRED COMPONENTS
 	angles
 	geometry_msgs
 	lama_msgs
-	moveit_ros_planning_interface
 	nav_msgs
 	rosbag
 	roscpp
@@ -105,7 +104,6 @@ catkin_package(
 	angles
 	geometry_msgs
 	lama_msgs
-	moveit_ros_planning_interface
 	nav_msgs
 	roscpp
 	sensor_msgs

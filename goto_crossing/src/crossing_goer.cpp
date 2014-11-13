@@ -4,6 +4,8 @@ namespace lama {
 namespace goto_crossing {
 
 const double CrossingGoer::threshold_w_only_ = 0.35;  // (rad), ~20 deg.
+const double CrossingGoer::max_sum_v_ = 10;  // (m.s).
+const double CrossingGoer::max_sum_w_ = 3;  // (rad.s).
 
 CrossingGoer::CrossingGoer() :
   kp_v_(0.1),
@@ -24,17 +26,19 @@ CrossingGoer::CrossingGoer() :
   }
 
   ros::NodeHandle private_nh("~");
-  private_nh.getParamCached("kp_v", kp_v_);
-  private_nh.getParamCached("kp_w", kp_w_);
-  private_nh.getParamCached("ki_v", ki_v_);
-  private_nh.getParamCached("ki_w", ki_w_);
-  private_nh.getParamCached("min_linear_velocity", min_linear_velocity_);
-  private_nh.getParamCached("min_angular_velocity", min_angular_velocity_);
-  private_nh.getParamCached("reach_distance", reach_distance_);
+  private_nh.getParam("kp_v", kp_v_);
+  private_nh.getParam("kp_w", kp_w_);
+  private_nh.getParam("ki_v", ki_v_);
+  private_nh.getParam("ki_w", ki_w_);
+  private_nh.getParam("min_linear_velocity", min_linear_velocity_);
+  private_nh.getParam("min_angular_velocity", min_angular_velocity_);
+  private_nh.getParam("reach_distance", reach_distance_);
 
   twist_publisher_ = private_nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   goal_reached_publisher_ = private_nh.advertise<std_msgs::Bool>("goal_reached", 1);
   
+  reset_integral_server_ = private_nh.advertiseService("reset_integrals", &CrossingGoer::callback_resetIntegrals, this);
+
   ROS_INFO("%s: CrossingGoer initialized", ros::this_node::getName().c_str());
 }
 
@@ -103,7 +107,7 @@ bool CrossingGoer::goto_crossing(const lama_msgs::Crossing& crossing, geometry_m
  *
  * Compute and publish the Twist and Bool messages.
  */
-void CrossingGoer::goto_crossing_callback(const lama_msgs::Crossing& crossing)
+void CrossingGoer::callback_goto_crossing(const lama_msgs::Crossing& crossing)
 {
   // TODO: add a timeout mechanism for Crossing reception and set twist to 0.
   geometry_msgs::Twist twist;
@@ -115,6 +119,12 @@ void CrossingGoer::goto_crossing_callback(const lama_msgs::Crossing& crossing)
   goal_reached_publisher_.publish(goal_reached_msg);
 }
 
+bool CrossingGoer::callback_resetIntegrals(::goto_crossing::ResetIntegrals::Request& req, ::goto_crossing::ResetIntegrals::Response& res)
+{
+  resetIntegrals();
+  return true;
+}
+
 /* Return the twist to reach the given goal pose
  * 
  * There is no cycle in this function, so it should be called periodically by class instances.
@@ -124,7 +134,15 @@ void CrossingGoer::goto_crossing_callback(const lama_msgs::Crossing& crossing)
  */
 bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twist& twist)
 {
-  ros::Time t = ros::Time::now();
+  // TODO: use dynamic_reconfigure instead of getParamCached.
+  ros::NodeHandle private_nh("~");
+  private_nh.getParamCached("kp_v", kp_v_);
+  private_nh.getParamCached("kp_w", kp_w_);
+  private_nh.getParamCached("ki_v", ki_v_);
+  private_nh.getParamCached("ki_w", ki_w_);
+  private_nh.getParamCached("min_linear_velocity", min_linear_velocity_);
+  private_nh.getParamCached("min_angular_velocity", min_angular_velocity_);
+  private_nh.getParamCached("reach_distance", reach_distance_);
 
   double distance = std::sqrt(goal.x * goal.x + goal.y * goal.y);
 
@@ -146,39 +164,63 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
   }
 
   // Compute the integrals.
-  // TODO: Add anti wind-up.
-  double dt = (t - last_t_).toSec();
-  if (dt != 0)
+  const ros::Time t = ros::Time::now();
+  const double dt = (t - last_t_).toSec();
+  sum_v_ += distance * dt;
+  sum_w_ += dtheta * dt;
+
+  // Anti wind-up.
+  if (sum_v_ < -max_sum_v_)
   {
-    sum_v_ += distance / dt;
-    sum_w_ += dtheta / dt;
+    sum_v_ = -max_sum_v_;
   }
-  last_t_ = t;
+  else if (sum_v_ > max_sum_v_)
+  {
+    sum_v_ = max_sum_v_;
+  }
+  if (sum_w_ < -max_sum_w_)
+  {
+    sum_w_ = -max_sum_w_;
+  }
+  else if (sum_w_ > max_sum_w_)
+  {
+    sum_w_ = max_sum_w_;
+  }
   
   // TODO: add a parameter "allow_backward" so that we don't need to turn 180 deg.
   
   double vx = kp_v_ * distance + ki_v_ * sum_v_; 
   double wz = kp_w_ * dtheta + ki_w_ * sum_w_;
 
+  // Linear velocity throttle depending on dtheta (full velocity
+  // when dtheta = 0, 0 when dtheta = threshold_w_only_).
+  const double vx_throttle_dtheta = std::max(std::min(1.0, 1.0 - std::abs(dtheta) / threshold_w_only_), 0.0);
+  vx = vx * vx_throttle_dtheta;
+
   // Dead-zone management (not needed if ki_v_ and ki_w_ non null).
-  if ((vx < min_linear_velocity_) && (std::abs(distance) > 1e-10) && (std::abs(wz) <= min_angular_velocity_))
+  if ((ki_v_ < 1e-10) && (vx < min_linear_velocity_) &&
+      (std::abs(distance) > 1e-10) && (std::abs(wz) <= min_angular_velocity_))
   {
     vx = min_linear_velocity_;
   }
-  if ((wz > 0) && (wz < min_angular_velocity_) && (vx <= min_linear_velocity_))
+  if ((ki_w_ < 1e-10) && (wz > 0) && (wz < min_angular_velocity_) && (vx <= min_linear_velocity_))
   {
     wz = min_angular_velocity_;
   }
-  else if ((wz < 0) && (wz > -min_angular_velocity_) && (vx <= min_linear_velocity_))
+  else if ((ki_w_ < 1e-10) && (wz < 0) && (wz > -min_angular_velocity_) && (vx <= min_linear_velocity_))
   {
     wz = -min_angular_velocity_;
   }
   ROS_DEBUG("%s: distance to goal: %f, dtheta to goal: %f, twist: (%f, %f)", ros::this_node::getName().c_str(),
       distance, dtheta, vx, wz);
 
+  ROS_DEBUG_NAMED("superdebug", "sum_v_: %f", sum_v_);
+  ROS_DEBUG_NAMED("superdebug", "sum_w_: %f", sum_w_);
+
   twist.linear.x = vx;
   twist.angular.z = wz;
 
+  last_t_ = t;
   return false;
 }
 

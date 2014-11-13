@@ -17,7 +17,7 @@ int main(int argc, char** argv)
   }
 
   lama::goto_crossing::CrossingGoer crossing_goer;
-  ros::Subscriber sub = nh.subscribe("crossing", 1, &lama::goto_crossing::CrossingGoer::goto_crossing_callback, &crossing_goer);
+  ros::Subscriber sub = nh.subscribe("crossing", 1, &lama::goto_crossing::CrossingGoer::callback_goto_crossing, &crossing_goer);
 
   ros::spin();
 }

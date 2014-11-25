@@ -54,19 +54,19 @@ void LearningJockey::goalCallback()
 
 void LearningJockey::preemptCallback()
 {
-  ROS_INFO("%s: Preempted", jockey_name_.c_str());
+  ROS_INFO_STREAM(jockey_name_ << ": Preempted");
   // set the action state to preempted
-  server_.setPreempted();
+  /* server_.setPreempted(); DISABLED FOR DEBUG */
 }
 
 void LearningJockey::onInterrupt()
 {
-  ROS_DEBUG("%s: learning interrupted", jockey_name_.c_str());
+  ROS_DEBUG_STREAM(jockey_name_ << ": learning interrupted");
 }
 
 void LearningJockey::onContinue()
 {
-  ROS_DEBUG("%s: learning resumed", jockey_name_.c_str());
+  ROS_DEBUG_STREAM(jockey_name_ << ": learning resumed");
 }
 
 } // namespace lama

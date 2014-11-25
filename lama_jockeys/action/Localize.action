@@ -20,8 +20,8 @@ uint32 NOT_SUPPORTED=2
 
 lama_interfaces/DescriptorLink[] descriptor_links
 # Data output, dependent on action.
-int32[] idata
-float32[] fdata
+int64[] idata
+float64[] fdata
  
 duration completion_time
 ---

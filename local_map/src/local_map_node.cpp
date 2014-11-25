@@ -16,8 +16,8 @@
 #include <sensor_msgs/LaserScan.h>
 #include <nav_msgs/OccupancyGrid.h>
 
-#include "local_map/map_builder.h"
-#include "local_map/SaveMap.h"
+#include <local_map/map_builder.h>
+#include <local_map/SaveMap.h>
 
 ros::Publisher map_publisher;
 lama::local_map::MapBuilder* map_builder_ptr;

@@ -61,7 +61,7 @@ Visualization Manager:
       Marker Topic: /test_goto_crossing/crossing_marker
       Name: Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -88,22 +88,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 15.2853
+      Distance: 14.0113
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: -0.819679
+        Y: 0.236498
+        Z: 3.50809
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.785398
+      Pitch: 1.5498
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.785398
+      Yaw: 0.0103977
     Saved: ~
 Window Geometry:
   Displays:
@@ -121,5 +121,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 42
-  Y: 44
+  X: 33
+  Y: 36

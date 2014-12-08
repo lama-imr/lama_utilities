@@ -1,6 +1,6 @@
 <launch>
 
-	<arg name="model" default="$(find lama_test)/worlds/stage-360.world" />
+	<arg name="model" default="$(find lama_test)/worlds/stage-270.world" />
 
 	<!-- costmap == true => local_map + nj_costmap; costmap == false => nj_laser -->
 	<arg name="costmap" default="true" />
@@ -53,12 +53,14 @@
 			<param name="navigating_jockey_server_name" value="/navigating_jockey_server" />
 			<param name="odom_frame" value="base_link" />
 			<param name="frontier_width" value="0.5" />
-			<param name="kp_v" value="0.05" />
-			<param name="kp_w" value="0.1" />
+			<param name="kp_v" value="0.1" />
+			<param name="kp_w" value="0.5" />
 			<param name="ki_v" value="0" />
 			<param name="ki_w" value="0" />
-			<param name="min_linear_velocity" value="0" />
-			<param name="min_angular_velocity" value="0" />
+			<param name="min_linear_velocity" value="0.2" />
+			<param name="min_angular_velocity" value="0.2" />
+			<param name="dtheta_force_left" value="0.17" />
+			<param name="robot_radius" value="0.3" />
 			<remap from="navigating_jockey/local_costmap" to="/costmap/local_map" />
 			<remap from="navigating_jockey/cmd_vel" to="/cmd_vel" />
 			<remap from="navigating_jockey/base_scan" to="/base_scan" />
@@ -82,8 +84,8 @@
 			<param name="kp_w" value="0.1" />
 			<param name="ki_v" value="0" />
 			<param name="ki_w" value="0" />
-			<param name="min_linear_velocity" value="0" />
-			<param name="min_angular_velocity" value="0" />
+			<param name="min_linear_velocity" value="0.2" />
+			<param name="min_angular_velocity" value="0.2" />
 			<param name="max_frontier_distance" value="3.5" />
 			<param name="max_frontier_angle" value ="$(arg max_frontier_angle)" />
 			<remap from="navigating_jockey/cmd_vel" to="/cmd_vel" />
@@ -101,8 +103,12 @@
 
 	<node name="crossing_escaper" pkg="nj_escape_crossing" type="nj_escape_crossing"
 			output="screen" >
+		<param name="kp_v" value="0.05" />
+		<param name="kp_w" value="0.1" />
+		<param name="min_linear_velocity" value="0.2" />
+		<param name="min_angular_velocity" value="0.2" />
 		<param name="crossing_interface_name" value="/localizing_jockey_server_crossing_descriptor" />
-		<param name="exit_angle_interface_name" value="/dfs_explorer_exit_angle" />
+		<param name="exit_angle_interface_name" value="dfs_explorer_exit_angle" />
 		<remap from="crossing_escaper/odometry" to="/odom" />
 		<remap from="crossing_escaper/cmd_vel" to="/cmd_vel" />
 		<remap from="crossing_escaper/exit_angle" to="/explorer/exit_angle" />

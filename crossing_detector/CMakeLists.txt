@@ -5,14 +5,14 @@ project(crossing_detector)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-	angles
-	geometry_msgs
-	lama_msgs
-	nav_msgs
-	rosbag
-	roscpp
-	sensor_msgs
-)
+  angles
+  geometry_msgs
+  lama_msgs
+  nav_msgs
+  rosbag
+  roscpp
+  sensor_msgs
+  )
 
 ## System dependencies are found with CMake's conventions
 find_package(CGAL REQUIRED COMPONENTS Core)
@@ -75,10 +75,10 @@ add_service_files(
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
-	DEPENDENCIES
-	lama_msgs
-	sensor_msgs
-	)
+  DEPENDENCIES
+  lama_msgs
+  sensor_msgs
+  )
 
 ###################################
 ## catkin specific configuration ##
@@ -90,27 +90,27 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-	INCLUDE_DIRS
-	include
+  INCLUDE_DIRS
+  include
 
-	LIBRARIES
-	crossing_detector
-	laser_crossing_detector
-	costmap_crossing_detector
-	crossing_detector_wrapper_cpp
-	laser_crossing_detector_wrapper_cpp
+  LIBRARIES
+  crossing_detector
+  laser_crossing_detector
+  costmap_crossing_detector
+  crossing_detector_wrapper_cpp
+  laser_crossing_detector_wrapper_cpp
 
-	CATKIN_DEPENDS
-	angles
-	geometry_msgs
-	lama_msgs
-	nav_msgs
-	roscpp
-	sensor_msgs
+  CATKIN_DEPENDS
+  angles
+  geometry_msgs
+  lama_msgs
+  nav_msgs
+  roscpp
+  sensor_msgs
 
-	DEPENDS
-	cgal
-)
+  DEPENDS
+  cgal
+  )
 
 ###########
 ## Build ##
@@ -120,12 +120,12 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-	include
-	${catkin_INCLUDE_DIRS}
-	${CGAL_INCLUDE_DIRS}
-	${Boost_INCLUDE_DIRS}
-	${PYTHON_INCLUDE_DIRS}
-)
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${CGAL_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${PYTHON_INCLUDE_DIRS}
+  )
 
 ## Declare a cpp library
 add_library(crossing_detector src/crossing_detector.cpp)
@@ -145,10 +145,10 @@ add_dependencies(laser_crossing_detector_server crossing_detector_generate_messa
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(crossing_detector
-	${catkin_LIBRARIES}
-	${CGAL_LIBRARIES}
-	${CGAL_3RD_PARTY_LIBRARIES}
-	)
+  ${catkin_LIBRARIES}
+  ${CGAL_LIBRARIES}
+  ${CGAL_3RD_PARTY_LIBRARIES}
+  )
 target_link_libraries(laser_crossing_detector crossing_detector ${catkin_LIBRARIES})
 target_link_libraries(costmap_crossing_detector crossing_detector ${catkin_LIBRARIES})
 target_link_libraries(crossing_detector_server crossing_detector ${catkin_LIBRARIES})
@@ -158,12 +158,12 @@ target_link_libraries(laser_crossing_detector_wrapper_cpp crossing_detector lase
 
 # Don't prepend wrapper library name with lib and add to Python libs.
 set_target_properties(crossing_detector_wrapper_cpp PROPERTIES
-	PREFIX ""
-	LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
+  PREFIX ""
+  LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
 
 set_target_properties(laser_crossing_detector_wrapper_cpp PROPERTIES
-	PREFIX ""
-	LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
+  PREFIX ""
+  LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION})
 
 #############
 ## Install ##

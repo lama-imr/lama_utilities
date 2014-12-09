@@ -1,7 +1,7 @@
 #ifndef MAP_RAY_CASTER_MAP_RAY_CASTER_H
 #define MAP_RAY_CASTER_MAP_RAY_CASTER_H
 
-#include <math.h> // for lround, not in C++99.
+#include <math.h> /* for lround, std::lround not in C++99. */
 #include <cmath>
 #include <map>
 #include <vector>

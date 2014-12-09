@@ -6,8 +6,13 @@ project(lama_common)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED
   COMPONENTS
+  angles
   geometry_msgs
+  laser_geometry
+  map_ray_caster
+  roscpp
   sensor_msgs
+  visualization_msgs
   )
 
 ## System dependencies are found with CMake's conventions
@@ -80,9 +85,24 @@ find_package(catkin REQUIRED
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-	INCLUDE_DIRS include
-#  LIBRARIES lama_common
-#  CATKIN_DEPENDS other_catkin_pkg
+  INCLUDE_DIRS
+  include
+
+  LIBRARIES
+  crossing_utils
+  crossing_visualization
+  place_profile_utils
+  place_profile_conversions
+
+  CATKIN_DEPENDS
+  angles
+  geometry_msgs
+  laser_geometry
+  map_ray_caster
+  roscpp
+  sensor_msgs
+  visualization_msgs
+
 #  DEPENDS system_lib
 )
 
@@ -92,9 +112,16 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include)
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  )
 
 ## Declare a cpp library
+add_library(crossing_utils src/crossing_utils.cpp)
+add_library(crossing_visualization src/crossing_visualization.cpp)
+add_library(place_profile_utils src/place_profile_utils.cpp)
+add_library(place_profile_conversions src/place_profile_conversions.cpp)
 # add_library(lama_common
 #   src/${PROJECT_NAME}/lama_common.cpp
 # )
@@ -107,9 +134,10 @@ include_directories(include)
 # add_dependencies(lama_common_node lama_common_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(lama_common_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(crossing_utils ${catkin_LIBRARIES})
+target_link_libraries(crossing_visualization ${catkin_LIBRARIES})
+target_link_libraries(place_profile_utils ${catkin_LIBRARIES})
+target_link_libraries(place_profile_conversions ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -152,9 +180,10 @@ include_directories(include)
 
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_lama_common.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
+catkin_add_gtest(${PROJECT_NAME}-test test/utest.cpp)
+if(TARGET ${PROJECT_NAME}-test)
+	target_link_libraries(${PROJECT_NAME}-test place_profile_utils place_profile_conversions ${catkin_LIBRARIES})
+endif()
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)

@@ -5,17 +5,11 @@ project(lama_msgs)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED
-	COMPONENTS
-	angles
-	geometry_msgs
-	lama_interfaces
-	laser_geometry
-	map_ray_caster
-	message_generation
-	roscpp
-	sensor_msgs
-	visualization_msgs
-	)
+  COMPONENTS
+  geometry_msgs
+  lama_interfaces
+  message_generation
+  )
 
 ## System dependencies are found with CMake's conventions
 #find_package(Boost REQUIRED COMPONENTS python)
@@ -91,27 +85,10 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-	INCLUDE_DIRS
-	include
-
-	LIBRARIES
-	crossing_utils
-	crossing_visualization
-	place_profile_utils
-	place_profile_conversions
-
-	CATKIN_DEPENDS
-	angles
-	geometry_msgs
-	laser_geometry
-	lama_interfaces
-	map_ray_caster
-	message_runtime
-	roscpp
-	sensor_msgs
-	visualization_msgs
-
-	#  DEPENDS system_lib
+  INCLUDE_DIRS include
+  # LIBRARIES
+  CATKIN_DEPENDS geometry_msgs lama_interfaces message_runtime
+  #  DEPENDS system_lib
 )
 
 ###########
@@ -121,31 +98,26 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-	include
-	${catkin_INCLUDE_DIRS}
-	)
+  include
+  ${catkin_INCLUDE_DIRS}
+  )
 
 ## Declare a cpp library
-add_library(crossing_utils src/crossing_utils.cpp)
-add_library(crossing_visualization src/crossing_visualization.cpp)
-add_library(place_profile_utils src/place_profile_utils.cpp)
-add_library(place_profile_conversions src/place_profile_conversions.cpp)
+# add_library(lama_msgs_node
+#   src/${PROJECT_NAME}/lama_msgs.cpp
+# )
 
 ## Declare a cpp executable
 # add_executable(lama_msgs_node src/lama_msgs_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-add_dependencies(crossing_utils lama_msgs_generate_messages_cpp)
-add_dependencies(crossing_visualization lama_msgs_generate_messages_cpp)
-add_dependencies(place_profile_utils lama_msgs_generate_messages_cpp)
-add_dependencies(place_profile_conversions lama_msgs_generate_messages_cpp)
+# add_dependencies(lama_msgs_node lama_common_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(crossing_utils ${catkin_LIBRARIES})
-target_link_libraries(crossing_visualization ${catkin_LIBRARIES})
-target_link_libraries(place_profile_utils ${catkin_LIBRARIES})
-target_link_libraries(place_profile_conversions ${catkin_LIBRARIES})
+# target_link_libraries(lama_msgs_node
+#   ${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##
@@ -187,10 +159,10 @@ target_link_libraries(place_profile_conversions ${catkin_LIBRARIES})
 #############
 
 ## Add gtest based cpp test target and link libraries
-catkin_add_gtest(${PROJECT_NAME}-test test/utest.cpp)
-if(TARGET ${PROJECT_NAME}-test)
-	target_link_libraries(${PROJECT_NAME}-test place_profile_utils place_profile_conversions ${catkin_LIBRARIES})
-endif()
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_lama_msgs.cpp)
+# if(TARGET ${PROJECT_NAME}-test)
+#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+# endif()
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)

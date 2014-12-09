@@ -5,6 +5,7 @@ project(map_ray_caster)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  lama_msgs
   nav_msgs
   roscpp
 )
@@ -81,7 +82,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES map_ray_caster
-  #  CATKIN_DEPENDS nav_msgs roscpp
+  CATKIN_DEPENDS lama_msgs nav_msgs roscpp
   #  DEPENDS system_lib
 )
 

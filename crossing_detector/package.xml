@@ -4,11 +4,9 @@
   <version>0.0.0</version>
   <description>The crossing_detector package</description>
 
-  <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <maintainer email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</maintainer>
 
 
-  <!-- One license tag required, multiple allowed, one license per tag -->
   <license>MIT</license>
 
 
@@ -18,25 +16,13 @@
   <!-- <url type="website">http://wiki.ros.org/nj_laser</url> -->
 
 
-  <!-- Author tags are optional, mutiple are allowed, one per tag -->
-  <!-- Authors do not have to be maintianers, but could be -->
   <author email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</author>
   <author email="kosnar@labe.felk.cvut.cz">Karel Košnar</author>
   <author email="vonasek@labe.felk.cvut.cz">Vojtěch Vonásek</author>
 
 
-  <!-- The *_depend tags are used to specify dependencies -->
-  <!-- Dependencies can be catkin packages or system dependencies -->
-  <!-- Examples: -->
-  <!-- Use build_depend for packages you need at compile time: -->
-  <!--   <build_depend>message_generation</build_depend> -->
-  <!-- Use buildtool_depend for build tool packages: -->
-  <!--   <buildtool_depend>catkin</buildtool_depend> -->
-  <!-- Use run_depend for packages you need at runtime: -->
-  <!--   <run_depend>message_runtime</run_depend> -->
-  <!-- Use test_depend for packages you need only for testing: -->
-  <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+
   <build_depend>angles</build_depend>
   <build_depend>cgal</build_depend>
   <build_depend>geometry_msgs</build_depend>
@@ -45,6 +31,7 @@
   <build_depend>rosbag</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>sensor_msgs</build_depend>
+
   <run_depend>angles</run_depend>
   <run_depend>cgal</run_depend>
   <run_depend>geometry_msgs</run_depend>
@@ -54,12 +41,6 @@
   <run_depend>sensor_msgs</run_depend>
 
 
-  <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <!-- You can specify that this package is a metapackage here: -->
-    <!-- <metapackage/> -->
-
-    <!-- Other tools can request additional information be placed here -->
-
   </export>
 </package>

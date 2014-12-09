@@ -25,11 +25,11 @@ CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
   exit_angle_interface_name_("exit_angle")
 {
   ros::NodeHandle private_nh("~");
-  private_nh.getParamCached("kp_v", kp_v_);
-  private_nh.getParamCached("kp_w", kp_w_);
-  private_nh.getParamCached("min_linear_velocity", min_linear_velocity_);
-  private_nh.getParamCached("min_angular_velocity", min_angular_velocity_);
-  private_nh.getParamCached("escape_distance", escape_distance_);
+  private_nh.getParam("kp_v", kp_v_);
+  private_nh.getParam("kp_w", kp_w_);
+  private_nh.getParam("min_linear_velocity", min_linear_velocity_);
+  private_nh.getParam("min_angular_velocity", min_angular_velocity_);
+  private_nh.getParam("escape_distance", escape_distance_);
   private_nh.getParam("crossing_interface_name", crossing_interface_name_);
   private_nh.getParam("exit_angle_interface_name", exit_angle_interface_name_);
   private_nh.getParam("exit_angle_topic_name", exit_angle_topic_name_);
@@ -72,7 +72,7 @@ void CrossingEscaper::onTraverse()
   {
     distance_to_escape_ = escape_distance_;
   }
-  ROS_DEBUG("%s: distance to escape: %.3f m", jockey_name_.c_str(), distance_to_escape_);
+  ROS_DEBUG("Distance to escape: %.3f m", distance_to_escape_);
 
   twist_publisher_ = private_nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   odometry_subscriber_ = private_nh_.subscribe("odometry", 1, &CrossingEscaper::odometry_callback, this);
@@ -84,11 +84,14 @@ void CrossingEscaper::onTraverse()
         &CrossingEscaper::direction_callback, this);
 
     // Wait for odometry (for the start position) and exit_angle data.
-    ros::Rate r(100);
+    ros::Duration(0.2).sleep();
+    ros::spinOnce();
     while (!(has_odometry_ && has_direction_))
     {
       ros::spinOnce();
-      r.sleep();
+      ROS_WARN_STREAM_THROTTLE(5, "Waiting for odometry on topic " << odometry_subscriber_.getTopic() <<
+          " and exit_angle on topic " << direction_subscriber.getTopic());
+      ros::Duration(0.01).sleep();
     }
     has_odometry_ = false;
     has_direction_ = false;
@@ -98,11 +101,13 @@ void CrossingEscaper::onTraverse()
   else
   {
     // Wait for odometry data (no exit_angle topic necessary).
-    ros::Rate r(100);
+    ros::Duration(0.2).sleep();
+    ros::spinOnce();
     while (!has_odometry_)
     {
       ros::spinOnce();
-      r.sleep();
+      ROS_WARN_STREAM_THROTTLE(5, "Waiting for odometry on topic " << odometry_subscriber_.getTopic());
+      ros::Duration(0.01).sleep();
     }
     has_odometry_ = false;
   }
@@ -212,6 +217,13 @@ bool CrossingEscaper::getCrossing()
   {
     lama_interfaces::ActOnMap map_action;
     map_action.request.action = lama_interfaces::ActOnMapRequest::GET_DESCRIPTOR_LINKS;
+    map_action.request.interface_name = crossing_interface_name_;
+    if (goal_.edge.references.empty())
+    {
+      ROS_INFO("goal.edge (id: %d) should be have references, probably not an edge",
+          goal_.edge.id);
+      return false;
+    }
     map_action.request.object.id = goal_.edge.references[0];
     map_action.request.interface_name = crossing_interface_name_;
     if (!map_agent_.call(map_action))
@@ -224,7 +236,7 @@ bool CrossingEscaper::getCrossing()
       ROS_DEBUG("No crossing descriptor for vertex %d", map_action.request.object.id);
       return false;
     }
-    if (map_action.response.descriptor_links.size() > 0)
+    if (map_action.response.descriptor_links.size() > 1)
     {
       ROS_WARN("More than one crossing descriptor for vertex %d, taking the first one",
           map_action.request.object.id);
@@ -279,11 +291,11 @@ bool CrossingEscaper::getExitAngle()
   map_agent_.call(map_action);
   if (map_action.response.descriptor_links.empty())
   {
-    ROS_DEBUG("No exit angle descriptor for vertex %d",
-        map_action.request.object.id);
+    ROS_WARN_STREAM("No exit angle descriptor for edge " << map_action.request.object.id <<
+        " on interface " << exit_angle_interface_name_);
     return false;
   }
-  if (map_action.response.descriptor_links.size() > 0)
+  if (map_action.response.descriptor_links.size() > 1)
   {
     ROS_WARN("More than one exit angle descriptor for edge %d, taking the first one",
         map_action.request.object.id);
@@ -351,16 +363,16 @@ bool CrossingEscaper::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::
   double vx = kp_v_ * distance; 
   double wz = kp_w_ * dtheta;
 
-  // Dead-zone management (not need if ki_v_ and ki_w_ non null).
+  // Dead-zone management.
   if ((vx < min_linear_velocity_) && (std::abs(distance) > 1e-10) && (std::abs(wz) < min_angular_velocity_))
   {
     vx = min_linear_velocity_;
   }
-  if ((wz > 0) && (wz < min_angular_velocity_) && (vx < min_linear_velocity_))
+  if ((wz > 0) && (wz < min_angular_velocity_) && (vx <= min_linear_velocity_))
   {
     wz = min_angular_velocity_;
   }
-  else if ((wz < 0) && (wz > -min_angular_velocity_) && (vx < min_linear_velocity_))
+  else if ((wz < 0) && (wz > -min_angular_velocity_) && (vx <= min_linear_velocity_))
   {
     wz = -min_angular_velocity_;
   }

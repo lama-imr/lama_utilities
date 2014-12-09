@@ -1,5 +1,5 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
+# Test the behavior of the goto_crossing with a random walk.
 
 import copy
 import random
@@ -87,7 +87,6 @@ def main():
             crossing_publisher.publish(crossing)
             r.sleep()
         rospy.sleep(1)
-
 
 if __name__ == '__main__':
     rospy.init_node('test_nj_oa', log_level=rospy.INFO)

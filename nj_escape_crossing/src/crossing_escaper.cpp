@@ -1,6 +1,5 @@
 #include <nj_escape_crossing/crossing_escaper.h>
 
-namespace lama {
 namespace nj_escape_crossing {
 
 const double CrossingEscaper::reach_angular_distance_ = 0.017;  // (rad), 1 deg
@@ -10,7 +9,7 @@ const double CrossingEscaper::threshold_w_only_ = 1.0;  // (rad), ~60 deg.
 const ros::Duration CrossingEscaper::max_odometry_age_ = ros::Duration(0.1);
 
 CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
-  NavigatingJockey(name),
+  lama_jockeys::NavigatingJockey(name),
   kp_v_(0.05),
   kp_w_(0.2),
   min_linear_velocity_(0.050),
@@ -408,4 +407,3 @@ geometry_msgs::Point CrossingEscaper::goalFromOdometry()
 }
 
 } // namespace nj_escape_crossing
-} // namespace lama

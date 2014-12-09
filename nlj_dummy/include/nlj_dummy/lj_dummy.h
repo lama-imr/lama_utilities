@@ -10,7 +10,7 @@
 
 #include <nlj_dummy/SetDummyDescriptor.h>
 
-class LJDummy : public lama::LocalizingJockey
+class LJDummy : public lama_jockeys::LocalizingJockey
 {
   public:
 

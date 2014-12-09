@@ -1,8 +1,8 @@
-#include <lama_msgs/place_profile_utils.h>
+#include <lama_common/place_profile_utils.h>
 
 #include <iostream> // DEBUG
 
-namespace lama {
+namespace lama_common {
 
 /* A pair (index, angle) constructed from a Point32, to get the permutation used for sorting.
 */
@@ -613,6 +613,6 @@ PlaceProfile curtailedPlaceProfile(const PlaceProfile& profile, const double max
   return new_profile;
 }
 
-} // namespace lama
+} // namespace lama_common
 
 

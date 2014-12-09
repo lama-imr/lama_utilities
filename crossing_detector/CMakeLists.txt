@@ -7,6 +7,7 @@ project(crossing_detector)
 find_package(catkin REQUIRED COMPONENTS
   angles
   geometry_msgs
+  lama_common
   lama_msgs
   nav_msgs
   rosbag
@@ -103,6 +104,7 @@ catkin_package(
   CATKIN_DEPENDS
   angles
   geometry_msgs
+  lama_common
   lama_msgs
   nav_msgs
   roscpp

@@ -1,9 +1,9 @@
 #include <nlj_dummy/lj_dummy.h>
 
 LJDummy::LJDummy(const std::string& name,
-        const std::string& interface_name,
-        const std::string& set_service_name) :
-  lama::LocalizingJockey(name),
+    const std::string& interface_name,
+    const std::string& set_service_name) :
+  lama_jockeys::LocalizingJockey(name),
   interface_name_(interface_name),
   set_service_name_(set_service_name),
   mean_localizing_time_(0.1),

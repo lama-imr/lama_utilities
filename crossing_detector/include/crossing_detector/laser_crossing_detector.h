@@ -10,11 +10,10 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 
-#include <lama_msgs/place_profile_conversions.h>
+#include <lama_common/place_profile_conversions.h>
 
 #include <crossing_detector/crossing_detector.h>
 
-namespace lama {
 namespace crossing_detector {
 
 using sensor_msgs::LaserScan;
@@ -26,7 +25,7 @@ class LaserCrossingDetector : public CrossingDetector
     LaserCrossingDetector(const double frontier_width, const double max_frontier_angle=0.785);
 
     Crossing crossingDescriptor(const LaserScan& scan, const bool normalize=false);
-    vector<Frontier> frontiers(const LaserScan& scan, const bool normalize=false);
+    vector<lama_msgs::Frontier> frontiers(const LaserScan& scan, const bool normalize=false);
 
     double getMaxFrontierDistance() const {return max_frontier_dist_;}
     void setMaxFrontierDistance(const double value) {max_frontier_dist_ = value;}
@@ -45,6 +44,5 @@ class LaserCrossingDetector : public CrossingDetector
 };
 
 } // namespace crossing_detector
-} // namespace lama
 
 #endif // _CROSSING_DETECTOR_LASER_CROSSING_DETECTOR_H_

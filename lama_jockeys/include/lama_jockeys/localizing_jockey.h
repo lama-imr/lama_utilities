@@ -16,7 +16,7 @@
 #include <lama_jockeys/LocalizeGoal.h>
 #include <lama_jockeys/LocalizeFeedback.h>
 
-namespace lama {
+namespace lama_jockeys {
 
 typedef actionlib::SimpleActionServer<lama_jockeys::LocalizeAction> LocalizeServer;
 
@@ -60,6 +60,6 @@ class LocalizingJockey : public Jockey
     using Jockey::resume;
 };
 
-} // namespace lama
+} // namespace lama_jockeys
 
 #endif // _LAMA_JOCKEYS_LOCALIZING_JOCKEY_H_

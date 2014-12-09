@@ -5,7 +5,6 @@
 
 #include <nav_msgs/OccupancyGrid.h>
 
-namespace lama {
 namespace map_ray_caster {
 
 /* Return the row number from offset for a row-major array
@@ -53,6 +52,5 @@ inline void indexToReal(const nav_msgs::OccupancyGrid& map, const size_t index, 
 }
 
 } // namespace map_ray_caster
-} // namespace lama
 
 #endif // MAP_RAY_CASTER_RAY_CASTER_UTILS_H

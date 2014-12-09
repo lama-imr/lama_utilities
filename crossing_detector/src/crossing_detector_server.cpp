@@ -7,7 +7,7 @@
 #include <crossing_detector/crossing_detector.h>
 #include <crossing_detector/DetectCrossing.h>
 
-lama::crossing_detector::CrossingDetector* detector;
+crossing_detector::CrossingDetector* detector;
 
 bool detect_crossing_callback(crossing_detector::DetectCrossing::Request& req, crossing_detector::DetectCrossing::Response& res)
 {
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     ros::console::notifyLoggerLevelsChanged();
   }
 
-  detector = new lama::crossing_detector::CrossingDetector(0);
+  detector = new crossing_detector::CrossingDetector(0);
 
   ros::ServiceServer service_server = nh.advertiseService("detect_crossing", detect_crossing_callback);
 

@@ -7,11 +7,10 @@
 
 #include <nav_msgs/OccupancyGrid.h>
 
-#include <lama_msgs/place_profile_conversions.h>
+#include <lama_common/place_profile_conversions.h>
 
 #include <crossing_detector/crossing_detector.h>
 
-namespace lama {
 namespace crossing_detector {
 
 using nav_msgs::OccupancyGrid;
@@ -33,7 +32,6 @@ class CostmapCrossingDetector : public CrossingDetector
 };
 
 } // namespace crossing_detector
-} // namespace lama
 
 #endif //  _CROSSING_DETECTOR_COSTMAP_CROSSING_DETECTOR_H_
 

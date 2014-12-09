@@ -6,7 +6,7 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Point32.h>
 
-namespace lama {
+namespace lama_common {
 
 struct Point2
 {
@@ -41,6 +41,6 @@ double pointDistance2(const T &pa, const T &pb)
   return std::sqrt(pointDistanceSquared2(pa, pb));
 }
 
-} // namespace lama
+} // namespace lama_common
 
 #endif // _LAMA_COMMON_POINT_H_

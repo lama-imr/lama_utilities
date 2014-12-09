@@ -16,8 +16,8 @@ int main(int argc, char** argv)
     ros::console::notifyLoggerLevelsChanged();
   }
 
-  lama::goto_crossing::CrossingGoer crossing_goer;
-  ros::Subscriber sub = nh.subscribe("crossing", 1, &lama::goto_crossing::CrossingGoer::callback_goto_crossing, &crossing_goer);
+  goto_crossing::CrossingGoer crossing_goer;
+  ros::Subscriber sub = nh.subscribe("crossing", 1, &goto_crossing::CrossingGoer::callback_goto_crossing, &crossing_goer);
 
   ros::spin();
 }

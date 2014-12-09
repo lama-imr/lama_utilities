@@ -10,7 +10,7 @@
 
 #include <lama_interfaces/ActOnMap.h>
 
-namespace lama
+namespace lama_jockeys
 {
 
 class Jockey
@@ -51,6 +51,6 @@ class Jockey
     ros::Duration interruptions_duration_;  //!> Total interruption time (not including the current one)
 };
 
-} // namespace lama
+} // namespace lama_jockeys
 
 #endif // _LAMA_INTERFACES_JOCKEY_H_

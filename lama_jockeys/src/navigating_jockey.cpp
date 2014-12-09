@@ -1,6 +1,6 @@
 #include <lama_jockeys/navigating_jockey.h>
 
-namespace lama
+namespace lama_jockeys
 {
 
 NavigatingJockey::NavigatingJockey(const std::string& name) :
@@ -128,5 +128,5 @@ geometry_msgs::Twist NavigatingJockey::goToGoal(const geometry_msgs::Point& goal
   return twist;
 }
 
-} // namespace lama
+} // namespace lama_jockeys
 

@@ -21,7 +21,7 @@
 #include <lama_jockeys/NavigateGoal.h>
 #include <lama_jockeys/NavigateFeedback.h>
 
-namespace lama
+namespace lama_jockeys
 {
 
 typedef actionlib::SimpleActionServer<lama_jockeys::NavigateAction> NavigateServer;
@@ -95,6 +95,6 @@ class NavigatingJockey : public Jockey
     double reach_distance_;  //!> Goal is reached if closer than this (m).
 };
 
-} // namespace lama
+} // namespace lama_jockeys
 
 #endif // _LAMA_JOCKEYS_NAVIGATING_JOCKEY_H_

@@ -14,7 +14,6 @@
 
 #include <goto_crossing/ResetIntegrals.h>
 
-namespace lama {
 namespace goto_crossing {
 
 class CrossingGoer
@@ -62,6 +61,5 @@ class CrossingGoer
 };
 
 } // namespace goto_crossing
-} // namespace lama
 
 #endif // _GOTO_CROSSING_CROSSING_GOER_H_

@@ -26,6 +26,7 @@
   <build_depend>angles</build_depend>
   <build_depend>cgal</build_depend>
   <build_depend>geometry_msgs</build_depend>
+  <build_depend>lama_common</build_depend>
   <build_depend>lama_msgs</build_depend>
   <build_depend>nav_msgs</build_depend>
   <build_depend>rosbag</build_depend>
@@ -35,6 +36,7 @@
   <run_depend>angles</run_depend>
   <run_depend>cgal</run_depend>
   <run_depend>geometry_msgs</run_depend>
+  <run_depend>lama_common</run_depend>
   <run_depend>lama_msgs</run_depend>
   <run_depend>nav_msgs</run_depend>
   <run_depend>roscpp</run_depend>

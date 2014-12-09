@@ -1,6 +1,5 @@
 #include <map_ray_caster/map_ray_caster.h>
 
-namespace lama {
 namespace map_ray_caster {
 
 MapRayCaster::MapRayCaster(const int occupied_threshold) :
@@ -217,4 +216,3 @@ RayLookup::const_iterator MapRayCaster::angleLookup(const double angle, const do
 }
 
 } // namespace map_ray_caster
-} // namespace lama

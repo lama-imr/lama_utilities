@@ -9,7 +9,7 @@
 #include <nlj_dummy/GetDummyDescriptor.h>
 
 
-class NJDummy : public lama::NavigatingJockey
+class NJDummy : public lama_jockeys::NavigatingJockey
 {
   public:
 

@@ -14,7 +14,7 @@
 #include <lama_jockeys/LearnGoal.h>
 #include <lama_jockeys/LearnFeedback.h>
 
-namespace lama
+namespace lama_jockeys
 {
 
 typedef actionlib::SimpleActionServer<lama_jockeys::LearnAction> LearnServer;
@@ -54,6 +54,6 @@ class LearningJockey : public Jockey
     using Jockey::resume;
 };
 
-} // namespace lama
+} // namespace lama_jockeys
 
 #endif // _LAMA_JOCKEYS_LEARNING_JOCKEY_H_

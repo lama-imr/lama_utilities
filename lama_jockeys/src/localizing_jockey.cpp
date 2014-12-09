@@ -1,6 +1,6 @@
 #include <lama_jockeys/localizing_jockey.h>
 
-namespace lama
+namespace lama_jockeys
 {
 
 LocalizingJockey::LocalizingJockey(const std::string& name) :
@@ -89,5 +89,5 @@ void LocalizingJockey::onContinue()
   ROS_DEBUG("%s: localizing goal with lama object %d resumed", jockey_name_.c_str(), goal_.descriptor_link.object_id);
 }
 
-} // namespace lama
+} // namespace lama_jockeys
 

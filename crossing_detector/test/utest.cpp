@@ -60,7 +60,7 @@ PlaceProfile loadFromFile(std::string filename)
   } while (!fin.eof());
   scan.angle_max = scan.angle_min + scan.angle_increment * (scan.ranges.size() - 1);
 
-  profile = lama::laserScanToPlaceProfile(scan, 4);
+  profile = lama_common::laserScanToPlaceProfile(scan, 4);
   return profile;
 }
 
@@ -91,7 +91,7 @@ void saveToFile(const std::string& filename, const lama_msgs::Crossing& crossing
   
 TEST(TestSuite, TestLaserCrossingDescriptor)
 {
-  lama::crossing_detector::CrossingDetector crossing_detector(0.7);
+  crossing_detector::CrossingDetector crossing_detector(0.7);
   PlaceProfile profile = loadFromFile("../../../src/lama/crossing_detector/test/testdata-1.txt");
   lama_msgs::Crossing crossing = crossing_detector.crossingDescriptor(profile);
 

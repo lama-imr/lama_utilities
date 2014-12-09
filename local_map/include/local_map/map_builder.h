@@ -14,7 +14,6 @@
 
 #include <map_ray_caster/map_ray_caster.h>
 
-namespace lama {
 namespace local_map {
 
 using std::vector;
@@ -68,6 +67,5 @@ template <typename T>
 void moveAndCopyImage(const int fill, const int dx, const int dy, const unsigned int ncol, std::vector<T>& map);
 
 } // namespace local_map
-} // namespace lama
 
 #endif // # ifndef _LOCAL_MAP_MAP_BUILDER_H_

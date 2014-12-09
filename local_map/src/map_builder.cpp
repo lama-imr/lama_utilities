@@ -5,9 +5,8 @@
 #include <fstream>
 #include <math.h>  // for round(), std::round() is since C++11.
 
-#include "local_map/map_builder.h"
+#include <local_map/map_builder.h>
 
-namespace lama {
 namespace local_map {
 
 // Angle resolution for the ray cast lookup.
@@ -412,5 +411,4 @@ bool MapBuilder::saveMap(const std::string& name) const
 }
 
 } // namespace local_map
-} // namespace lama
 

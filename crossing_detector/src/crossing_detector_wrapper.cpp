@@ -23,7 +23,7 @@
 namespace bp = boost::python;
 namespace rs = ros::serialization;
 
-using lama::crossing_detector::CrossingDetector;
+using crossing_detector::CrossingDetector;
 using lama_msgs::Crossing;
 using lama_msgs::Frontier;
 using lama_msgs::PlaceProfile;

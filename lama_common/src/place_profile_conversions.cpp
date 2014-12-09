@@ -1,9 +1,9 @@
-#include <lama_msgs/place_profile_conversions.h>
+#include <lama_common/place_profile_conversions.h>
 
 #define OCCUPIED_THRESHOLD 60 // 0 = free, 100 = occupied.
 #define COSTMAP_DISCRETISATION_COUNT 360 // Number of points for the costmap discretisation to obtain a PlaceProfile.
 
-namespace lama {
+namespace lama_common {
 
 /* Return the polygon corresponding to the PlaceProfile
  */
@@ -211,5 +211,5 @@ PlaceProfile costmapToPlaceProfile(const nav_msgs::OccupancyGrid& map)
   return profile;
 }
 
-} // namespace lama
+} // namespace lama_common
 

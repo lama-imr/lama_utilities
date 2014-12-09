@@ -1,6 +1,6 @@
-#include <lama_msgs/crossing_visualization.h>
+#include <lama_common/crossing_visualization.h>
 
-namespace lama {
+namespace lama_common {
 
 /* Return the marker for the visualization of the crossing center
  */
@@ -59,4 +59,4 @@ visualization_msgs::Marker getFrontiersMarker(const std::string& frame_id, const
 	return m;
 }
 
-} // namespace lama
+} // namespace lama_common

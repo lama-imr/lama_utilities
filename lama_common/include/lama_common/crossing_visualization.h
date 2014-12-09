@@ -1,5 +1,5 @@
-#ifndef _LAMA_MSGS_CROSSING_VISUALIZATION_H_
-#define _LAMA_MSGS_CROSSING_VISUALIZATION_H_
+#ifndef LAMA_COMMON_CROSSING_VISUALIZATION_H
+#define LAMA_COMMON_CROSSING_VISUALIZATION_H
 
 #include <cmath>
 #include <string>
@@ -8,12 +8,12 @@
 
 #include <lama_msgs/Crossing.h>
 
-namespace lama {
+namespace lama_common {
 
 visualization_msgs::Marker getCrossingCenterMarker(const std::string& frame_id, const lama_msgs::Crossing& crossing);
 
 visualization_msgs::Marker getFrontiersMarker(const std::string& frame_id, const lama_msgs::Crossing& crossing);
 
-} // namespace lama
+} // namespace lama_common
 
-#endif // _LAMA_MSGS_CROSSING_VISUALIZATION_H_
+#endif // LAMA_COMMON_CROSSING_VISUALIZATION_H

@@ -10,7 +10,7 @@
 
 #include <lama_common/point.h>
 
-namespace lama {
+namespace lama_common {
 
 using std::vector;
 using geometry_msgs::Point32;
@@ -167,6 +167,6 @@ inline geometry_msgs::Polygon scanToPolygon(const sensor_msgs::LaserScan& scan)
   return polygon;
 }
 
-} // namespace lama
+} // namespace lama_common
 
 #endif // _LAMA_COMMON_POLYGON_H_

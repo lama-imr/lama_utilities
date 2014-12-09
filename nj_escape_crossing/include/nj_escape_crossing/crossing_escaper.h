@@ -62,10 +62,9 @@
 #include <lama_msgs/Crossing.h>
 #include <lama_msgs/GetCrossing.h>
 
-namespace lama {
 namespace nj_escape_crossing {
 
-class CrossingEscaper : public NavigatingJockey
+class CrossingEscaper : public lama_jockeys::NavigatingJockey
 {
   public:
 
@@ -123,6 +122,5 @@ class CrossingEscaper : public NavigatingJockey
 };
 
 } // namespace nj_escape_crossing
-} // namespace lama
 
 #endif //  _NJ_ESCAPE_CROSSING_CROSSING_ESCAPER_H_

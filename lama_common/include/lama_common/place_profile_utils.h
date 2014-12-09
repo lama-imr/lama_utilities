@@ -1,5 +1,5 @@
-#ifndef _LAMA_MSGS_PLACE_PROFILE_UTILS_H_
-#define _LAMA_MSGS_PLACE_PROFILE_UTILS_H_
+#ifndef LAMA_COMMON_PLACE_PROFILE_UTILS_H
+#define LAMA_COMMON_PLACE_PROFILE_UTILS_H
 
 #include <math.h>  // For round() (std::round() is since C++11).
 #include <cassert>
@@ -12,7 +12,7 @@
 
 #include <lama_msgs/PlaceProfile.h>
 
-namespace lama {
+namespace lama_common {
 
 using std::vector;
 using geometry_msgs::Point32;
@@ -33,7 +33,7 @@ PlaceProfile simplifiedPlaceProfile(const PlaceProfile& profile, const double mi
 void curtailPlaceProfile(PlaceProfile& profile, const double max_distance);
 PlaceProfile curtailedPlaceProfile(const PlaceProfile& profile, const double max_distance);
 
-} // namespace lama
+} // namespace lama_common
 
-#endif // _LAMA_MSGS_PLACE_PROFILE_UTILS_H_
+#endif // LAMA_COMMON_PLACE_PROFILE_UTILS_H
 

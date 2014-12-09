@@ -4,7 +4,7 @@
 
 #include <lama_jockeys/learning_jockey.h>
 
-namespace lama
+namespace lama_jockeys
 {
 
 LearningJockey::LearningJockey(const std::string& name) :
@@ -69,5 +69,5 @@ void LearningJockey::onContinue()
   ROS_DEBUG_STREAM(jockey_name_ << ": learning resumed");
 }
 
-} // namespace lama
+} // namespace lama_jockeys
 

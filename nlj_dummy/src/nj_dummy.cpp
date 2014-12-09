@@ -1,7 +1,7 @@
 #include <nlj_dummy/nj_dummy.h>
 
 NJDummy::NJDummy(const std::string& name, const std::string& get_service_name) :
-  lama::NavigatingJockey(name),
+  lama_jockeys::NavigatingJockey(name),
   get_service_name_(get_service_name),
   mean_traversing_time_(2.0),
   max_traversing_delta_(0.5)

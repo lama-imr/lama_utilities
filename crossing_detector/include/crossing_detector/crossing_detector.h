@@ -16,12 +16,11 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Polygon.h>
 
+#include <lama_common/place_profile_utils.h>
 #include <lama_msgs/Crossing.h>
 #include <lama_msgs/Frontier.h>
 #include <lama_msgs/PlaceProfile.h>
-#include <lama_msgs/place_profile_utils.h>
 
-namespace lama {
 namespace crossing_detector {
 
 using std::vector;
@@ -78,7 +77,6 @@ class CrossingDetector
 };
 
 } // namespace crossing_detector
-} // namespace lama
 
 #endif // _CROSSING_DETECTOR_CROSSING_DETECTOR_H_
 

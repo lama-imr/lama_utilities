@@ -1,6 +1,5 @@
 #include <crossing_detector/laser_crossing_detector.h>
 
-namespace lama {
 namespace crossing_detector {
 
 LaserCrossingDetector::LaserCrossingDetector(const double frontier_width, const double max_frontier_angle) :
@@ -21,7 +20,7 @@ Crossing LaserCrossingDetector::crossingDescriptor(const LaserScan& scan, const 
     max_range = 0.9 * scan.range_max;
   }
 
-  PlaceProfile profile = laserScanToPlaceProfile(scan, max_range);
+  PlaceProfile profile = lama_common::laserScanToPlaceProfile(scan, max_range);
 
   return CrossingDetector::crossingDescriptor(profile, normalize);
 }
@@ -34,12 +33,11 @@ vector<Frontier> LaserCrossingDetector::frontiers(const LaserScan& scan, const b
     max_range = 0.9 * scan.range_max;
   }
 
-  PlaceProfile profile = laserScanToPlaceProfile(scan, max_range);
+  PlaceProfile profile = lama_common::laserScanToPlaceProfile(scan, max_range);
 
   return CrossingDetector::frontiers(profile, normalize);
 }
 
 } // namespace crossing_detector
-} // namespace lama
 
 

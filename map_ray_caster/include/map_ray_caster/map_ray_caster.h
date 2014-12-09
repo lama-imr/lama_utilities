@@ -14,7 +14,6 @@
 
 #include <map_ray_caster/ray_caster_utils.h>
 
-namespace lama {
 namespace map_ray_caster {
 
 typedef std::map<double, std::vector<size_t> > RayLookup;
@@ -42,6 +41,5 @@ class MapRayCaster
 };
 
 } // namespace map_ray_caster
-} // namespace lama
 
 #endif // MAP_RAY_CASTER_MAP_RAY_CASTER_H

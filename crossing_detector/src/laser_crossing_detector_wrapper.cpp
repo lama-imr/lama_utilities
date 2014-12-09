@@ -24,7 +24,7 @@ namespace bp = boost::python;
 namespace rs = ros::serialization;
 
 using sensor_msgs::LaserScan;
-using lama::crossing_detector::LaserCrossingDetector;
+using crossing_detector::LaserCrossingDetector;
 using lama_msgs::Crossing;
 using lama_msgs::Frontier;
     

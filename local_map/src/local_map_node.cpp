@@ -20,7 +20,7 @@
 #include <local_map/SaveMap.h>
 
 ros::Publisher map_publisher;
-lama::local_map::MapBuilder* map_builder_ptr;
+local_map::MapBuilder* map_builder_ptr;
 
 void handleLaserScan(sensor_msgs::LaserScan msg)
 {
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
   nh.param<double>("map_width", map_width, 200);
   nh.param<double>("map_height", map_height, 200);
   nh.param<double>("map_resolution", map_resolution, 0.020);
-  lama::local_map::MapBuilder map_builder(map_width, map_height, map_resolution);
+  local_map::MapBuilder map_builder(map_width, map_height, map_resolution);
   map_builder_ptr = &map_builder;
 
   ros::Subscriber scanHandler = nh.subscribe<sensor_msgs::LaserScan>("scan", 1, handleLaserScan);

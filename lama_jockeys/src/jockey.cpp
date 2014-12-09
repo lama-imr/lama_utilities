@@ -4,7 +4,7 @@
 
 #include <lama_jockeys/jockey.h>
 
-namespace lama
+namespace lama_jockeys
 {
 
 Jockey::Jockey(const std::string& name) :
@@ -57,5 +57,6 @@ ros::Duration Jockey::getCompletionDuration() const
 {
   return ros::Time::now() - start_time_ - interruptions_duration_;
 }
-} // namespace lama
+
+} // namespace lama_jockeys
 

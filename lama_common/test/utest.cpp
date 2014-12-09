@@ -6,12 +6,13 @@
 
 #include <gtest/gtest.h>
 
-#include <lama_msgs/place_profile_utils.h>
-#include <lama_msgs/place_profile_conversions.h>
+#include <lama_common/place_profile_utils.h>
+#include <lama_common/place_profile_conversions.h>
 
-namespace lama {
+namespace lama_common {
 
 using sensor_msgs::LaserScan;
+using lama_msgs::PlaceProfile;
 
 testing::AssertionResult pointEqual(Point32 a, Point32 b)
 {
@@ -630,7 +631,7 @@ TEST(TestSuite, TestRealDataSimplify)
   PlaceProfile out_profile_1;
   PlaceProfile out_profile_2;
 
-  profile = loadFromFile("../../../src/lama/lama_msgs/test/corridor130a-1.txt");
+  profile = loadFromFile("../../../src/lama/lama_common/test/corridor130a-1.txt");
   out_profile_1 = profile;
   EXPECT_EQ(362, profile.polygon.points.size());
   out_profile_2 = simplifiedPlaceProfile(profile, 0.01);
@@ -765,11 +766,11 @@ TEST(TestSuite, TestLaserScanToPlaceProfile)
   EXPECT_EQ(0, profile.exclude_segments[0]);
 }
 
-} // namespace lama
+} // namespace lama_common
 
 int main(int argc, char** argv)
 {
-	testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
 

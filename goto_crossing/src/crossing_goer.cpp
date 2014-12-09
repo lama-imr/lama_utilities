@@ -1,6 +1,5 @@
 #include <goto_crossing/crossing_goer.h>
 
-namespace lama {
 namespace goto_crossing {
 
 const double CrossingGoer::threshold_w_only_ = 0.35;  // (rad), ~20 deg.
@@ -234,4 +233,3 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
 }
 
 } // namespace goto_crossing
-} // namespace lama

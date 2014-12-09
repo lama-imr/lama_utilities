@@ -1,6 +1,5 @@
 #include <crossing_detector/costmap_crossing_detector.h>
 
-namespace lama {
 namespace crossing_detector {
 
 CostmapCrossingDetector::CostmapCrossingDetector(const double frontier_width, const double max_frontier_angle) :
@@ -10,18 +9,17 @@ CostmapCrossingDetector::CostmapCrossingDetector(const double frontier_width, co
 
 Crossing CostmapCrossingDetector::crossingDescriptor(const OccupancyGrid& map)
 {
-  PlaceProfile profile = costmapToPlaceProfile(map);
+  PlaceProfile profile = lama_common::costmapToPlaceProfile(map);
 
   return CrossingDetector::crossingDescriptor(profile);
 }
 
 vector<Frontier> CostmapCrossingDetector::frontiers(const OccupancyGrid& map)
 {
-  PlaceProfile profile = costmapToPlaceProfile(map);
+  PlaceProfile profile = lama_common::costmapToPlaceProfile(map);
 
   return CrossingDetector::frontiers(profile);
 }
 
 } // namespace crossing_detector
-} // namespace lama
 

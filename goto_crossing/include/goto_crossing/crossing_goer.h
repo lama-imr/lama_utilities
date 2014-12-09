@@ -41,6 +41,10 @@ class CrossingGoer
     double min_linear_velocity_;  //!> Minimum linear set velocity (m.s^-1)
     double min_angular_velocity_;  //!> Minimum angular set velocity (m.s^-1)
     double reach_distance_;  //!> Goal is reached if closer than this (m).
+    double dtheta_force_left_;  //!> If the goal is behind the robot, force the robot to turn left if the goal angle
+                                //!> is within [pi - dtheta_force_left_, pi], even if the angle difference would tell
+                                //!> that we should turn right. This is to avoid instability in the case that the angle
+                                //!> would oscillate around pi. (rad)
 
     // Hard-coded parametrs.
     const static double threshold_w_only_;  //!> If dtheta is greater than this, only turn, do not go forward (rad).

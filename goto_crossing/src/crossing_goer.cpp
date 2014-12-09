@@ -15,6 +15,7 @@ CrossingGoer::CrossingGoer() :
   min_linear_velocity_(0.020),
   min_angular_velocity_(0.1),
   reach_distance_(0.050),
+  dtheta_force_left_(0),
   last_t_(ros::Time::now()),
   sum_v_(0),
   sum_w_(0)
@@ -33,6 +34,7 @@ CrossingGoer::CrossingGoer() :
   private_nh.getParam("min_linear_velocity", min_linear_velocity_);
   private_nh.getParam("min_angular_velocity", min_angular_velocity_);
   private_nh.getParam("reach_distance", reach_distance_);
+  private_nh.getParam("dtheta_force_left", dtheta_force_left_);
 
   twist_publisher_ = private_nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   goal_reached_publisher_ = private_nh.advertise<std_msgs::Bool>("goal_reached", 1);
@@ -143,6 +145,7 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
   private_nh.getParamCached("min_linear_velocity", min_linear_velocity_);
   private_nh.getParamCached("min_angular_velocity", min_angular_velocity_);
   private_nh.getParamCached("reach_distance", reach_distance_);
+  private_nh.getParamCached("dtheta_force_left", dtheta_force_left_);
 
   double distance = std::sqrt(goal.x * goal.x + goal.y * goal.y);
 
@@ -161,6 +164,12 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
     // Do no go forward because the goal is not well in front of the robot.
     ROS_DEBUG("%s: Goal angle too large, just turning...", ros::this_node::getName().c_str());
     distance = 0.0;
+  }
+
+  if ((M_PI - dtheta_force_left_ < dtheta) && (dtheta < M_PI))
+  {
+    // If the goal is behind the robot, force the robot to turn left.
+    dtheta -= 2 * M_PI;
   }
 
   // Compute the integrals.

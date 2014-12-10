@@ -106,7 +106,7 @@ add_library(map_ray_caster src/map_ray_caster.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(map_ray_caster_node map_ray_caster_generate_messages_cpp)
+add_dependencies(map_ray_caster lama_msgs_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(map_ray_caster ${catkin_LIBRARIES})

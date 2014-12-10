@@ -88,7 +88,9 @@ add_executable(goto_crossing src/goto_crossing_node.cpp)
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 add_dependencies(crossing_goer lama_msgs_generate_messages_cpp)
+add_dependencies(crossing_goer goto_crossing_generate_messages_cpp)
 add_dependencies(goto_crossing lama_msgs_generate_messages_cpp)
+add_dependencies(goto_crossing goto_crossing_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(crossing_goer

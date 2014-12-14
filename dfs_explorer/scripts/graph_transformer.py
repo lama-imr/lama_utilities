@@ -59,6 +59,8 @@ class GraphTransformer(object):
         for vertex, edges in map_graph.iteritems():
             key = vertex.id
             crossing = self.get_crossing(key)
+            if crossing is None:
+                continue
             graph[key] = []
             for frontier in crossing.frontiers:
                 # TODO: optimize database retrieval of the same objects.
@@ -74,9 +76,12 @@ class GraphTransformer(object):
         ----------
         - object_id: int, LamaObject's id
         """
-        return get_descriptors(object_id,
-                               self.crossing_interface,
-                               self.crossing_getter)[0]
+        crossings = get_descriptors(object_id,
+                                    self.crossing_interface,
+                                    self.crossing_getter)
+        if crossings:
+            return crossings[0]
+        return
 
     def get_exit_angle(self, object_id):
         """Retrieve the exit_angle associated with a LamaObject

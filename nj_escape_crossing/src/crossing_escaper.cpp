@@ -227,7 +227,7 @@ bool CrossingEscaper::getCrossing()
     map_action.request.interface_name = crossing_interface_name_;
     if (!map_agent_.call(map_action))
     {
-      ROS_ERROR("%s: failed to call map agent", ros::this_node::getName().c_str());
+      ROS_ERROR("Failed to call map agent");
       return false;
     }
     if (map_action.response.descriptor_links.empty())
@@ -237,15 +237,15 @@ bool CrossingEscaper::getCrossing()
     }
     if (map_action.response.descriptor_links.size() > 1)
     {
-      ROS_WARN("More than one crossing descriptor for vertex %d, taking the first one",
-          map_action.request.object.id);
+      ROS_WARN("More than one crossing descriptor for vertex %d, taking the first one (id %d)",
+          map_action.request.object.id, map_action.response.descriptor_links[0].descriptor_id);
     }
     return retrieveCrossingFromMap(map_action.response.descriptor_links[0].descriptor_id);
   }
   else
   {
-    ROS_DEBUG("%s: goal.edge.id not set, getting descriptor id from goal.descriptor_link",
-        ros::this_node::getName().c_str());
+    ROS_DEBUG("Goal.edge.id not set, getting descriptor id from goal.descriptor_link (id %d)",
+        goal_.descriptor_link.descriptor_id);
     return retrieveCrossingFromMap(goal_.descriptor_link.descriptor_id);
   }
 }
@@ -263,8 +263,9 @@ bool CrossingEscaper::retrieveCrossingFromMap(const int32_t descriptor_id)
   crossing_srv.request.id = descriptor_id;
   if (!crossing_getter_.call(crossing_srv))
   {
-    ROS_ERROR("%s: failed to get Crossing with id %d and interface %s (service %s)", ros::this_node::getName().c_str(),
-        descriptor_id, crossing_interface_name_.c_str(), crossing_getter_.getService().c_str());
+    ROS_ERROR_STREAM(jockey_name_ << ": failed to get Crossing with id " <<
+        descriptor_id << " and interface " << crossing_interface_name_ <<
+        " (service " << crossing_getter_.getService() << ")");
     return false;
   }
   crossing_ = crossing_srv.response.descriptor;
@@ -303,8 +304,9 @@ bool CrossingEscaper::getExitAngle()
   exit_angle_srv.request.id = map_action.response.descriptor_links[0].descriptor_id;
   if (!exit_angle_getter_.call(exit_angle_srv))
   {
-    ROS_ERROR("%s: failed to get exit_angle with id %d and interface %s (service %s)", ros::this_node::getName().c_str(),
-        exit_angle_srv.request.id, exit_angle_interface_name_.c_str(), exit_angle_getter_.getService().c_str());
+    ROS_ERROR_STREAM(jockey_name_ << ": failed to get exit_angle with id " <<
+        exit_angle_srv.request.id << " and interface " << exit_angle_interface_name_ <<
+        " (service " << exit_angle_getter_.getService() << ")");
     return false;
   }
   direction_ = exit_angle_srv.response.descriptor;
@@ -375,8 +377,7 @@ bool CrossingEscaper::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::
   {
     wz = -min_angular_velocity_;
   }
-  ROS_DEBUG("%s: distance to goal: %f, dtheta to goal: %f, vx: %f, wz: %f", ros::this_node::getName().c_str(),
-      distance, dtheta, vx, wz);
+  ROS_DEBUG("Distance to goal: %f, dtheta to goal: %f, vx: %f, wz: %f", distance, dtheta, vx, wz);
 
   twist.linear.x = vx;
   twist.angular.z = wz;

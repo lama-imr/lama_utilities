@@ -227,11 +227,11 @@ void MapBuilder::grow(const sensor_msgs::LaserScan& scan)
     bool has_parent = tf_listerner_.getParent(scan.header.frame_id, ros::Time(0), parent);
     if (!has_parent)
     {
-      ROS_DEBUG("%s: frame %s has no parent", ros::this_node::getName().c_str(), scan.header.frame_id.c_str());
+      ROS_DEBUG_STREAM("Frame " << scan.header.frame_id << " has no parent");
       return;
     }
     world_frame_id_ = getWorldFrame(tf_listerner_, scan.header.frame_id);
-    ROS_INFO("%s: found world frame %s", ros::this_node::getName().c_str(), world_frame_id_.c_str());
+    ROS_INFO_STREAM("Found world frame " << world_frame_id_);
     has_frame_id_ = true;
 
     // Initialize saved positions.

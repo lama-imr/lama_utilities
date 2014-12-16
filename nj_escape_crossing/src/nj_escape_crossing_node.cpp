@@ -14,7 +14,7 @@ int main(int argc, char** argv)
   }
 
   nj_escape_crossing::CrossingEscaper jockey(ros::this_node::getName() + "_jockey");
-  ROS_INFO("%s started (with server %s)", ros::this_node::getName().c_str(), jockey.getName().c_str());
+  ROS_INFO_STREAM(ros::this_node::getName() << " started (with server " << jockey.getName() << ")");
 
   ros::spin();
 }

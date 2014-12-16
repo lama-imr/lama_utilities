@@ -7,7 +7,7 @@
  *
  * Parameters:
  * - map_width, float, 200, map pixel width (x-direction)
- * - map_width, float, 200, map pixel height (y-direction)
+ * - map_height, float, 200, map pixel height (y-direction)
  * - map_resolution, float, 0.020, map resolution (m/pixel)
  */
 

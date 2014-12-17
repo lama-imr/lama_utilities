@@ -2,7 +2,7 @@
 <package>
   <name>crossing_detector</name>
   <version>0.1.0</version>
-  <description>The crossing_detector package</description>
+  <description>The crossing_detector package recognize frontiers from a LaserScan</description>
 
   <maintainer email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</maintainer>
 

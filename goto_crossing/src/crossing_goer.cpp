@@ -2,10 +2,6 @@
 
 namespace goto_crossing {
 
-const double CrossingGoer::threshold_w_only_ = 0.35;  // (rad), ~20 deg.
-const double CrossingGoer::max_sum_v_ = 10;  // (m.s).
-const double CrossingGoer::max_sum_w_ = 3;  // (rad.s).
-
 CrossingGoer::CrossingGoer() :
   kp_v_(0.1),
   kp_w_(0.2),
@@ -15,6 +11,9 @@ CrossingGoer::CrossingGoer() :
   min_angular_velocity_(0.1),
   reach_distance_(0.050),
   dtheta_force_left_(0),
+  threshold_w_only_(0.35),
+  max_sum_v_(10),
+  max_sum_w_(30),
   last_t_(ros::Time::now()),
   sum_v_(0),
   sum_w_(0)
@@ -34,6 +33,9 @@ CrossingGoer::CrossingGoer() :
   private_nh.getParam("min_angular_velocity", min_angular_velocity_);
   private_nh.getParam("reach_distance", reach_distance_);
   private_nh.getParam("dtheta_force_left", dtheta_force_left_);
+  private_nh.getParam("threshold_w_only", threshold_w_only_);
+  private_nh.getParam("max_sum_v", max_sum_v_);
+  private_nh.getParam("max_sum_w", max_sum_w_);
 
   twist_publisher_ = private_nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   goal_reached_publisher_ = private_nh.advertise<std_msgs::Bool>("goal_reached", 1);
@@ -145,6 +147,9 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
   private_nh.getParamCached("min_angular_velocity", min_angular_velocity_);
   private_nh.getParamCached("reach_distance", reach_distance_);
   private_nh.getParamCached("dtheta_force_left", dtheta_force_left_);
+  private_nh.getParamCached("threshold_w_only", threshold_w_only_);
+  private_nh.getParamCached("max_sum_v", max_sum_v_);
+  private_nh.getParamCached("max_sum_w", max_sum_w_);
 
   double distance = std::sqrt(goal.x * goal.x + goal.y * goal.y);
 

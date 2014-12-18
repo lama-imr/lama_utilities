@@ -44,11 +44,9 @@ class CrossingGoer
                                 //!> is within [pi - dtheta_force_left_, pi], even if the angle difference would tell
                                 //!> that we should turn right. This is to avoid instability in the case that the angle
                                 //!> would oscillate around pi. (rad)
-
-    // Hard-coded parametrs.
-    const static double threshold_w_only_;  //!> If dtheta is greater than this, only turn, do not go forward (rad).
-    const static double max_sum_v_;  //!> Anti wind-up for sum_v_ (m.s).
-    const static double max_sum_w_;  //!> Anti wind-up for sum_w_ (rad.s).
+    double threshold_w_only_;  //!> If dtheta is greater than this, only turn, do not go forward (rad).
+    double max_sum_v_;  //!> Anti wind-up for sum_v_ (m.s).
+    double max_sum_w_;  //!> Anti wind-up for sum_w_ (rad.s).
 
     // Internals.
     ros::NodeHandle nh_;

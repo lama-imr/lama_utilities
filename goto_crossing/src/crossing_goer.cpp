@@ -122,7 +122,7 @@ void CrossingGoer::callback_goto_crossing(const lama_msgs::Crossing& crossing)
   goal_reached_publisher_.publish(goal_reached_msg);
 }
 
-bool CrossingGoer::callback_resetIntegrals(::goto_crossing::ResetIntegrals::Request& req, ::goto_crossing::ResetIntegrals::Response& res)
+bool CrossingGoer::callback_resetIntegrals(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res)
 {
   resetIntegrals();
   return true;

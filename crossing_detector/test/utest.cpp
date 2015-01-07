@@ -10,7 +10,7 @@
 #include <geometry_msgs/Point32.h>
 #include <sensor_msgs/LaserScan.h>
 
-#include <lama_msgs/place_profile_conversions.h>
+#include <lama_common/place_profile_conversions.h>
 
 #include <crossing_detector/laser_crossing_detector.h>
 
@@ -92,7 +92,7 @@ void saveToFile(const std::string& filename, const lama_msgs::Crossing& crossing
 TEST(TestSuite, TestLaserCrossingDescriptor)
 {
   crossing_detector::CrossingDetector crossing_detector(0.7);
-  PlaceProfile profile = loadFromFile("../../../src/lama/crossing_detector/test/testdata-1.txt");
+  PlaceProfile profile = loadFromFile("../../../src/lama_utilities/crossing_detector/test/testdata-1.txt");
   lama_msgs::Crossing crossing = crossing_detector.crossingDescriptor(profile);
 
   saveToFile("/tmp/empty_crossing.bag", crossing);
@@ -100,9 +100,9 @@ TEST(TestSuite, TestLaserCrossingDescriptor)
 
 int main(int argc, char** argv)
 {
-  // Allow the use of ros::Time::now()
-  ros::Time::init();
-	testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
+  // ros::init is needed because CrossingDetector uses ros::NodeHandle.
+  ros::init(argc, argv, "test_cpp_crossing_detector");
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
 

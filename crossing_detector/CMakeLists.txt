@@ -207,8 +207,9 @@ set_target_properties(laser_crossing_detector_wrapper_cpp PROPERTIES
 #############
 
 ## Add gtest based cpp test target and link libraries
-catkin_add_gtest(${PROJECT_NAME}-test test/utest.cpp)
-if(TARGET ${PROJECT_NAME}-test)
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(${PROJECT_NAME}-test test/utest.test test/utest.cpp)
   target_link_libraries(${PROJECT_NAME}-test crossing_detector laser_crossing_detector costmap_crossing_detector)
 endif()
 

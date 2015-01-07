@@ -1,0 +1,4 @@
+<launch>
+  <test test-name="utest" pkg="crossing_detector" type="crossing_detector-test" time-limit="5.0" />
+</launch>
+

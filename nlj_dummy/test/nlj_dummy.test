@@ -3,5 +3,5 @@
 	<include file="$(find lama_interfaces)/launch/init_lama.launch" />
 
 	<test test-name="test_nlj_dummy" name="test_nlj_dummy" pkg="nlj_dummy" type="test_nlj_dummy.py"
-		time-limit="5.0"/>
+		time-limit="5.0" />
 </launch>

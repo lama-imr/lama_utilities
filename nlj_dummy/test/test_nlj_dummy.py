@@ -44,6 +44,10 @@ class RosTestCase(unittest.TestCase):
 
 class TestDbMessagePassing(RosTestCase):
     """test setting and getting dummy descriptors"""
+    def __init__(self, *args, **kwargs):
+        rospy.init_node('test_lama_interfaces_nlj_dummy', anonymous=True)
+        super(TestDbMessagePassing, self).__init__(*args, **kwargs)
+
     def test_dummy(self):
         """Test passing and getting a Dummy message"""
         interface_name = 'dummy_descriptor'
@@ -51,7 +55,6 @@ class TestDbMessagePassing(RosTestCase):
         setter_service = 'nlj_dummy/SetDummyDescriptor'
 
         # Set up node as well as getter and setter services.
-        rospy.init_node('lama_interfaces', anonymous=True)
         iface = interface_factory(interface_name,
                                   getter_service,
                                   setter_service)

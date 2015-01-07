@@ -182,7 +182,7 @@ target_link_libraries(place_profile_conversions ${catkin_LIBRARIES})
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_lama_common.cpp)
 catkin_add_gtest(${PROJECT_NAME}-test test/utest.cpp)
 if(TARGET ${PROJECT_NAME}-test)
-	target_link_libraries(${PROJECT_NAME}-test place_profile_utils place_profile_conversions ${catkin_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME}-test place_profile_utils place_profile_conversions ${catkin_LIBRARIES})
 endif()
 
 ## Add folders to be run by python nosetests

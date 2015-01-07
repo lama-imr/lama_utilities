@@ -631,7 +631,7 @@ TEST(TestSuite, TestRealDataSimplify)
   PlaceProfile out_profile_1;
   PlaceProfile out_profile_2;
 
-  profile = loadFromFile("../../../src/lama/lama_common/test/corridor130a-1.txt");
+  profile = loadFromFile("../../../src/lama_utilities/lama_common/test/corridor130a-1.txt");
   out_profile_1 = profile;
   EXPECT_EQ(362, profile.polygon.points.size());
   out_profile_2 = simplifiedPlaceProfile(profile, 0.01);

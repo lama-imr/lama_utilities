@@ -9,6 +9,8 @@
 #include <lama_common/place_profile_utils.h>
 #include <lama_common/place_profile_conversions.h>
 
+#define SAVE_FILES 0
+
 namespace lama_common {
 
 using sensor_msgs::LaserScan;
@@ -263,6 +265,8 @@ PlaceProfile loadFromFile(std::string filename)
   return profile;
 }
 
+#if SAVE_FILES
+
 void saveToFile(std::string filename, PlaceProfile profile)
 {
   std::ofstream fout(filename.c_str());
@@ -277,6 +281,7 @@ void saveToFile(std::string filename, PlaceProfile profile)
     fout << it->x << " " << it->y << "\n";
   }
 }
+#endif
 
 /* LaserScan with 4 points starting from 0, CCW
  */
@@ -397,9 +402,17 @@ TEST(TestSuite, TestClosePlaceProfile)
 
   profile = profile_circle_ccw();
   PlaceProfile old_profile = profile;
-  // saveToFile("open_profile.txt", profile);
+
+#if SAVE_FILES
+  saveToFile("open_profile.txt", profile);
+#endif
+
   closePlaceProfile(profile, 0.05);
-  // saveToFile("closed_profile.txt", profile);
+
+#if SAVE_FILES
+  saveToFile("closed_profile.txt", profile);
+#endif
+
   EXPECT_TRUE(profileIsClosed(profile, 0.06));
   EXPECT_FALSE(profileIsClosed(profile, 0.04));
   EXPECT_GE(profile.polygon.points.size(), old_profile.polygon.points.size());
@@ -411,8 +424,12 @@ TEST(TestSuite, TestClosedPlaceProfile)
 
   old_profile = profile_circle_ccw();
   PlaceProfile profile = closedPlaceProfile(old_profile, 0.05);
-  // saveToFile("open_profile.txt", old_profile);
-  // saveToFile("closed_profile.txt", profile);
+
+#if SAVE_FILES
+  saveToFile("open_profile.txt", old_profile);
+  saveToFile("closed_profile.txt", profile);
+#endif 
+
   EXPECT_TRUE(profileIsClosed(profile, 0.06));
   EXPECT_FALSE(profileIsClosed(profile, 0.04));
   EXPECT_GE(profile.polygon.points.size(), old_profile.polygon.points.size());
@@ -631,16 +648,23 @@ TEST(TestSuite, TestRealDataSimplify)
   PlaceProfile out_profile_1;
   PlaceProfile out_profile_2;
 
-  profile = loadFromFile("../../../src/lama_utilities/lama_common/test/corridor130a-1.txt");
+  profile = loadFromFile("corridor130a-1.txt");
   out_profile_1 = profile;
   EXPECT_EQ(362, profile.polygon.points.size());
   out_profile_2 = simplifiedPlaceProfile(profile, 0.01);
   EXPECT_GE(out_profile_1.polygon.points.size(), out_profile_2.polygon.points.size());
+
+#if SAVE_FILES
   saveToFile("corridor130a-1-0.01.txt", out_profile_2);
+#endif
+
   out_profile_1 = out_profile_2;
   out_profile_2 = simplifiedPlaceProfile(profile, 0.1);
   EXPECT_GE(out_profile_1.polygon.points.size(), out_profile_2.polygon.points.size());
+
+#if SAVE_FILES
   saveToFile("corridor130a-1-0.1.txt", out_profile_2);
+#endif
 }
 
 TEST(TestSuite, TestCurtailPlaceProfile)

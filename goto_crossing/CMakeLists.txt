@@ -72,7 +72,7 @@ catkin_package(
   angles
   geometry_msgs
   lama_msgs
-  message_generation
+  message_runtime
   roscpp
   std_msgs
   std_srvs

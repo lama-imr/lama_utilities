@@ -5,7 +5,7 @@
 #include <ctime>
 #include <math.h>  // for lround()
 
-#include <lama_interfaces/DescriptorLink.h>
+#include <lama_msgs/DescriptorLink.h>
 #include <lama_jockeys/localizing_jockey.h>
 
 #include <nlj_dummy/SetDummyDescriptor.h>

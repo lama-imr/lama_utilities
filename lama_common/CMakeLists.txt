@@ -122,9 +122,6 @@ add_library(crossing_utils src/crossing_utils.cpp)
 add_library(crossing_visualization src/crossing_visualization.cpp)
 add_library(place_profile_utils src/place_profile_utils.cpp)
 add_library(place_profile_conversions src/place_profile_conversions.cpp)
-# add_library(lama_common
-#   src/${PROJECT_NAME}/lama_common.cpp
-# )
 
 ## Declare a cpp executable
 # add_executable(lama_common_node src/lama_common_node.cpp)
@@ -154,18 +151,21 @@ target_link_libraries(place_profile_conversions ${catkin_LIBRARIES})
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS lama_common lama_common_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(TARGETS
+  crossing_utils
+  crossing_visualization
+  place_profile_utils
+  place_profile_conversions
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+)
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES

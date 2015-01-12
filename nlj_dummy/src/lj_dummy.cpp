@@ -52,7 +52,7 @@ void LJDummy::onGetEdgesDescriptors()
       {
         setter_srv.request.descriptor.value = random_angle();
         ros::service::call(set_service_name_, setter_srv);
-        lama_interfaces::DescriptorLink descriptor_link;
+        lama_msgs::DescriptorLink descriptor_link;
         descriptor_link.object_id = goal_.descriptor_link.object_id;
         descriptor_link.descriptor_id = setter_srv.response.id;
         descriptor_link.interface_name = interface_name_;

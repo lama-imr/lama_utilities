@@ -23,10 +23,12 @@
 
   <build_depend>lama_interfaces</build_depend>
   <build_depend>lama_jockeys</build_depend>
+  <build_depend>lama_msgs</build_depend>
   <build_depend>roscpp</build_depend>
 
   <run_depend>lama_interfaces</run_depend>
   <run_depend>lama_jockeys</run_depend>
+  <run_depend>lama_msgs</run_depend>
   <run_depend>roscpp</run_depend>
 
   <test_depend>python-nose</test_depend>

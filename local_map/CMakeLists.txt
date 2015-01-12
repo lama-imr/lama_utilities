@@ -86,9 +86,22 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS
+  include
+
   # LIBRARIES local_map 
-  CATKIN_DEPENDS angles roscpp tf map_ray_caster message_runtime sensor_msgs nav_msgs geometry_msgs
+
+  CATKIN_DEPENDS
+  angles
+  geometry_msgs
+  lama_msgs
+  map_ray_caster
+  message_generation
+  nav_msgs
+  roscpp
+  sensor_msgs
+  tf
+
   #  DEPENDS system_lib
 )
 
@@ -132,11 +145,11 @@ target_link_libraries(local_map ${catkin_LIBRARIES})
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS local_map local_map_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(TARGETS local_map
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark cpp header files for installation
 # install(DIRECTORY include/${PROJECT_NAME}/

@@ -62,9 +62,21 @@ find_package(catkin REQUIRED
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES crossing_goer
-  CATKIN_DEPENDS angles geometry_msgs lama_msgs message_runtime roscpp std_msgs std_srvs
+  INCLUDE_DIRS
+  include
+
+  LIBRARIES
+  crossing_goer
+
+  CATKIN_DEPENDS
+  angles
+  geometry_msgs
+  lama_msgs
+  message_generation
+  roscpp
+  std_msgs
+  std_srvs
+
   #DEPENDS system_lib
 )
 
@@ -88,10 +100,10 @@ add_executable(goto_crossing src/goto_crossing_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-add_dependencies(crossing_goer lama_msgs_generate_messages_cpp)
-add_dependencies(crossing_goer goto_crossing_generate_messages_cpp)
-add_dependencies(goto_crossing lama_msgs_generate_messages_cpp)
-add_dependencies(goto_crossing goto_crossing_generate_messages_cpp)
+# add_dependencies(crossing_goer lama_msgs_generate_messages_cpp)
+# add_dependencies(crossing_goer goto_crossing_generate_messages_cpp)
+# add_dependencies(goto_crossing lama_msgs_generate_messages_cpp)
+# add_dependencies(goto_crossing goto_crossing_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(crossing_goer
@@ -117,18 +129,17 @@ target_link_libraries(goto_crossing
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS goto_crossing goto_crossing_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(TARGETS goto_crossing crossing_goer
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+)
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES

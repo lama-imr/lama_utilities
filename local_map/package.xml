@@ -8,27 +8,22 @@
 	  as the one of the global frame.
   </description>
 
-  <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <maintainer email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</maintainer>
 
 
-  <!-- One license tag required, multiple allowed, one license per tag -->
   <license>BSD</license>
 
 
-  <!-- Url tags are optional, but mutiple are allowed, one per tag -->
-  <!-- Optional attribute type can be: website, bugtracker, or repository -->
-  <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/local_map</url> -->
+  <url type="website">http://wiki.ros.org/local_map</url>
+  <url type="repository">https://github.com/lama-imr/lama_utilities.git</url>
+  <url type="bugtracker">https://github.com/lama-imr/lama_utilities/issues</url>
 
 
-  <!-- Author tags are optional, mutiple are allowed, one per tag -->
   <author email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</author>
 
 
-  <!-- The *_depend tags are used to specify dependencies -->
-  <!-- Dependencies can be catkin packages or system dependencies -->
   <buildtool_depend>catkin</buildtool_depend>
+
   <build_depend>angles</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>lama_msgs</build_depend>
@@ -38,6 +33,7 @@
   <build_depend>roscpp</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>tf</build_depend>
+
   <run_depend>angles</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>lama_msgs</run_depend>
@@ -49,12 +45,6 @@
   <run_depend>tf</run_depend>
 
 
-  <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <!-- You can specify that this package is a metapackage here: -->
-    <!-- <metapackage/> -->
-
-    <!-- Other tools can request additional information be placed here -->
-
   </export>
 </package>

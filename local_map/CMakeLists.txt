@@ -96,7 +96,7 @@ catkin_package(
   geometry_msgs
   lama_msgs
   map_ray_caster
-  message_generation
+  message_runtime
   nav_msgs
   roscpp
   sensor_msgs

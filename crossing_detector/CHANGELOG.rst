@@ -2,9 +2,14 @@
 Changelog for package crossing_detector
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.4 (2015-01-14)
+------------------
+* manipulate build flags for CGAL
+* Contributors: Gaël Ecorchard
+
 0.1.3 (2015-01-14)
 ------------------
-* crossing_detector: manipulate build type for CGAL
+* manipulate build type for CGAL
 * Contributors: Gaël Ecorchard
 
 0.1.2 (2015-01-14)

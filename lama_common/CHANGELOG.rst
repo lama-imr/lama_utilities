@@ -2,7 +2,11 @@
 Changelog for package lama_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.1.3 (2015-01-14)
+0.1.4 (2015-01-14)
+------------------
+* Unchanged
+
+0.1.2 (2015-01-14)
 ------------------
 * lama_common: run test in test and do not save file
 * Contributors: Gaël Ecorchard

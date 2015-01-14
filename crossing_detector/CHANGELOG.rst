@@ -2,6 +2,10 @@
 Changelog for package crossing_detector
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.5 (2015-01-14)
+------------------
+* Unchanged
+
 0.1.4 (2015-01-14)
 ------------------
 * manipulate build flags for CGAL

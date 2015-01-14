@@ -2,6 +2,11 @@
 Changelog for package lama_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.5 (2015-01-14)
+------------------
+* Fix SimplifyPlaceProfile with last point excluded
+* Contributors: Gaël Ecorchard
+
 0.1.4 (2015-01-14)
 ------------------
 * Unchanged

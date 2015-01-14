@@ -2,13 +2,14 @@
 #define LAMA_COMMON_PLACE_PROFILE_UTILS_H
 
 #include <math.h>  // For round() (std::round() is since C++11).
-#include <cassert>
 #include <cmath>
 #include <vector>
 #include <list>
 #include <map>
 #include <limits>
 #include <algorithm>
+#include <stdexcept>
+#include <sstream>
 
 #include <lama_msgs/PlaceProfile.h>
 

@@ -406,9 +406,28 @@ double getRelevance(const std::list<IndexedDouble>& l, std::list<IndexedDouble>:
   */
 vector<Point32> simplifyPath(const vector<Point32>& points, const size_t begin, const size_t end, const double min_relevance)
 {
-  assert(begin < points.size());
-  assert(end <= points.size());
-  assert(begin <= end);
+  if(begin >= points.size())
+  {
+    std::ostringstream msg;
+    msg << "begin index (" << begin << ") should but strictly smaller than length of argument 1 (" <<
+      points.size() << ")";
+    throw std::runtime_error(msg.str());
+  }
+  if(end > points.size())
+  {
+    std::ostringstream msg;
+    msg << "end index (" << end << ") should but smaller than or equal to length of argument 1 (" <<
+      points.size() << ")";
+    throw std::runtime_error(msg.str());
+  }
+  if(begin > end)
+  {
+    std::ostringstream msg;
+    msg << "end index (" << end << ") should but larger than or equal to begin index (" <<
+      begin << ")";
+    throw std::runtime_error(msg.str());
+  }
+
   if (end - begin < 3)
   {
     // Two points or less, just copy the points.
@@ -533,8 +552,12 @@ void simplifyPlaceProfile(PlaceProfile& profile, const double min_relevance)
     profile.exclude_segments.push_back(((int)profile.polygon.points.size()) - 1);
     path_start = old_profile.exclude_segments[i] + 1;
   }
-  const vector<Point32> filtered_points = simplifyPath(old_profile.polygon.points, path_start, old_profile.polygon.points.size(), min_relevance);
-  std::copy(filtered_points.begin(), filtered_points.end(), std::back_inserter(profile.polygon.points));
+  if (path_start < old_profile.polygon.points.size())
+  {
+    // If path_start is not after the last point, what happens if last point is excluded.
+    const vector<Point32> filtered_points = simplifyPath(old_profile.polygon.points, path_start, old_profile.polygon.points.size(), min_relevance);
+    std::copy(filtered_points.begin(), filtered_points.end(), std::back_inserter(profile.polygon.points));
+  }
 }
 
 /* Return a PlaceProfile with reduced number of points.

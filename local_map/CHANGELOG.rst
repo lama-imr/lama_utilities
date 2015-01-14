@@ -2,7 +2,7 @@
 Changelog for package local_map
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.1.2 (2015-01-14)
+0.1.3 (2015-01-14)
 ------------------
 * local_map: fix message_runtime in catkin_package
 * Contributors: Gaël Ecorchard

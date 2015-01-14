@@ -2,7 +2,7 @@
 Changelog for package goto_crossing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.1.2 (2015-01-14)
+0.1.3 (2015-01-14)
 ------------------
 * goto_crossing: fix catkin setup
 * Contributors: Gaël Ecorchard

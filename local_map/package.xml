@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>local_map</name>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
   <description>The local_map package
 	  The local_map package takes as input a LaserScan message and outputs
 	  a local map as OccupancyGrid. The local map orientation is the same

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>nlj_dummy</name>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
   <description>The nlj_dummy package</description>
 
   <maintainer email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</maintainer>

@@ -102,8 +102,10 @@ catkin_package(
   crossing_detector
   laser_crossing_detector
   costmap_crossing_detector
-  crossing_detector_wrapper_cpp
-  laser_crossing_detector_wrapper_cpp
+  # crossing_detector_wrapper_cpp and laser_crossing_detector_wrapper_cpp
+  # are Python libraries, they don't need to be exported
+  #crossing_detector_wrapper_cpp
+  #laser_crossing_detector_wrapper_cpp
 
   CATKIN_DEPENDS
   angles

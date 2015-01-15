@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>goto_crossing</name>
-  <version>0.1.5</version>
+  <version>0.1.6</version>
   <description>
 	  The goto_crossing package provides a goToGoal behavior
 	  to a crossing center if the crossing has at least three

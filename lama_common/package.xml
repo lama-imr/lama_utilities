@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>lama_common</name>
-  <version>0.1.5</version>
+  <version>0.1.6</version>
   <description>Utilities for the LaMa package</description>
 
   <maintainer email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</maintainer>

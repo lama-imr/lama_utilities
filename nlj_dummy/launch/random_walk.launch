@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+	<include file="$(find lama_interfaces)/launch/init_lama.launch" />
+
+	<node name="nlj_dummy" pkg="nlj_dummy" type="nlj_dummy"
+			output="screen" />
+
+	<node name="random_walker" pkg="nlj_dummy" type="random_walker.py"
+			output="screen" />
+</launch>

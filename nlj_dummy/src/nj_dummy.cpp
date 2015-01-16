@@ -33,6 +33,11 @@ void NJDummy::onTraverse()
   // start navigating.
   while (ros::ok())
   {
+    if (server_.isPreemptRequested() && !ros::ok())
+    {
+      ROS_INFO_STREAM(jockey_name_ << ": Preempted");
+      break;
+    }
     // update the feedback every 0.5 s.
     ros::Duration(0.5).sleep();
     ROS_INFO("just slept a bit");

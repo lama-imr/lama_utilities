@@ -14,15 +14,16 @@ LJDummy::LJDummy(const std::string& name,
 
 void LJDummy::onGetVertexDescriptor()
 {
-  ROS_INFO("Responded with vertex description");
+  ROS_INFO("Received action GET_VERTEX_DESCRIPTOR");
   result_.state = lama_jockeys::LocalizeResult::DONE;
   result_.completion_time = ros::Duration(0.001);
   server_.setSucceeded(result_);
+  ROS_INFO("Responded with empty vertex descriptor");
 }
 
 void LJDummy::onGetEdgesDescriptors()
 {
-  ROS_INFO("* onGetEdgesDescriptors");
+  ROS_INFO("Received action GET_EDGES_DESCRIPTORS");
 
   ros::Time start_time = ros::Time::now();
   double localizing_duration = random_duration();
@@ -72,26 +73,29 @@ void LJDummy::onGetEdgesDescriptors()
 
 void LJDummy::onLocalizeInVertex()
 {
-  ROS_INFO("LJDummy responded with localization inside vertex");
+  ROS_INFO("Received action LOCALIZE_IN_VERTEX");
   result_.state = lama_jockeys::LocalizeResult::DONE;
   result_.completion_time = ros::Duration(0.001);
   server_.setSucceeded(result_);
+  ROS_INFO("Responded with localization inside vertex");
 }
 
 void LJDummy::onLocalizeEdge()
 {
-  ROS_INFO("LJDummy responded with edge localization");
+  ROS_INFO("Received action LOCALIZE_EDGE");
   result_.state = lama_jockeys::LocalizeResult::DONE;
   result_.completion_time = ros::Duration(0.001);
   server_.setSucceeded(result_);
+  ROS_INFO("Responded with edge localization");
 }
 
 void LJDummy::onGetDissimilarity()
 {
-  ROS_INFO("LJDummy responded with dissimilarity");
+  ROS_INFO("Received action GET_DISSIMILARITY");
   result_.state = lama_jockeys::LocalizeResult::DONE;
   result_.completion_time = ros::Duration(0.001);
   server_.setSucceeded(result_);
+  ROS_INFO("Responded with dissimilarity");
 }
 
 double LJDummy::random_duration()

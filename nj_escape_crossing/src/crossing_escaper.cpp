@@ -59,7 +59,6 @@ void CrossingEscaper::onTraverse()
     {
       // crossing_.radius set to 0, don't need to travel very far.
       ROS_WARN("Crossing descriptor to be used as escape distance but radius is 0, DONE");
-      twist_publisher_.publish(geometry_msgs::Twist());
       result_.final_state = lama_jockeys::NavigateResult::DONE;
       result_.completion_time = ros::Duration(0);
       server_.setSucceeded(result_);
@@ -124,7 +123,8 @@ void CrossingEscaper::onTraverse()
     {
       ROS_INFO("%s: Preempted", jockey_name_.c_str());
       // set the action state to preempted
-      server_.setPreempted();
+      // server_.setPreempted();
+      twist_publisher_.publish(geometry_msgs::Twist());
       break;
     }
 

@@ -19,14 +19,14 @@
  * - Getter: float64, "exit_angle"
  *
  * Subscribers (other than map-related):
- * - nav_msgs::Odometry, "~odometry", robot position
- * - std_msgs::Float32, "~direction", direction in which to escape.
+ * - nav_msgs/Odometry, "~odometry", robot position
+ * - std_msgs/Float32, "~direction", direction in which to escape.
  *     The direction must be in the same reference frame as ~odometry.
  *     This topic is used only if the requested edge does not exist or if it
  *     has no exit angle descriptor.
  *
  * Publishers (other than map-related):
- * - geometry_msgs::Twist, "~/twist", set velocity
+ * - geometry_msgs/Twist, "~cmd_vel", set velocity
  *
  * Services used (other than map-related):
  * - none

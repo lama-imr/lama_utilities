@@ -109,7 +109,7 @@ add_executable(nlj_dummy src/nlj_dummy_node.cpp ${SRC})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-add_dependencies(nlj_dummy nlj_dummy_generate_messages_cpp)
+#add_dependencies(nlj_dummy nlj_dummy_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(nlj_dummy
@@ -164,5 +164,5 @@ install(TARGETS nlj_dummy
 ## Add folders to be run by python nosetests
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest(test/nlj_dummy.test)
+  add_rostest(test/nlj_dummy_interfaces.test)
 endif()

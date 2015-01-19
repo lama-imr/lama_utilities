@@ -66,7 +66,7 @@ add_service_files(
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
-  DEPENDENCIES
+  #DEPENDENCIES
   )
 
 ###################################
@@ -109,7 +109,7 @@ add_executable(nlj_dummy src/nlj_dummy_node.cpp ${SRC})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-#add_dependencies(nlj_dummy nlj_dummy_generate_messages_cpp)
+add_dependencies(nlj_dummy nlj_dummy_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(nlj_dummy

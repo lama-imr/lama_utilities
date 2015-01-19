@@ -15,14 +15,14 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   )
 
+## Use CGAL
 # Set build type to avoid cmake error with /usr/lib/CGAL/CGAL_SetupFlags.cmake
+set(OLD_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 set(CMAKE_BUILD_TYPE "Release")
-## System dependencies are found with CMake's conventions
-set(CGAL_DONT_OVERRIDE_CMAKE_FLAGS TRUE CACHE BOOL "Don't override flags")
 find_package(CGAL REQUIRED COMPONENTS Core)
 include(${CGAL_USE_FILE})
 # Reset build type
-set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+set(CMAKE_BUILD_TYPE ${OLD_CMAKE_BUILD_TYPE})
 
 find_package(Boost REQUIRED COMPONENTS python)
 find_package(PythonLibs 2.7 REQUIRED)

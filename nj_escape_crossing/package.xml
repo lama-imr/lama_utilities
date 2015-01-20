@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>nj_escape_crossing</name>
-  <version>0.1.6</version>
+  <version>0.1.7</version>
   <description>
 	  The nj_escape_crossing package is a navigating jockey used to move a robot from away from a crossing</description>
 

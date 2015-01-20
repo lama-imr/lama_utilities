@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>dfs_explorer</name>
-  <version>0.1.6</version>
+  <version>0.1.7</version>
   <description>An explorer with depth-first search for finite worlds for the Large Maps Framework (LaMa).</description>
 
   <maintainer email="gael.ecorchard@ciirc.cvut.cz">Gaël Ecorchard</maintainer>

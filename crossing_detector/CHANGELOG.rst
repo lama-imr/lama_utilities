@@ -2,6 +2,11 @@
 Changelog for package crossing_detector
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.7 (2015-01-20)
+------------------
+* crossing_detector: solve CGAL cmake on Saucy
+* Contributors: Gaël Ecorchard
+
 0.1.6 (2015-01-15)
 ------------------
 * remove Python bindings libs from catkin_package

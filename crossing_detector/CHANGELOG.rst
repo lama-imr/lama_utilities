@@ -2,6 +2,11 @@
 Changelog for package crossing_detector
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.8 (2015-01-21)
+------------------
+* crossing_detector: Fix Ubuntu detection on non-Ubuntu systems
+* Contributors: Scott K Logan
+
 0.1.7 (2015-01-20)
 ------------------
 * crossing_detector: solve CGAL cmake on Saucy

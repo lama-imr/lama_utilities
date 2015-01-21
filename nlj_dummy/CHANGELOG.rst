@@ -2,6 +2,10 @@
 Changelog for package nlj_dummy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.8 (2015-01-21)
+------------------
+* Unchanged
+
 0.1.7 (2015-01-20)
 ------------------
 * nlj_dummy: remove setup.py

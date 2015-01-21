@@ -24,7 +24,7 @@ find_package(CGAL REQUIRED COMPONENTS Core)
 set(CMAKE_BUILD_TYPE ${OLD_CMAKE_BUILD_TYPE})
 # Manually set CGAL_3RD_PARTY_LIBRARIES on Saucy
 include(cmake/FindUbuntuFlavor.cmake)
-if (${UBUNTU_DIST} EQUAL "13.10")
+if (${UBUNTU_DIST} AND ${UBUNTU_DIST} EQUAL "13.10")
   if (EXISTS "/usr/lib/x86_64-linux-gnu/libboost_thread.so")
     set(CGAL_3RD_PARTY_LIBRARIES "/usr/lib/x86_64-linux-gnu/libboost_thread.so;/usr/lib/x86_64-linux-gnu/libboost_system.so;/usr/lib/x86_64-linux-gnu/libpthread.so" )
   else()

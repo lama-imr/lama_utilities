@@ -31,7 +31,7 @@ if (${UBUNTU_DIST} AND ${UBUNTU_DIST} EQUAL "13.10")
     set(CGAL_3RD_PARTY_LIBRARIES "/usr/lib/i386-linux-gnu/libboost_thread.so;/usr/lib/i386-linux-gnu/libboost_system.so;/usr/lib/i386-linux-gnu/libpthread.so" )
   endif()
 endif()
-# include after setting CGAL_USE_FILE.
+# include after setting CGAL_3RD_PARTY_LIBRARIES.
 include(${CGAL_USE_FILE})
 
 find_package(Boost REQUIRED COMPONENTS python)

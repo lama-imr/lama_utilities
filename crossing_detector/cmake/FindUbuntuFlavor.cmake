@@ -18,6 +18,7 @@ if (NOT WINDOWS)
       message (STATUS "Building for Ubuntu ${UBUNTU_DIST}")
     else()
       message (STATUS "Ubuntu not detected")
+      set (UBUNTU_DIST "NA")
     endif()
 
   endif()

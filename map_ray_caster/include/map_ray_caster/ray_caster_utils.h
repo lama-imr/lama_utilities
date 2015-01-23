@@ -32,7 +32,7 @@ inline size_t offsetFromRowCol(const size_t row, const size_t col, const size_t 
  */
 inline bool pointInMap(const int row, const int col, const size_t nrow, const size_t ncol)
 {
-  return ((0 <= col) && (col < ncol) && (0 <= row) && (row < nrow));
+  return ((0 <= col) && ((size_t) col < ncol) && (0 <= row) && ((size_t) row < nrow));
 }
 
 /* Return the world coordinates of the map point at given index

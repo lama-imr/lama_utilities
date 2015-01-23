@@ -312,8 +312,8 @@ class ExplorerNode(object):
         map_action = ActOnMapRequest()
         map_action.action = map_action.PUSH_EDGE
         map_action.object.type = map_action.object.EDGE
-        map_action.object.references.append(v0)
-        map_action.object.references.append(v1)
+        map_action.object.references[0] = v0
+        map_action.object.references[1] = v1
         edge_response = self.map_agent(map_action)
         if not edge_response.objects:
             rospy.logerr('Database error')

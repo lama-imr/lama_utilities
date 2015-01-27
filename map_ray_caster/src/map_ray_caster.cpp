@@ -7,19 +7,20 @@ MapRayCaster::MapRayCaster(const int occupied_threshold) :
 {
 }
 
-/* Return true if the map point is occupied.
+/** Return true if the map point is occupied.
 */
 inline bool pointOccupied(const nav_msgs::OccupancyGrid& map, const int index, const int occupied_threshold)
 {
   return (map.data[index] > occupied_threshold) || (map.data[index] == -1);
 }
 
-/* Fill the ranges attributes with distances to obstacle
+/** Fill the ranges attributes with distances to obstacle
  *
  * The ray casting will be from scan.angle_min to scan.angle_max, so that the
  * scan message must be initialized with non-default values.
- * map[in] occupancy grid
- * scan[in/out] LaserScan.
+ *
+ * @param[in] map occupancy grid.
+ * @param[in,out] scan LaserScan.
  *   scan.angle_min, scan.angle_max, scan.increment, scan.range_max will be
  *   used as input and must have non-null values.
  *   scan.ranges will set as output.
@@ -56,13 +57,15 @@ void MapRayCaster::laserScanCast(const nav_msgs::OccupancyGrid& map, sensor_msgs
   }
 }
 
-/* Return the list of pixel indexes from map center to pixel at map border and given angle
+/** Return the list of pixel indexes from map center to pixel at map border and given angle
  *
  * The Bresenham algorithm is used.
  *
- * angle[in] beam angle
- * nrow[in] image height
- * ncol[in] image width
+ * @param[in] angle beam angle.
+ * @param[in] nrow image height.
+ * @param[in] ncol image width.
+ *
+ * @return The list of pixel indexes from map center to pixel at map border and given angle.
  */
 const std::vector<size_t>& MapRayCaster::getRayCastToMapBorder(const double angle, const size_t nrow, const size_t ncol, const double tolerance)
 {
@@ -154,10 +157,10 @@ const std::vector<size_t>& MapRayCaster::getRayCastToMapBorder(const double angl
   }
 }
 
-/* Return an iterator to the closest key (angle) in the cache.
+/** Return an iterator to the closest key (angle) in the cache.
  *
- * Return an iterator to the closest key (angle) in the cache, if this angle is close enough
- * to the desired angle.
+ * @return The iterator to the closest key (angle) in the cache, if this angle is close enough
+ * to the desired angle. Otherwise, return the past the last iterator.
  */
 RayLookup::const_iterator MapRayCaster::angleLookup(const double angle, const double tolerance)
 {

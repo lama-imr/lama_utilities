@@ -2,11 +2,7 @@
 
 namespace nj_escape_crossing {
 
-const double CrossingEscaper::reach_angular_distance_ = 0.017;  // (rad), 1 deg
-const double CrossingEscaper::threshold_w_only_ = 1.0;  // (rad), ~60 deg.
-
-// Timeout for Odometry.
-const ros::Duration CrossingEscaper::max_odometry_age_ = ros::Duration(0.1);
+const double CrossingEscaper::reach_angular_distance_ = 0.0017;  // (rad), 0.1 deg
 
 CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
   lama_jockeys::NavigatingJockey(name),
@@ -15,6 +11,8 @@ CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
   min_linear_velocity_(0.050),
   min_angular_velocity_(0.1),
   escape_distance_(escape_distance),
+  max_angle_turn_only_(1.0),
+  max_odometry_age_(0.1),
   exit_angle_topic_name_("exit_angle"),
   angle_reached_(false),
   goal_reached_(false),
@@ -29,6 +27,8 @@ CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
   private_nh.getParam("min_linear_velocity", min_linear_velocity_);
   private_nh.getParam("min_angular_velocity", min_angular_velocity_);
   private_nh.getParam("escape_distance", escape_distance_);
+  private_nh.getParam("max_angle_turn_only", max_angle_turn_only_);
+  private_nh.getParam("max_odometry_age", max_odometry_age_);
   private_nh.getParam("crossing_interface_name", crossing_interface_name_);
   private_nh.getParam("exit_angle_interface_name", exit_angle_interface_name_);
   private_nh.getParam("exit_angle_topic_name", exit_angle_topic_name_);
@@ -121,18 +121,18 @@ void CrossingEscaper::onTraverse()
   {
     if (server_.isPreemptRequested() && !ros::ok())
     {
-      ROS_INFO("%s: Preempted", jockey_name_.c_str());
+      ROS_INFO_STREAM(jockey_name_ << ": Preempted");
       // set the action state to preempted
-      // server_.setPreempted();
+      server_.setPreempted();
       twist_publisher_.publish(geometry_msgs::Twist());
       break;
     }
 
     // Odometry timeout mechanism.
-    if ((ros::Time::now() - odometry_.header.stamp) > max_odometry_age_)
+    if ((ros::Time::now() - odometry_.header.stamp) > ros::Duration(max_odometry_age_))
     {
       ROS_WARN("No Odometry received within %.3f s, setting Twist to 0 (odometry age: %.3f s)",
-          max_odometry_age_.toSec(), odometry_.header.stamp.toSec());
+          max_odometry_age_, (ros::Time::now() - odometry_.header.stamp).toSec());
         twist_publisher_.publish(geometry_msgs::Twist());
       continue;
     }
@@ -353,7 +353,7 @@ bool CrossingEscaper::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::
 
   double dtheta = std::atan2(goal.y, goal.x);
 
-  if (std::fabs(dtheta) > threshold_w_only_)
+  if (std::fabs(dtheta) > max_angle_turn_only_)
   {
     // Do not go forward because the goal is not well in front of the robot.
     distance = 0.0;

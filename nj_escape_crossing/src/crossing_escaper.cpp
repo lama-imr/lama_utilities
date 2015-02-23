@@ -3,14 +3,12 @@
 namespace nj_escape_crossing
 {
 
-const double CrossingEscaper::reach_angular_distance_ = 0.0017;  // (rad), 0.1 deg
-
 CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
   lama_jockeys::NavigatingJockey(name),
   kp_v_(0.05),
   kp_w_(0.2),
-  min_linear_velocity_(0.050),
-  min_angular_velocity_(0.1),
+  min_linear_velocity_(0),
+  min_angular_velocity_(0),
   escape_distance_(escape_distance),
   max_angle_turn_only_(1.0),
   max_odometry_age_(0.1),
@@ -20,7 +18,8 @@ CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
   has_odometry_(false),
   has_direction_(false),
   crossing_interface_name_("crossing"),
-  exit_angle_interface_name_("exit_angle")
+  exit_angle_interface_name_("exit_angle"),
+  last_dtheta_(0)
 {
   ros::NodeHandle private_nh("~");
   private_nh.getParam("kp_v", kp_v_);
@@ -145,6 +144,7 @@ void CrossingEscaper::onTraverse()
       if (angle_reached_)
       {
         ROS_DEBUG("%s: angle reached", jockey_name_.c_str());
+        last_dtheta_ = 0;
         feedback_.completion = 0.25;
         server_.publishFeedback(feedback_);
       }
@@ -319,7 +319,7 @@ bool CrossingEscaper::getExitAngle()
  * direction[in] direction the robot should have at the end (in odometry_ frame).
  * twist[out] set velocity.
  */
-bool CrossingEscaper::turnToAngle(const double direction, geometry_msgs::Twist& twist) const
+bool CrossingEscaper::turnToAngle(const double direction, geometry_msgs::Twist& twist)
 {
   const double yaw_now= tf::getYaw(odometry_.pose.pose.orientation);
   const double dtheta = angles::shortest_angular_distance(yaw_now, direction_);
@@ -338,7 +338,11 @@ bool CrossingEscaper::turnToAngle(const double direction, geometry_msgs::Twist& 
   }
   twist.linear.x = 0;
   twist.angular.z = wz;
-  return (std::abs(dtheta) < reach_angular_distance_);
+
+  // The goal (0) is reached is the sign of dtheta changes.
+  bool angle_reached = (dtheta * last_dtheta_ < 1e-10) && std::abs(dtheta < M_PI_2);
+  last_dtheta_ = dtheta;
+  return angle_reached;
 }
 
 /* GoToGoal behavior
@@ -379,11 +383,11 @@ bool CrossingEscaper::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::
   {
     vx = min_linear_velocity_;
   }
-  if ((wz > 0) && (wz < min_angular_velocity_) && (vx <= min_linear_velocity_))
+  if ((wz > 0) && (wz < min_angular_velocity_) && (vx < min_linear_velocity_))
   {
     wz = min_angular_velocity_;
   }
-  else if ((wz < 0) && (wz > -min_angular_velocity_) && (vx <= min_linear_velocity_))
+  else if ((wz < 0) && (wz > -min_angular_velocity_) && (vx < min_linear_velocity_))
   {
     wz = -min_angular_velocity_;
   }

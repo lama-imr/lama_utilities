@@ -83,7 +83,7 @@ class CrossingEscaper : public lama_jockeys::NavigatingJockey
     bool getCrossing();
     bool retrieveCrossingFromMap(const int32_t descriptor_id);
     bool getExitAngle();
-    bool turnToAngle(const double direction, geometry_msgs::Twist& twist) const;
+    bool turnToAngle(const double direction, geometry_msgs::Twist& twist);
     bool goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twist& twist) const;
     geometry_msgs::Point goalFromOdometry();
 
@@ -103,10 +103,6 @@ class CrossingEscaper : public lama_jockeys::NavigatingJockey
     double max_odometry_age_;  //!< If Odometry is not received withing this time, set null Twist (s).
     std::string exit_angle_topic_name_;  //!< Name of the optional topic for exit angle (or direction).
 
-
-    // Hard-coded parameters.
-    const static double reach_angular_distance_;  //!< dtheta to reach when turning (rad).
-
     // Internals.
     bool angle_reached_;
     bool goal_reached_;
@@ -119,6 +115,7 @@ class CrossingEscaper : public lama_jockeys::NavigatingJockey
     double distance_to_escape_;  //!< Either escape_distance_ or crossing_.radius.
     std::string crossing_interface_name_;  //!< Name of the map interface for crossing.
     std::string exit_angle_interface_name_;  //!< Name of the map interface for exit angle.
+    double last_dtheta_;  //!< Last measured dtheta, used for zero-crossing detection.
 };
 
 } // namespace nj_escape_crossing

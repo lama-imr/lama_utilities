@@ -1,6 +1,7 @@
 #include <goto_crossing/crossing_goer.h>
 
-namespace goto_crossing {
+namespace goto_crossing
+{
 
 CrossingGoer::CrossingGoer() :
   kp_v_(0.1),
@@ -8,7 +9,9 @@ CrossingGoer::CrossingGoer() :
   ki_v_(0),
   ki_w_(0),
   min_linear_velocity_(0.020),
+  max_linear_velocity_(0),
   min_angular_velocity_(0.1),
+  max_angular_velocity_(0),
   reach_distance_(0.050),
   dtheta_force_left_(0),
   threshold_w_only_(0.35),
@@ -18,19 +21,15 @@ CrossingGoer::CrossingGoer() :
   sum_v_(0),
   sum_w_(0)
 {
-  // Log level
-  if(ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info))
-  {
-    ros::console::notifyLoggerLevelsChanged();
-  }
-
   ros::NodeHandle private_nh("~");
   private_nh.getParam("kp_v", kp_v_);
   private_nh.getParam("kp_w", kp_w_);
   private_nh.getParam("ki_v", ki_v_);
   private_nh.getParam("ki_w", ki_w_);
   private_nh.getParam("min_linear_velocity", min_linear_velocity_);
+  private_nh.getParam("max_linear_velocity", max_linear_velocity_);
   private_nh.getParam("min_angular_velocity", min_angular_velocity_);
+  private_nh.getParam("max_angular_velocity", max_angular_velocity_);
   private_nh.getParam("reach_distance", reach_distance_);
   private_nh.getParam("dtheta_force_left", dtheta_force_left_);
   private_nh.getParam("threshold_w_only", threshold_w_only_);
@@ -41,8 +40,6 @@ CrossingGoer::CrossingGoer() :
   goal_reached_publisher_ = private_nh.advertise<std_msgs::Bool>("goal_reached", 1);
   
   reset_integral_server_ = private_nh.advertiseService("reset_integrals", &CrossingGoer::callback_resetIntegrals, this);
-
-  ROS_INFO("%s: CrossingGoer initialized", ros::this_node::getName().c_str());
 }
 
 /* Compute the twist needed to reach the goal
@@ -102,7 +99,7 @@ bool CrossingGoer::goto_crossing(const lama_msgs::Crossing& crossing, geometry_m
     goal.x = crossing.center.x;
     goal.y = crossing.center.y;
   }
-  ROS_DEBUG("%s: goal: (%.3f, %.3f)", ros::this_node::getName().c_str(), goal.x, goal.y);
+  ROS_DEBUG("goal: (%.3f, %.3f)", goal.x, goal.y);
   return goToGoal(goal, twist) && can_reach;
 }
 
@@ -144,7 +141,9 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
   private_nh.getParamCached("ki_v", ki_v_);
   private_nh.getParamCached("ki_w", ki_w_);
   private_nh.getParamCached("min_linear_velocity", min_linear_velocity_);
+  private_nh.getParamCached("max_linear_velocity", max_linear_velocity_);
   private_nh.getParamCached("min_angular_velocity", min_angular_velocity_);
+  private_nh.getParamCached("max_angular_velocity", max_angular_velocity_);
   private_nh.getParamCached("reach_distance", reach_distance_);
   private_nh.getParamCached("dtheta_force_left", dtheta_force_left_);
   private_nh.getParamCached("threshold_w_only", threshold_w_only_);
@@ -224,7 +223,30 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
   {
     wz = -min_angular_velocity_;
   }
-  ROS_DEBUG("%s: distance to goal: %f, dtheta to goal: %f, twist: (%f, %f)", ros::this_node::getName().c_str(),
+
+  // velocity throttle.
+  if (std::abs(max_linear_velocity_) > 1e-10)
+  {
+    // Only throttle if max_linear_velocity_ is set.
+    if (vx > max_linear_velocity_)
+    {
+      vx = max_linear_velocity_;
+    }
+  }
+  if (std::abs(max_angular_velocity_) > 1e-10)
+  {
+    // Only throttle if max_angular_velocity_ is set.
+    if (wz > max_linear_velocity_)
+    {
+      wz = max_angular_velocity_;
+    }
+    if (wz < -max_angular_velocity_)
+    {
+      wz = -max_angular_velocity_;
+    }
+  }
+
+  ROS_DEBUG("distance to goal: %f, dtheta to goal: %f, twist: (%f, %f)",
       distance, dtheta, vx, wz);
 
   ROS_DEBUG_NAMED("superdebug", "sum_v_: %f", sum_v_);

@@ -4,7 +4,6 @@
 #include <cmath>
 
 #include <ros/ros.h>
-#include <ros/console.h>
 #include <angles/angles.h>
 #include <std_msgs/Bool.h>
 #include <std_srvs/Empty.h>
@@ -14,7 +13,8 @@
 #include <lama_msgs/Crossing.h>
 
 
-namespace goto_crossing {
+namespace goto_crossing
+{
 
 class CrossingGoer
 {
@@ -38,7 +38,9 @@ class CrossingGoer
     double ki_v_;  //!< Integral gain for the linear velocity (s^-2).
     double ki_w_;  //!< Integral gain for the angular velocity (s^-2).
     double min_linear_velocity_;  //!< Minimum linear set velocity (m.s^-1), used if the integral gain is 0.
+    double max_linear_velocity_;  //!< Maximum linear set velocity (m.s^-1).
     double min_angular_velocity_;  //!< Minimum angular set velocity (m.s^-1), used if the integral gain is 0.
+    double max_angular_velocity_;  //!< Maximum angular set velocity (m.s^-1).
     double reach_distance_;  //!< Goal is reached if closer than this (m).
     double dtheta_force_left_;  //!< If the goal is behind the robot, force the robot to turn left if the goal angle
                                 //!< is within [pi - dtheta_force_left_, pi], even if the angle difference would tell
@@ -54,8 +56,8 @@ class CrossingGoer
     ros::Publisher goal_reached_publisher_;
     ros::ServiceServer reset_integral_server_;
     ros::Time last_t_;
-    double sum_v_;  //!> Integral of linear error (m.s).
-    double sum_w_;  //!> Integral of angular error (rad.s).
+    double sum_v_;  //!< Integral of linear error (m.s).
+    double sum_w_;  //!< Integral of angular error (rad.s).
 };
 
 } // namespace goto_crossing

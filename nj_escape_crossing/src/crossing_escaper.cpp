@@ -1,6 +1,7 @@
 #include <nj_escape_crossing/crossing_escaper.h>
 
-namespace nj_escape_crossing {
+namespace nj_escape_crossing
+{
 
 const double CrossingEscaper::reach_angular_distance_ = 0.0017;  // (rad), 0.1 deg
 
@@ -322,10 +323,19 @@ bool CrossingEscaper::turnToAngle(const double direction, geometry_msgs::Twist& 
 {
   const double yaw_now= tf::getYaw(odometry_.pose.pose.orientation);
   const double dtheta = angles::shortest_angular_distance(yaw_now, direction_);
-  ROS_DEBUG("dtheta to goal: %f", dtheta);
+  ROS_DEBUG("dtheta to goal: %.3f", dtheta);
 
-  const double wz = kp_w_ * dtheta;
+  double wz = kp_w_ * dtheta;
 
+  // Dead-zone management.
+  if ((wz > 0) && (wz < min_angular_velocity_))
+  {
+    wz = min_angular_velocity_;
+  }
+  else if ((wz < 0) && (wz > -min_angular_velocity_))
+  {
+    wz = -min_angular_velocity_;
+  }
   twist.linear.x = 0;
   twist.angular.z = wz;
   return (std::abs(dtheta) < reach_angular_distance_);

@@ -8,11 +8,11 @@ CrossingGoer::CrossingGoer() :
   kp_w_(0.2),
   ki_v_(0),
   ki_w_(0),
-  min_linear_velocity_(0.020),
+  min_linear_velocity_(0),
   max_linear_velocity_(0),
-  min_angular_velocity_(0.1),
+  min_angular_velocity_(0),
   max_angular_velocity_(0),
-  reach_distance_(0.050),
+  reach_distance_(0.1),
   dtheta_force_left_(0),
   threshold_w_only_(0.35),
   max_sum_v_(10),
@@ -211,15 +211,15 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
 
   // Dead-zone management (not needed if ki_v_ and ki_w_ non null).
   if ((ki_v_ < 1e-10) && (vx < min_linear_velocity_) &&
-      (std::abs(distance) > 1e-10) && (std::abs(wz) <= min_angular_velocity_))
+      (std::abs(distance) > 1e-10) && (std::abs(wz) < min_angular_velocity_))
   {
     vx = min_linear_velocity_;
   }
-  if ((ki_w_ < 1e-10) && (wz > 0) && (wz < min_angular_velocity_) && (vx <= min_linear_velocity_))
+  if ((ki_w_ < 1e-10) && (wz > 0) && (wz < min_angular_velocity_) && (vx < min_linear_velocity_))
   {
     wz = min_angular_velocity_;
   }
-  else if ((ki_w_ < 1e-10) && (wz < 0) && (wz > -min_angular_velocity_) && (vx <= min_linear_velocity_))
+  else if ((ki_w_ < 1e-10) && (wz < 0) && (wz > -min_angular_velocity_) && (vx < min_linear_velocity_))
   {
     wz = -min_angular_velocity_;
   }

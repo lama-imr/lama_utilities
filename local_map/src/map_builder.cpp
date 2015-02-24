@@ -10,18 +10,6 @@
 namespace local_map
 {
 
-// Angle resolution for the ray cast lookup.
-const double angle_resolution = M_PI / 720;  // 0.25 deg
-
-// Probability that a point is occupied when the laser ranger says so.
-const double p_occupied_when_laser = 0.90;
-// Probability that a point is occupied when the laser ranger says it's free.
-const double p_occupied_when_no_laser = 0.3;
-// Large log odds used with probability 0 and 1. The greater, the more inertia.
-const double large_log_odds = 1000;
-// Max log odds used to compute the belief (exp(max_log_odds_for_belief) should not overflow).
-const double max_log_odds_for_belief = 20;
-
 /** Return the name of the tf frame that has no parent.
  */
 std::string getWorldFrame(const tf::Transformer& tf_transformer, const std::string& child)
@@ -128,7 +116,7 @@ void moveAndCopyImage(const int fill, const int dx, const int dy, const unsigned
  * occupancy[in/out] occupancy map to update
  * log_odds[in/out] log odds to update
  */
-void updatePointOccupancy(const bool occupied, const size_t idx, vector<int8_t>& occupancy, vector<double>& log_odds)
+void MapBuilder::updatePointOccupancy(const bool occupied, const size_t idx, vector<int8_t>& occupancy, vector<double>& log_odds) const
 {
   if (idx >= occupancy.size())
   {
@@ -145,31 +133,31 @@ void updatePointOccupancy(const bool occupied, const size_t idx, vector<int8_t>&
   double p;  // Probability of being occupied knowing current measurement.
   if (occupied)
   {
-    p = p_occupied_when_laser;
+    p = p_occupied_when_laser_;
   }
   else
   {
-    p = p_occupied_when_no_laser;
+    p = p_occupied_when_no_laser_;
   }
   // Original formula: Table 4.2, "Probabilistics robotics", Thrun et al., 2005:
   // log_odds[idx] = log_odds[idx] +
   //     std::log(p * (1 - p_occupancy) / (1 - p) / p_occupancy);
   // With p_occupancy = 0.5, this simplifies to:
   log_odds[idx] += std::log(p / (1 - p));
-  if (log_odds[idx] < -large_log_odds)
+  if (log_odds[idx] < -large_log_odds_)
   {
-    log_odds[idx] = -large_log_odds;
+    log_odds[idx] = -large_log_odds_;
   }
-  else if(log_odds[idx] > large_log_odds)
+  else if(log_odds[idx] > large_log_odds_)
   {
-    log_odds[idx] = large_log_odds;
+    log_odds[idx] = large_log_odds_;
   }
   // Update occupancy.
-  if (log_odds[idx] < -max_log_odds_for_belief)
+  if (log_odds[idx] < -max_log_odds_for_belief_)
   {
     occupancy[idx] = 0;
   }
-  else if (log_odds[idx] > max_log_odds_for_belief)
+  else if (log_odds[idx] > max_log_odds_for_belief_)
   {
     occupancy[idx] = 100;
   }
@@ -179,18 +167,12 @@ void updatePointOccupancy(const bool occupied, const size_t idx, vector<int8_t>&
   }
 }
 
-/** Update occupancy and log odds for a list of a points
-*/
-inline void updatePointsOccupancy(const bool occupied, const vector<size_t>& indexes, vector<int8_t>& occupancy, vector<double>& log_odds)
-{
-  vector<size_t>::const_iterator idx = indexes.begin();
-  for (; idx != indexes.end(); ++idx)
-  {
-    updatePointOccupancy(occupied, *idx, occupancy, log_odds);
-  }
-}
-
 MapBuilder::MapBuilder(const int width, const int height, const double resolution) :
+  angle_resolution_(M_PI / 720),
+  p_occupied_when_laser_(0.9),
+  p_occupied_when_no_laser_(0.3),
+  large_log_odds_(100),
+  max_log_odds_for_belief_(20),
   has_frame_id_(false)
 {
   map_frame_id_ = ros::this_node::getName() + "/local_map";
@@ -206,12 +188,44 @@ MapBuilder::MapBuilder(const int width, const int height, const double resolutio
   // occupancy = 0.5, equiprobability between occupied and free.
   log_odds_.assign(width * height, 0);
 
+  ros::NodeHandle private_nh("~");
+  private_nh.getParam("angle_resolution", angle_resolution_);
+  private_nh.getParam("p_occupied_when_laser", p_occupied_when_laser_);
+  if (p_occupied_when_laser_ <=0 || p_occupied_when_laser_ >= 1)
+  {
+    ROS_ERROR_STREAM("Parameter "<< private_nh.getNamespace() << "/p_occupied_when_laser must be within ]0, 1[, setting to default");
+    p_occupied_when_laser_ = 0.9;
+  }
+  private_nh.getParam("p_occupied_when_no_laser", p_occupied_when_no_laser_);
+  if (p_occupied_when_no_laser_ <=0 || p_occupied_when_no_laser_ >= 1)
+  {
+    ROS_ERROR_STREAM("Parameter "<< private_nh.getNamespace() << "/p_occupied_when_no_laser must be within ]0, 1[, setting to default");
+    p_occupied_when_no_laser_ = 0.3;
+  }
+  private_nh.getParam("large_log_odds", large_log_odds_);
+  if (large_log_odds_ <=0)
+  {
+    ROS_ERROR_STREAM("Parameter "<< private_nh.getNamespace() << "/large_log_odds must be positive, setting to default");
+    large_log_odds_ = 100;
+  }
+  private_nh.getParam("max_log_odds_for_belief", max_log_odds_for_belief_);
+  try
+  {
+    exp(max_log_odds_for_belief_);
+  }
+  catch (std::exception)
+  {
+    ROS_ERROR_STREAM("Parameter "<< private_nh.getNamespace() << "/max_log_odds_for_belief too large, setting to default");
+    p_occupied_when_no_laser_ = 20;
+  }
+
+
   // Fill in the lookup cache.
   const double angle_start = -M_PI;
   const double angle_end = angle_start + 2 * M_PI - 1e-6;
-  for (double a = angle_start; a <= angle_end; a += angle_resolution)
+  for (double a = angle_start; a <= angle_end; a += angle_resolution_)
   {
-    ray_caster_.getRayCastToMapBorder(a, height, width, 0.9 * angle_resolution);
+    ray_caster_.getRayCastToMapBorder(a, height, width, 0.9 * angle_resolution_);
   }
 }
 
@@ -341,7 +355,7 @@ bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, const long int dx
 bool MapBuilder::getRayCastToObstacle(const nav_msgs::OccupancyGrid& map, const double angle, const double range, vector<size_t>& raycast)
 {
   const vector<size_t>& ray_to_map_border = ray_caster_.getRayCastToMapBorder(angle,
-      map.info.height, map.info.width, 1.1 * angle_resolution);
+      map.info.height, map.info.width, 1.1 * angle_resolution_);
   // range in pixel length. The ray length in pixels corresponds to the number
   // of pixels in the bresenham algorithm.
   const size_t pixel_range = lround(range * max(abs(std::cos(angle)), abs(std::sin(angle))) / map.info.resolution);

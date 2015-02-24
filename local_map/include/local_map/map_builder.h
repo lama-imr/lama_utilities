@@ -1,6 +1,7 @@
 #ifndef _LOCAL_MAP_MAP_BUILDER_H_
 #define _LOCAL_MAP_MAP_BUILDER_H_
 
+#include <exception>
 #include <string>
 #include <vector>
 
@@ -37,6 +38,37 @@ class MapBuilder
 
     bool updateMap(const sensor_msgs::LaserScan& scan, const long int dx, const long int dy, const double theta);
     bool getRayCastToObstacle(const nav_msgs::OccupancyGrid& map, const double angle, const double range, vector<size_t>& raycast);
+    void updatePointOccupancy(const bool occupied, const size_t idx, vector<int8_t>& occupancy, vector<double>& log_odds) const;
+
+    /** Update occupancy and log odds for a list of a points
+    */
+    inline void updatePointsOccupancy(const bool occupied, const vector<size_t>& indexes, vector<int8_t>& occupancy, vector<double>& log_odds)
+    {
+      vector<size_t>::const_iterator idx = indexes.begin();
+      for (; idx != indexes.end(); ++idx)
+      {
+        updatePointOccupancy(occupied, *idx, occupancy, log_odds);
+      }
+    }
+
+    // ROS parameters.
+    double angle_resolution_;  //!< Angle resolution for the ray cast lookup (rad).
+                               //!< Defaults to 0.25 deg equivalent.
+    double p_occupied_when_laser_;  //!< Probability that a point is occupied
+                                    //!< when the laser ranger says so.
+                                    //!< Defaults to 0.9.
+    double p_occupied_when_no_laser_ ;  //!< Probability that a point is
+                                        //!< occupied when the laser ranger
+                                        //!< says it's free.
+                                        //!< Defaults to 0.3.
+    double large_log_odds_;  //!< Large log odds used with probability 0 and 1.
+                             //!< The greater, the more inertia.
+                             //!< Defaults to 100.
+    double max_log_odds_for_belief_;  //!< Max log odds used to compute the
+                                      //!< belief (exp(max_log_odds_for_belief)
+                                      //!< should not overflow).
+                                      //!< Defaults to 20.
+
 
     // Internals.
     tf::TransformListener tf_listerner_;

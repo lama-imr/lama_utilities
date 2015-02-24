@@ -21,7 +21,8 @@
 #include <lama_msgs/Frontier.h>
 #include <lama_msgs/PlaceProfile.h>
 
-namespace crossing_detector {
+namespace crossing_detector
+{
 
 using std::vector;
 using lama_msgs::Crossing;
@@ -58,19 +59,19 @@ class CrossingDetector
 
     vector<Frontier> frontiers_() const;
 
-    PlaceProfile place_profile_;  //!> PlaceProfile used to compute the crossing.
+    PlaceProfile place_profile_;  //!< PlaceProfile used to compute the crossing.
 
   private:
 
     vector<Point> delaunayInput(const PlaceProfile& profile) const;
 
     // Parameters shown outside (constructor and setter).
-    double frontier_width_;  //!> Min. frontier width, i.e. space turough which a robot can go (m).
-    double max_frontier_angle_;  //!> Max. angle between frontier and line from robot to frontier (rad).
-                                 //!> 0 means that the angle between the line from robot to frontier middle
-                                 //!> and the frontier is 90 deg.
-    double min_relevance_;  //!> Points with relevance smaller than this will be removed (m).
-                            //!> Defaults to 0.01.
+    double frontier_width_;  //!< Min. frontier width, i.e. space turough which a robot can go (m).
+    double max_frontier_angle_;  //!< Max. angle between frontier and line from robot to frontier (rad).
+                                 //!< 0 means that the angle between the line from robot to frontier middle
+                                 //!< and the frontier is 90 deg.
+    double min_relevance_;  //!< Points with relevance smaller than this will be removed (m).
+                            //!< Defaults to 0.01.
 
     // Internals.
     char node_name_[31];

@@ -14,7 +14,8 @@
 
 #include <crossing_detector/crossing_detector.h>
 
-namespace crossing_detector {
+namespace crossing_detector
+{
 
 using sensor_msgs::LaserScan;
 
@@ -33,8 +34,8 @@ class LaserCrossingDetector : public CrossingDetector
   private:
 
     // Parameters shown outside.
-    double max_frontier_dist_;  //!> Threshold for a laser beam to be considered infinite.
-                                //!> If the user does not set the value, 90% of range_max will be used.
+    double max_frontier_dist_;  //!< Threshold for a laser beam to be considered infinite.
+                                //!< If the user does not set the value, 90% of range_max will be used.
 
     // Internals.
 

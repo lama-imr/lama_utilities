@@ -12,6 +12,7 @@ from math import pi
 import rospy
 import actionlib
 from std_msgs.msg import Float32
+from actionlib_msgs.msg import GoalStatus
 
 from lama_jockeys.msg import NavigateAction
 from lama_jockeys.msg import NavigateGoal
@@ -48,8 +49,26 @@ def jockey_client(jockey_name, action_type):
     while not client.wait_for_server(rospy.Duration(5)):
         rospy.loginfo(('{}: waiting for the jockey action ' +
                       'server ({})').format(rospy.get_name(), jockey_name))
+        if rospy.is_shutdown():
+            return
     debug('communicating with the jockey ' +
           'action server {}'.format(jockey_name))
+    return client
+
+
+def service_client(service_name, service_type):
+    client = rospy.ServiceProxy(service_name, service_type)
+    client_ok = False
+    while not client_ok:
+        if rospy.is_shutdown():
+            return
+        try:
+            client.wait_for_service(5)
+        except rospy.ROSException:
+            debug('waiting for service "{}"'.format(service_name))
+        else:
+            client_ok = True
+    debug('service "{}" available'.format(service_name))
     return client
 
 
@@ -83,30 +102,37 @@ class ExplorerNode(object):
                                                  'localizing_jockey')
         escape_jockey_name = rospy.get_param('~escape_jockey_name',
                                              'nj_escape_jockey')
+        self.initialized = False
 
         # Navigate jockey server.
         self.navigate = jockey_client(navigating_jockey_name, NavigateAction)
+        if not self.navigate:
+            return
 
         # Localize jockey server.
         self.localize = jockey_client(localizing_jockey_name, LocalizeAction)
+        if not self.localize:
+            return
 
         # Crossing escape jockey server.
         self.escape = jockey_client(escape_jockey_name, NavigateAction)
+        if not self.escape:
+            return
 
         # Map agent server.
         iface = MapAgentInterface(start=False)
-        self.map_agent = rospy.ServiceProxy(iface.action_service_name,
-                                            ActOnMap)
+        self.map_agent = service_client(iface.action_service_name, ActOnMap)
+        if not self.map_agent:
+            return
 
         # Descriptor getter for Crossing.
         self.crossing_interface_name = rospy.get_param('~crossing_interface',
                                                        'crossing')
         crossing_getter_name = self.crossing_interface_name + '_getter'
-        self.crossing_getter = rospy.ServiceProxy(crossing_getter_name,
-                                                  GetCrossing)
-        debug('waiting for service {}'.format(crossing_getter_name))
-        self.crossing_getter.wait_for_service()
-        debug('service {} available'.format(crossing_getter_name))
+        self.crossing_getter = service_client(crossing_getter_name,
+                                              GetCrossing)
+        if not self.crossing_getter:
+            return
 
         # Exit angles getter and setter (double).
         self.exit_angles_interface_name = rospy.get_param(
@@ -147,6 +173,7 @@ class ExplorerNode(object):
             self.exit_angles_interface_name)
 
         debug('initialized')
+        self.initialized = True
 
     def move_to_crossing(self):
         """Move the robot to the first crossing
@@ -227,11 +254,13 @@ class ExplorerNode(object):
         """
         loc_goal = LocalizeGoal()
         loc_goal.action = loc_goal.GET_VERTEX_DESCRIPTOR
-        self.localize.send_goal_and_wait(loc_goal, rospy.Duration(0.5))
+        state = self.localize.send_goal_and_wait(loc_goal)
+        if state != GoalStatus.SUCCEEDED:
+            rospy.logerr('Did not receive vertex descriptor, exiting')
+            return False
         loc_result = self.localize.get_result()
         if not loc_result:
-            rospy.logerr('Did not receive vertex descriptor within ' +
-                         '0.5 s, exiting')
+            rospy.logerr('Goal succeeded but result not set, exiting')
             return False
         rospy.logdebug('Received {} vertex descriptors'.format(
             len(loc_result.descriptor_links)))
@@ -292,11 +321,13 @@ class ExplorerNode(object):
         loc_goal = LocalizeGoal()
         loc_goal.action = loc_goal.GET_DISSIMILARITY
         debug('Requested GET_DISSIMILARITY')
-        self.localize.send_goal_and_wait(loc_goal, rospy.Duration(0.5))
+        state = self.localize.send_goal_and_wait(loc_goal)
+        if state != GoalStatus.SUCCEEDED:
+            rospy.logerr('Did not receive dissimilarities, exiting')
+            return None, None
         loc_result = self.localize.get_result()
         if not loc_result:
-            rospy.logerr('Did not received vertex descriptor within ' +
-                         '0.5 s, exiting')
+            rospy.logerr('Goal succeeded but result not set, exiting')
             return None, None
         debug('received {} dissimilarities'.format(len(loc_result.idata)))
         return loc_result.idata, loc_result.fdata
@@ -465,5 +496,6 @@ class ExplorerNode(object):
         self.exit_taken = self.next_exit
 
 node = ExplorerNode()
-node.move_to_crossing()
-node.loop()
+if node.initialized:
+    node.move_to_crossing()
+    node.loop()

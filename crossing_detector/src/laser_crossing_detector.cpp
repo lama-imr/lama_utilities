@@ -1,6 +1,7 @@
 #include <crossing_detector/laser_crossing_detector.h>
 
-namespace crossing_detector {
+namespace crossing_detector
+{
 
 LaserCrossingDetector::LaserCrossingDetector(const double frontier_width, const double max_frontier_angle) :
   CrossingDetector(frontier_width, max_frontier_angle)

@@ -14,7 +14,8 @@
 
 #include <map_ray_caster/ray_caster_utils.h>
 
-namespace map_ray_caster {
+namespace map_ray_caster
+{
 
 typedef std::map<double, std::vector<size_t> > RayLookup;
 
@@ -35,8 +36,8 @@ class MapRayCaster
     RayLookup::const_iterator angleLookup(const double angle, const double tolerance);
 
     int occupied_threshold_;
-    size_t ncol_; //!> Map width used in the cache.
-    size_t nrow_; //!> Map height used in the cache.
+    size_t ncol_; //!< Map width used in the cache.
+    size_t nrow_; //!< Map height used in the cache.
     RayLookup raycast_lookup_;
 };
 

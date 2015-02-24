@@ -14,7 +14,8 @@
 
 #include <map_ray_caster/map_ray_caster.h>
 
-namespace local_map {
+namespace local_map
+{
 
 using std::vector;
 using std::abs;
@@ -26,7 +27,7 @@ class MapBuilder
 
     MapBuilder(const int width, const int height, const double resolution);
 
-    bool saveMap(const std::string& name) const;  //!> Save the map on disk
+    bool saveMap(const std::string& name) const;  //!< Save the map on disk
 
     void grow(const sensor_msgs::LaserScan& scan);
 
@@ -39,19 +40,19 @@ class MapBuilder
 
     // Internals.
     tf::TransformListener tf_listerner_;
-    std::string world_frame_id_; //!> frame_id of the world frame
-    tf::TransformBroadcaster tr_broadcaster_;  //!> To broadcast the transform from LaserScan to local map.
-    bool has_frame_id_;  //!> true if map frame_id was already set
-    std::string map_frame_id_;  //!> map frame id in tf
-    double xinit_;  //!> Map x position at initialization
-    double yinit_;  //!> Map y position at initialization
-    long int last_xmap_;  //!> Map integer x position at last map move
-    long int last_ymap_;  //!> Map integer y position at last map move
+    std::string world_frame_id_; //!< frame_id of the world frame
+    tf::TransformBroadcaster tr_broadcaster_;  //!< To broadcast the transform from LaserScan to local map.
+    bool has_frame_id_;  //!< true if map frame_id was already set
+    std::string map_frame_id_;  //!< map frame id in tf
+    double xinit_;  //!< Map x position at initialization
+    double yinit_;  //!< Map y position at initialization
+    long int last_xmap_;  //!< Map integer x position at last map move
+    long int last_ymap_;  //!< Map integer y position at last map move
 
-    nav_msgs::OccupancyGrid map_; //!> local map with fixed orientation
-    std::vector<double> log_odds_;  //>! log odds ratios for the binary Bayes filter
-    //>! log_odd = log(p(x) / (1 - p(x)))
-    map_ray_caster::MapRayCaster ray_caster_;  //!> Ray casting with cache.
+    nav_msgs::OccupancyGrid map_; //!< local map with fixed orientation
+    std::vector<double> log_odds_;  //!< log odds ratios for the binary Bayes filter
+                                    //!< log_odd = log(p(x) / (1 - p(x)))
+    map_ray_caster::MapRayCaster ray_caster_;  //!< Ray casting with cache.
 };
 
 /* Return the offset from row and column number for a row-major array

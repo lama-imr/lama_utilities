@@ -7,11 +7,12 @@
 #include <cassert>
 #endif
 
-namespace crossing_detector {
+namespace crossing_detector
+{
 
 #ifdef DEBUG_CROSSDETECT
 
-/* Save a list of geometry_msgs::Point32 into a file (space separation).
+/** Save a list of geometry_msgs::Point32 into a file (space separation).
  */
 void points_output(const std::string& filename, const std::vector<geometry_msgs::Point32>& points)
 {
@@ -28,7 +29,7 @@ void points_output(const std::string& filename, const std::vector<geometry_msgs:
   ofs.close();
 }
 
-/* Save a list of Point into a file (space separation).
+/** Save a list of Point into a file (space separation).
 */
 void points_output(const std::string& filename, const std::vector<Point>& points)
 {
@@ -45,7 +46,7 @@ void points_output(const std::string& filename, const std::vector<Point>& points
   ofs.close();
 }
 
-/* Save a list of edges into a file (space-separated x1, y1, x2, y2).
+/** Save a list of edges into a file (space-separated x1, y1, x2, y2).
 */
 void edges_output(const std::string& filename, const Delaunay& dt)
 {
@@ -70,7 +71,7 @@ void edges_output(const std::string& filename, const Delaunay& dt)
   ofs.close();
 }
 
-/* Save a list of (x, z, r) into a file
+/** Save a list of (x, z, r) into a file
 */
 void candidates_output(const std::string& filename, const Delaunay& dt, const Polygon& polygon, const bool rejected=false)
 {
@@ -108,7 +109,7 @@ CrossingDetector::CrossingDetector(const double frontier_width, const double max
   private_nh.getParamCached("frontier_width", frontier_width_);
 }
 
-/* Return a lama_msgs/Crossing message from analysis of a lama_msgs/PlaceProfile
+/** Return a lama_msgs/Crossing message from analysis of a lama_msgs/PlaceProfile
  *
  * profile[in] PlaceProfile message.
  * normalize[in] true if the PlaceProfile should be normalized in a first step.
@@ -184,7 +185,7 @@ Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const
   return crossing;
 }
 
-/* Return frontiers computed from place_profile_.
+/** Return frontiers computed from place_profile_.
  *
  * Frontiers can be an excluded segment (or a series of them) or a normal segment.
  * Uses place_profile_ as input.
@@ -237,7 +238,7 @@ vector<Frontier> CrossingDetector::frontiers_() const
   return frontiers;
 }
 
-/* Return a list of frontiers.
+/** Return a list of frontiers.
  *
  * Frontiers can be an excluded segment (or a series of them) or a normal segment.
  *
@@ -257,7 +258,7 @@ vector<Frontier> CrossingDetector::frontiers(const PlaceProfile& profile, const 
   return frontiers_();
 }
 
-/* Return a list of points suited for Delaunay
+/** Return a list of points suited for Delaunay
  *
  * Two operations are realized:
  * - reduce the number of points with a relevance filter (less points on a single "line segment").

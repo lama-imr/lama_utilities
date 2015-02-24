@@ -7,7 +7,8 @@
 
 #include <local_map/map_builder.h>
 
-namespace local_map {
+namespace local_map
+{
 
 // Angle resolution for the ray cast lookup.
 const double angle_resolution = M_PI / 720;  // 0.25 deg
@@ -21,7 +22,7 @@ const double large_log_odds = 1000;
 // Max log odds used to compute the belief (exp(max_log_odds_for_belief) should not overflow).
 const double max_log_odds_for_belief = 20;
 
-/* Return the name of the tf frame that has no parent.
+/** Return the name of the tf frame that has no parent.
  */
 std::string getWorldFrame(const tf::Transformer& tf_transformer, const std::string& child)
 {
@@ -36,7 +37,7 @@ std::string getWorldFrame(const tf::Transformer& tf_transformer, const std::stri
   return last_parent;
 }
 
-/* Return the angle from a quaternion representing a rotation around the z-axis
+/** Return the angle from a quaternion representing a rotation around the z-axis
   *
   * The quaternion in ROS is q = (x, y, z, w), so that
   * q = (ux * sin(a/2), uy * sin(a/2), uz * sin(a/2), cos(a/2)),
@@ -56,7 +57,7 @@ double angleFromQuaternion(const tf::Quaternion& q)
   return 2 * std::atan2(q.z(), q.w());
 }
 
-/* In-place move an image represented as a 1D array
+/** In-place move an image represented as a 1D array
   *
   * The origin of the image moves relativelty to a frame F. All pixels must be
   * moved in the opposite direction, so that what is represented by the pixels
@@ -119,7 +120,7 @@ void moveAndCopyImage(const int fill, const int dx, const int dy, const unsigned
   }
 }
 
-/* Update occupancy and log odds for a point
+/** Update occupancy and log odds for a point
  *
  * occupied[in] true if the point was measured as occupied
  * idx[in] pixel index
@@ -178,7 +179,7 @@ void updatePointOccupancy(const bool occupied, const size_t idx, vector<int8_t>&
   }
 }
 
-/* Update occupancy and log odds for a list of a points
+/** Update occupancy and log odds for a list of a points
 */
 inline void updatePointsOccupancy(const bool occupied, const vector<size_t>& indexes, vector<int8_t>& occupancy, vector<double>& log_odds)
 {
@@ -214,7 +215,7 @@ MapBuilder::MapBuilder(const int width, const int height, const double resolutio
   }
 }
 
-/* Callback for the LaserScan subscriber.
+/** Callback for the LaserScan subscriber.
  *
  * Update (geometrical transformation + probability update) the map with the current scan
  */
@@ -327,16 +328,16 @@ bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, const long int dx
   return has_moved;
 }
 
-/* Return the pixel list by ray casting from map origin to map border, first obstacle.
-  *
-  * Return the pixel list by ray casting from map origin to map border or first obstacle, whichever comes first.
-  * Return true if the last point of the pixel list is an obstacle (end of laser beam).
-  *
-  * map[in] occupancy grid
-  * angle[in] laser beam angle
-  * range[in] laser beam range
-  * raycast[out] list of pixel indexes touched by the laser beam
-  */
+/** Return the pixel list by ray casting from map origin to map border, first obstacle.
+ *
+ * Return the pixel list by ray casting from map origin to map border or first obstacle, whichever comes first.
+ * Return true if the last point of the pixel list is an obstacle (end of laser beam).
+ *
+ * map[in] occupancy grid
+ * angle[in] laser beam angle
+ * range[in] laser beam range
+ * raycast[out] list of pixel indexes touched by the laser beam
+ */
 bool MapBuilder::getRayCastToObstacle(const nav_msgs::OccupancyGrid& map, const double angle, const double range, vector<size_t>& raycast)
 {
   const vector<size_t>& ray_to_map_border = ray_caster_.getRayCastToMapBorder(angle,

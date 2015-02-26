@@ -40,7 +40,7 @@ sensor_msgs::PointCloud placeProfileToPointCloud(const PlaceProfile& profile)
  * The laser beams greater than range_cutoff are removed. However, the first and the last beam of
  * a series of beams larger than range_cutoff are kept are their length is reduced to range_cutoff.
  */
-PlaceProfile laserScanToPlaceProfile(const sensor_msgs::LaserScan& scan, const double range_cutoff)
+PlaceProfile laserScanToPlaceProfile(const sensor_msgs::LaserScan& scan, double range_cutoff)
 {
   // Use LaserProjection for its caching of sine and cosine values.
   static laser_geometry::LaserProjection projector;
@@ -136,27 +136,51 @@ inline bool pointUnknown(const nav_msgs::OccupancyGrid& map, const int index)
  * calculated by raytracing from the map center to the map border with the
  * Bresenham algorithm and stopping at the first encountered occupied or
  * unknown point.
- * Return true if the first non-free point is an obstacle and false if it is an
+ * If the ray is free over the distance range_cutoff, the point will be at this
+ * distance and the returned value will be false (i.e. obstacle free).
+ *
+ * @param[in] map An occupancy grid.
+ * @param[in] angle The ray angle.
+ * @param[in] range_cutoff The max ray length, unused if 0.
+ * @param[out] point The first non-free point.
+ * @return True if the first non-free point is an obstacle and false if it is an
  * unknown point or if no non-free point was met (ray tracing up to map
  * border).
- *
- * map[in] occupancy grid 
- * angle[in] angle of the laser ray
  */
-bool firstNonFree(const nav_msgs::OccupancyGrid& map, const double angle, geometry_msgs::Point32& point)
+bool firstNonFree(const nav_msgs::OccupancyGrid& map, double angle, double range_cutoff, geometry_msgs::Point32& point)
 {
   static map_ray_caster::MapRayCaster ray_caster;
-
   const vector<size_t>& ray = ray_caster.getRayCastToMapBorder(angle, map.info.height, map.info.width);
+
+  // range_cutoff in pixel length.
+  // Initialize to a large value, so that the if condition afterwards will be
+  // always false in the case that range_cuttoff is set to 0.
+  size_t pixel_range = ray.size();
+  double cos_angle;
+  double sin_angle;
+  if (std::abs(range_cutoff) > 1e-10)
+  {
+    cos_angle = std::cos(angle);
+    sin_angle = std::sin(angle);
+    pixel_range = lround(range_cutoff * std::max(std::abs(cos_angle), std::abs(sin_angle)) / map.info.resolution);
+  }
+
   for (size_t i = 0; i < ray.size(); ++i)
   {
     size_t idx = ray[i];
+
+    if (i >= pixel_range)
+    {
+      point.x = range_cutoff * cos_angle;
+      point.y = range_cutoff * sin_angle;
+      return false;
+    }
     if (pointOccupied(map, idx))
     {
       map_ray_caster::indexToReal(map, idx, point);
       return true;
     }
-    else if (pointUnknown(map, idx))
+    if (pointUnknown(map, idx))
     {
       map_ray_caster::indexToReal(map, idx, point);
       return false;
@@ -170,7 +194,7 @@ bool firstNonFree(const nav_msgs::OccupancyGrid& map, const double angle, geomet
  *
  * The range limit is the map border.
  */
-PlaceProfile costmapToPlaceProfile(const nav_msgs::OccupancyGrid& map)
+PlaceProfile costmapToPlaceProfile(const nav_msgs::OccupancyGrid& map, double range_cutoff)
 {
   PlaceProfile profile;
   profile.header = map.header;
@@ -185,11 +209,11 @@ PlaceProfile costmapToPlaceProfile(const nav_msgs::OccupancyGrid& map)
   last_point.x = map.info.width * map.info.resolution;
   geometry_msgs::Point32 this_point;
   geometry_msgs::Point32 next_point;
-  bool this_in_range = firstNonFree(map, angle_min, this_point);
+  bool this_in_range = firstNonFree(map, angle_min, range_cutoff, this_point);
   double next_angle = angle_min + resolution;
   for (size_t i = 0; i < COSTMAP_DISCRETISATION_COUNT; ++i)
   {
-    bool next_in_range = firstNonFree(map, next_angle, next_point);
+    bool next_in_range = firstNonFree(map, next_angle, range_cutoff, next_point);
     if (this_in_range)
     {
       if ((this_point.x != last_point.x) || (this_point.y != last_point.y))

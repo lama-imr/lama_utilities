@@ -28,7 +28,7 @@ namespace lama_common
  * 
  * index must be greater than (-size).
  */
-inline int32_t circular_index(const int32_t index, const size_t size)
+inline int32_t circular_index(int32_t index, size_t size)
 {
   return (index + size) % size;
 }
@@ -37,9 +37,9 @@ geometry_msgs::Polygon placeProfileToPolygon(const PlaceProfile& profile);
 
 sensor_msgs::PointCloud placeProfileToPointCloud(const PlaceProfile& profile);
 
-PlaceProfile laserScanToPlaceProfile(const sensor_msgs::LaserScan& scan, const double range_cutoff);
+PlaceProfile laserScanToPlaceProfile(const sensor_msgs::LaserScan& scan, double range_cutoff);
 
-PlaceProfile costmapToPlaceProfile(const nav_msgs::OccupancyGrid& map);
+PlaceProfile costmapToPlaceProfile(const nav_msgs::OccupancyGrid& map, double range_cutoff = 0);
 
 } // namespace lama_common
 

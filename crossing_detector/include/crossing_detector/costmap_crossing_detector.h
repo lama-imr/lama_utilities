@@ -1,4 +1,4 @@
-/*
+/**
  * Crossing detector based on OccupancyGrid centered on robot.
  */
 
@@ -11,7 +11,8 @@
 
 #include <crossing_detector/crossing_detector.h>
 
-namespace crossing_detector {
+namespace crossing_detector
+{
 
 using nav_msgs::OccupancyGrid;
 
@@ -21,8 +22,8 @@ class CostmapCrossingDetector : public CrossingDetector
     
     CostmapCrossingDetector(const double frontier_width, const double max_frontier_angle=0.785);
 
-    Crossing crossingDescriptor(const OccupancyGrid& map);
-    vector<Frontier> frontiers(const OccupancyGrid& map);
+    Crossing crossingDescriptor(const OccupancyGrid& map, double range_cutoff = 0);
+    vector<Frontier> frontiers(const OccupancyGrid& map, double range_cutoff = 0);
 
   private:
     

@@ -251,10 +251,18 @@ void MapBuilder::grow(const sensor_msgs::LaserScan& scan)
 
     // Initialize saved positions.
     tf::StampedTransform transform;
-    tf_listerner_.waitForTransform(world_frame_id_, scan.header.frame_id,
-	scan.header.stamp, ros::Duration(5.0));
-    tf_listerner_.lookupTransform(world_frame_id_, scan.header.frame_id,
-	scan.header.stamp, transform);
+    try
+    {
+      tf_listerner_.waitForTransform(world_frame_id_, scan.header.frame_id,
+          scan.header.stamp, ros::Duration(1.0));
+      tf_listerner_.lookupTransform(world_frame_id_, scan.header.frame_id,
+          scan.header.stamp, transform);
+    }
+    catch (tf::TransformException ex)
+    {
+      ROS_ERROR("%s", ex.what());
+      has_frame_id_ = false;
+    }
     xinit_ = transform.getOrigin().x();
     yinit_ = transform.getOrigin().y();
     last_xmap_ = lround(xinit_ / map_.info.resolution);
@@ -273,13 +281,14 @@ void MapBuilder::grow(const sensor_msgs::LaserScan& scan)
   try
   {
     tf_listerner_.waitForTransform(world_frame_id_, scan.header.frame_id,
-	scan.header.stamp, ros::Duration(0.2));
+        scan.header.stamp, ros::Duration(0.2));
     tf_listerner_.lookupTransform(world_frame_id_, scan.header.frame_id,
-	scan.header.stamp, new_tr);
+        scan.header.stamp, new_tr);
   }
   catch (tf::TransformException ex)
   {
     ROS_ERROR("%s", ex.what());
+    return;
   }
 
   // Map position relative to initialization.

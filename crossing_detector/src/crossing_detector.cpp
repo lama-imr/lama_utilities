@@ -102,11 +102,9 @@ CrossingDetector::CrossingDetector(const double frontier_width, const double max
   max_frontier_angle_(max_frontier_angle),
   min_relevance_(0.01)
 {
-  std::strncpy(node_name_, ros::this_node::getName().c_str(), 30);
-
   ros::NodeHandle private_nh("~");
-  private_nh.getParamCached("max_frontier_angle", max_frontier_angle_);
-  private_nh.getParamCached("frontier_width", frontier_width_);
+  private_nh.getParam("max_frontier_angle", max_frontier_angle_);
+  private_nh.getParam("frontier_width", frontier_width_);
 }
 
 /** Return a lama_msgs/Crossing message from analysis of a lama_msgs/PlaceProfile
@@ -128,8 +126,8 @@ Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const
   }
   vector<Point> inputPoints = delaunayInput(place_profile_);
 
-  ROS_DEBUG("%s: %zu PlaceProfile points", node_name_, place_profile_.polygon.points.size());
-  ROS_DEBUG("%s: %zu Delaunay input points", node_name_, inputPoints.size());
+  ROS_DEBUG("%zu PlaceProfile points", place_profile_.polygon.points.size());
+  ROS_DEBUG("%zu Delaunay input points", inputPoints.size());
 
   // Insert points and compute the Delaunay triangulation.
   Delaunay triangulation;
@@ -138,9 +136,9 @@ Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const
   // Build a polygon to test if the circumcenter lies inside place_profile_.
   Polygon polygon(inputPoints.begin(), inputPoints.end());
 
-  ROS_DEBUG("%s: Delaunay triangulation is %svalid", node_name_, triangulation.is_valid() ? "" : "not ");
+  ROS_DEBUG("Delaunay triangulation is %svalid", triangulation.is_valid() ? "" : "not ");
   // check if the polygon is simple (i.e., e.g., if points are sorted according to their angle).
-  ROS_DEBUG("%s: the polygon is %ssimple", node_name_, polygon.is_simple() ? "" : "not ");
+  ROS_DEBUG("The polygon is %ssimple", polygon.is_simple() ? "" : "not ");
 
   for (Face_iterator face = triangulation.finite_faces_begin(); face != triangulation.finite_faces_end(); ++face)
   {
@@ -198,12 +196,11 @@ vector<Frontier> CrossingDetector::frontiers_() const
 
   if (size < 2)
   {
-    ROS_ERROR("%s: PlaceProfile message must have at least 2 points",
-	node_name_);
+    ROS_ERROR("PlaceProfile message must have at least 2 points");
     return frontiers;
   }
 
-  double frontier_width2 = frontier_width_ * frontier_width_;
+  double min_frontier_width2 = frontier_width_ * frontier_width_;
 
   Frontier frontier;
   for(size_t i = 0; i < size; ++i)
@@ -211,26 +208,31 @@ vector<Frontier> CrossingDetector::frontiers_() const
     geometry_msgs::Point32 a(place_profile_.polygon.points[i]);
     geometry_msgs::Point32 b(place_profile_.polygon.points[(i + 1) % size]);
 
-    const double dist2 = (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+    const double width2 = (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 
-    if (dist2 > frontier_width2)
+    if (width2 > min_frontier_width2)
     {
+      // Frontier middle.
       const double sx = (a.x + b.x) / 2.0;
       const double sy = (a.y + b.y) / 2.0;
 
-      const double distToFrontierCenter = std::sqrt(sx * sx + sy * sy);
-      const double dotProductFrontierSxSy = (b.x - a.x) * sx + (b.y - a.y) * sy;
-      const double dist = std::sqrt(dist2);
-      const double frontierAngleWithSxSy = std::acos(dotProductFrontierSxSy / dist / distToFrontierCenter);
-      if (std::fabs(M_PI_2 - frontierAngleWithSxSy) < max_frontier_angle_)
+      const double dist_to_frontier_center = std::sqrt(sx * sx + sy * sy);
+      const double dot_product_frontier_sx_sy = (b.x - a.x) * sx + (b.y - a.y) * sy;
+      const double width = std::sqrt(width2);
+      double frontier_angle_with_sx_sy = max_frontier_angle_;
+      if ((width > 0) && (dist_to_frontier_center > 0))
       {
-	frontier.p1.x = a.x;
-	frontier.p1.y = a.y;
-	frontier.p2.x = b.x;
-	frontier.p2.y = b.y;
-	frontier.width = dist;
-	frontier.angle = std::atan2(sy, sx);
-	frontiers.push_back(frontier);
+        frontier_angle_with_sx_sy = std::acos(dot_product_frontier_sx_sy / width / dist_to_frontier_center);
+      }
+      if (std::fabs(M_PI_2 - frontier_angle_with_sx_sy) < max_frontier_angle_)
+      {
+        frontier.p1.x = a.x;
+        frontier.p1.y = a.y;
+        frontier.p2.x = b.x;
+        frontier.p2.y = b.y;
+        frontier.width = width;
+        frontier.angle = std::atan2(sy, sx);
+        frontiers.push_back(frontier);
       }
     }
     a = b;
@@ -267,7 +269,7 @@ vector<Frontier> CrossingDetector::frontiers(const PlaceProfile& profile, const 
 vector<Point> CrossingDetector::delaunayInput(const PlaceProfile& profile) const
 {
   PlaceProfile delaunayProfile = lama_common::simplifiedPlaceProfile(profile, min_relevance_);
-  ROS_DEBUG("%s: %zu relevant points in the PlaceProfile", node_name_, delaunayProfile.polygon.points.size());
+  ROS_DEBUG("%zu relevant points in the PlaceProfile", delaunayProfile.polygon.points.size());
   lama_common::closePlaceProfile(delaunayProfile, frontier_width_ / 2);
   vector<Point> points;
   points.reserve(delaunayProfile.polygon.points.size());

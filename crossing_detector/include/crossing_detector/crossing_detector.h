@@ -72,9 +72,6 @@ class CrossingDetector
                                  //!< and the frontier is 90 deg.
     double min_relevance_;  //!< Points with relevance smaller than this will be removed (m).
                             //!< Defaults to 0.01.
-
-    // Internals.
-    char node_name_[31];
 };
 
 } // namespace crossing_detector

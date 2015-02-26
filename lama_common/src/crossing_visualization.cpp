@@ -1,8 +1,9 @@
 #include <lama_common/crossing_visualization.h>
 
-namespace lama_common {
+namespace lama_common
+{
 
-/* Return the marker for the visualization of the crossing center
+/** Return the marker for the visualization of the crossing center
  */
 visualization_msgs::Marker getCrossingCenterMarker(const std::string& frame_id, const lama_msgs::Crossing& crossing)
 {
@@ -23,7 +24,7 @@ visualization_msgs::Marker getCrossingCenterMarker(const std::string& frame_id, 
 	return m;
 }
 
-/* Return the marker for the visualization of the roads
+/** Return the marker for the visualization of the roads
  */
 visualization_msgs::Marker getFrontiersMarker(const std::string& frame_id, const lama_msgs::Crossing& crossing)
 {

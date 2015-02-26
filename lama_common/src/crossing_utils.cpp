@@ -1,7 +1,10 @@
 #include <lama_common/crossing_utils.h>
 
-namespace lama_common {
+namespace lama_common
+{
 
+/** Apply a rotation to a crossing
+ */
 void rotateCrossing(lama_msgs::Crossing& crossing, const double angle)
 {
   const double cosangle = std::cos(angle);

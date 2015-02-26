@@ -3,9 +3,10 @@
 #define OCCUPIED_THRESHOLD 60 // 0 = free, 100 = occupied.
 #define COSTMAP_DISCRETISATION_COUNT 360 // Number of points for the costmap discretisation to obtain a PlaceProfile.
 
-namespace lama_common {
+namespace lama_common
+{
 
-/* Return the polygon corresponding to the PlaceProfile
+/** Return the polygon corresponding to the PlaceProfile
  */
 geometry_msgs::Polygon placeProfileToPolygon(const PlaceProfile& profile)
 {
@@ -21,7 +22,7 @@ geometry_msgs::Polygon placeProfileToPolygon(const PlaceProfile& profile)
   return polygon;
 }
 
-/* Return the point cloud corresponding to the PlaceProfile
+/** Return the point cloud corresponding to the PlaceProfile
  */
 sensor_msgs::PointCloud placeProfileToPointCloud(const PlaceProfile& profile)
 {
@@ -34,7 +35,7 @@ sensor_msgs::PointCloud placeProfileToPointCloud(const PlaceProfile& profile)
   return cloud;
 }
 
-/* Tranform a LaserScan into a PlaceProfile
+/** Tranform a LaserScan into a PlaceProfile
  *
  * The laser beams greater than range_cutoff are removed. However, the first and the last beam of
  * a series of beams larger than range_cutoff are kept are their length is reduced to range_cutoff.
@@ -115,21 +116,21 @@ PlaceProfile laserScanToPlaceProfile(const sensor_msgs::LaserScan& scan, const d
   return profile;
 }
 
-/* Return true if the map point is occupied.
+/** Return true if the map point is occupied.
  */
 inline bool pointOccupied(const nav_msgs::OccupancyGrid& map, const int index)
 {
   return (map.data[index] > OCCUPIED_THRESHOLD);
 }
 
-/* Return true if the map point is unknown.
+/** Return true if the map point is unknown.
  */
 inline bool pointUnknown(const nav_msgs::OccupancyGrid& map, const int index)
 {
   return (map.data[index] == -1);
 }
 
-/* Return the first non-free point from map center to map border with given angle.
+/** Return the first non-free point from map center to map border with given angle.
  *
  * Return the first non-free point (i.e. first occupied or unknown point),
  * calculated by raytracing from the map center to the map border with the
@@ -165,6 +166,10 @@ bool firstNonFree(const nav_msgs::OccupancyGrid& map, const double angle, geomet
   return false;
 }
 
+/** Return a PlaceProfile from an occupancy grid.
+ *
+ * The range limit is the map border.
+ */
 PlaceProfile costmapToPlaceProfile(const nav_msgs::OccupancyGrid& map)
 {
   PlaceProfile profile;

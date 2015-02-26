@@ -186,12 +186,11 @@ class ExplorerNode(object):
         self.navigate.send_goal(nav_goal)
         self.navigate.wait_for_result()
         nav_result = self.navigate.get_result()
-        if nav_result.final_state == nav_result.DONE:
+        if nav_result and nav_result.final_state == nav_result.DONE:
             debug(('traversed to crossing center in {:.2f} s').format(
                 nav_result.completion_time.to_sec()))
         else:
-            err = '{}: something wrong happened, exiting!'.format(
-                rospy.get_name())
+            err = 'Something wrong happened while getting TRAVERSE result, exiting!'
             rospy.logerr(err)
             raise Exception(err)
         self.first_crossing_reached = True

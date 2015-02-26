@@ -8,7 +8,8 @@
 #include <lama_msgs/Crossing.h>
 #include <lama_msgs/Frontier.h>
 
-namespace lama_common {
+namespace lama_common
+{
 
 void rotateCrossing(lama_msgs::Crossing& crossing, const double angle);
 

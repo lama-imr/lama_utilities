@@ -6,7 +6,8 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Point32.h>
 
-namespace lama_common {
+namespace lama_common
+{
 
 struct Point2
 {

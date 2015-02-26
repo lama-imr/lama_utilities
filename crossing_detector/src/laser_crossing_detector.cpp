@@ -29,7 +29,7 @@ Crossing LaserCrossingDetector::crossingDescriptor(const LaserScan& scan, const 
 vector<Frontier> LaserCrossingDetector::frontiers(const LaserScan& scan, const bool normalize)
 {
   double max_range = max_frontier_dist_;
-  if (max_frontier_dist_ == 0)
+  if (std::abs(max_frontier_dist_) < 1e-10)
   {
     max_range = 0.9 * scan.range_max;
   }

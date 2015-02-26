@@ -8,7 +8,8 @@
 
 #include <lama_msgs/Crossing.h>
 
-namespace lama_common {
+namespace lama_common
+{
 
 visualization_msgs::Marker getCrossingCenterMarker(const std::string& frame_id, const lama_msgs::Crossing& crossing);
 

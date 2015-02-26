@@ -13,7 +13,8 @@
 
 #include <lama_msgs/PlaceProfile.h>
 
-namespace lama_common {
+namespace lama_common
+{
 
 using std::vector;
 using geometry_msgs::Point32;

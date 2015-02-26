@@ -10,12 +10,14 @@
 
 #include <lama_common/point.h>
 
-namespace lama_common {
+namespace lama_common
+{
 
 using std::vector;
 using geometry_msgs::Point32;
 
-// Return the length of a given polygon.
+/** Return the length of a given polygon.
+ */
 template<typename T> 
 double getLength(const vector<T> &pts)
 {
@@ -31,10 +33,11 @@ double getLength(const vector<T> &pts)
   return length;
 }
 
-/// for each segment in polygon, return it's length
-/// polygon: p0, p1,.., pn
-/// result:  l0, l1,.., ln
-/// l0 = lenght of (p0, p1), l1 = length(p1,p2), ... , ln = length(pn, p0)
+/** For each segment in polygon, return its length
+ * polygon: p0, p1,.., pn
+ * result:  l0, l1,.., ln
+ * l0 = lenght of (p0, p1), l1 = length(p1,p2), ... , ln = length(pn, p0)
+ */
 template<typename T>
 vector<double> getLengths(const vector<T> &pts)
 {
@@ -51,8 +54,7 @@ vector<double> getLengths(const vector<T> &pts)
 }
 
 
-/**
- * Resample the given polygon
+/** Resample the given polygon
  *
  * Resample the given polygon of 2D or 3D points. The third coordinate of 3D points is ignored.
  * T must have a constructor T(double, double).
@@ -95,7 +97,7 @@ vector<T> resamplePolygon(const vector<T>& polygon, const int numOfSamples, doub
   return result;
 }
 
-/* Resample the given polygon.
+/** Resample the given polygon.
  *
  * Specialization for geometry_msgs::Point32 that doesn't have a constructor T(double, double).
  *
@@ -128,7 +130,7 @@ inline vector<Point32> resamplePolygon<Point32>(const vector<Point32>& polygon, 
   return resampledGPoints;
 }
 
-/* Return a list of points from a LaserScan.
+/** Return a list of points from a LaserScan.
  *
  * T must have a constructor T(double, double).
  */
@@ -147,7 +149,7 @@ vector<T> scanToPolygon(const sensor_msgs::LaserScan& scan)
   return polygon;
 }
 
-/* Return a geometry_msgs::Polygon from a LaserScan.
+/** Return a geometry_msgs::Polygon from a LaserScan.
  *
  */
 inline geometry_msgs::Polygon scanToPolygon(const sensor_msgs::LaserScan& scan)

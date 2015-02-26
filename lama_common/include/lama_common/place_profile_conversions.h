@@ -1,4 +1,4 @@
-/* Utility functions to convert to and from PlaceProfile messages
+/** Utility functions to convert to and from PlaceProfile messages
  */
 
 #ifndef LAMA_COMMON_PLACE_PROFILE_CONVERSIONS_H
@@ -21,9 +21,10 @@
 using std::vector;
 using lama_msgs::PlaceProfile;
 
-namespace lama_common {
+namespace lama_common
+{
 
-/* Return a positive modulo (as Python does, even with negative numbers)
+/** Return a positive modulo (as Python does, even with negative numbers)
  * 
  * index must be greater than (-size).
  */

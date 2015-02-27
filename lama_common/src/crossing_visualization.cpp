@@ -15,8 +15,8 @@ visualization_msgs::Marker getCrossingCenterMarker(const std::string& frame_id, 
 	m.pose.position.y = crossing.center.y;
 	m.pose.position.z = 0;
 	m.pose.orientation.w = 1.0;
-	m.scale.x = crossing.radius;
-	m.scale.y = crossing.radius;
+	m.scale.x = 2 * crossing.radius;
+	m.scale.y = 2 * crossing.radius;
 	m.scale.z = 1;
 	m.color.r = 1.0;
 	m.color.g = 1.0;

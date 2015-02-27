@@ -95,7 +95,7 @@ class Edge:
 class ExplorerNode(object):
     def __init__(self):
         # Node and server initialization.
-        rospy.init_node('dfs_explorer', log_level=rospy.DEBUG)
+        rospy.init_node('dfs_explorer')
         navigating_jockey_name = rospy.get_param('~navigating_jockey_name',
                                                  'navigating_jockey')
         localizing_jockey_name = rospy.get_param('~localizing_jockey_name',

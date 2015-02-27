@@ -4,19 +4,17 @@ namespace crossing_detector
 {
 
 LaserCrossingDetector::LaserCrossingDetector(const double frontier_width, const double max_frontier_angle) :
-  CrossingDetector(frontier_width, max_frontier_angle)
+  CrossingDetector(frontier_width, max_frontier_angle),
+  range_cutoff_(0)
 {
   ros::NodeHandle private_nh("~");
-  if (!private_nh.getParamCached("max_frontier_distance", max_frontier_dist_))
-  {
-    max_frontier_dist_ = 0.0;
-  }
+  private_nh.getParam("range_cutoff", range_cutoff_);
 }
 
 Crossing LaserCrossingDetector::crossingDescriptor(const LaserScan& scan, const bool normalize)
 {
-  double max_range = max_frontier_dist_;
-  if (std::abs(max_frontier_dist_) < 1e-10)
+  double max_range = range_cutoff_;
+  if (std::abs(range_cutoff_) < 1e-10)
   {
     max_range = 0.9 * scan.range_max;
   }
@@ -28,8 +26,8 @@ Crossing LaserCrossingDetector::crossingDescriptor(const LaserScan& scan, const 
 
 vector<Frontier> LaserCrossingDetector::frontiers(const LaserScan& scan, const bool normalize)
 {
-  double max_range = max_frontier_dist_;
-  if (std::abs(max_frontier_dist_) < 1e-10)
+  double max_range = range_cutoff_;
+  if (std::abs(range_cutoff_) < 1e-10)
   {
     max_range = 0.9 * scan.range_max;
   }

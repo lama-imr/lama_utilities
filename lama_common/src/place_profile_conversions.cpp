@@ -38,7 +38,7 @@ sensor_msgs::PointCloud placeProfileToPointCloud(const PlaceProfile& profile)
 /** Tranform a LaserScan into a PlaceProfile
  *
  * The laser beams greater than range_cutoff are removed. However, the first and the last beam of
- * a series of beams larger than range_cutoff are kept are their length is reduced to range_cutoff.
+ * a series of beams larger than range_cutoff are kept and their length is reduced to range_cutoff.
  */
 PlaceProfile laserScanToPlaceProfile(const sensor_msgs::LaserScan& scan, double range_cutoff)
 {

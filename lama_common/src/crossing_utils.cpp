@@ -7,6 +7,11 @@ namespace lama_common
  */
 void rotateCrossing(lama_msgs::Crossing& crossing, const double angle)
 {
+  if ((crossing.center.x == 0) && (crossing.center.y == 0) && crossing.frontiers.empty())
+  {
+    return;
+  }
+
   const double cosangle = std::cos(angle);
   const double sinangle = std::sin(angle);
 

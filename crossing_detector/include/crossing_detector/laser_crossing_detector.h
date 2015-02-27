@@ -1,4 +1,4 @@
-/*
+/**
  * Crossing detector based on LaserScan
  */
 
@@ -28,14 +28,14 @@ class LaserCrossingDetector : public CrossingDetector
     Crossing crossingDescriptor(const LaserScan& scan, const bool normalize=false);
     vector<lama_msgs::Frontier> frontiers(const LaserScan& scan, const bool normalize=false);
 
-    double getMaxFrontierDistance() const {return max_frontier_dist_;}
-    void setMaxFrontierDistance(const double value) {max_frontier_dist_ = value;}
+    double getMaxFrontierDistance() const {return range_cutoff_;}
+    void setMaxFrontierDistance(const double value) {range_cutoff_ = value;}
     
   private:
 
     // Parameters shown outside.
-    double max_frontier_dist_;  //!< Threshold for a laser beam to be considered infinite.
-                                //!< If the user does not set the value, 90% of range_max will be used.
+    double range_cutoff_;  //!< Threshold for a laser beam to be considered infinite.
+                           //!< If the user does not set the value, 90% of range_max will be used.
 
     // Internals.
 

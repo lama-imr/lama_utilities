@@ -116,6 +116,12 @@ Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const
 {
   Crossing crossing;
 
+  if (profile.polygon.points.empty())
+  {
+    ROS_ERROR("PlaceProfile message must have at least 2 points");
+    return crossing;
+  }
+
   if (normalize)
   {
     place_profile_ = lama_common::normalizedPlaceProfile(profile);

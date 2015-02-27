@@ -192,7 +192,7 @@ bool firstNonFree(const nav_msgs::OccupancyGrid& map, double angle, double range
 
 /** Return a PlaceProfile from an occupancy grid.
  *
- * The range limit is the map border.
+ * The range limit is the map border or range_cutoff, which ever comes first.
  */
 PlaceProfile costmapToPlaceProfile(const nav_msgs::OccupancyGrid& map, double range_cutoff)
 {

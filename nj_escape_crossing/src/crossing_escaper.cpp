@@ -340,7 +340,7 @@ bool CrossingEscaper::turnToAngle(const double direction, geometry_msgs::Twist& 
   twist.angular.z = wz;
 
   // The goal (0) is reached is the sign of dtheta changes.
-  bool angle_reached = (dtheta * last_dtheta_ < 1e-10) && std::abs(dtheta < M_PI_2);
+  bool angle_reached = (dtheta * last_dtheta_ < -1e-10) && std::abs(dtheta < M_PI_2);
   last_dtheta_ = dtheta;
   return angle_reached;
 }

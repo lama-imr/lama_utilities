@@ -1,11 +1,13 @@
 #include <crossing_detector/crossing_detector.h>
 
- #define DEBUG_CROSSDETECT 
+/* #define DEBUG_CROSSDETECT */ 
 
 #ifdef DEBUG_CROSSDETECT
 #include <fstream>
 #include <cassert>
 #endif
+
+#define SIMPLIFY_PROFILE 0
 
 namespace crossing_detector
 {
@@ -268,16 +270,22 @@ vector<Frontier> CrossingDetector::frontiers(const PlaceProfile& profile, const 
 
 /** Return a list of points suited for Delaunay
  *
- * Two operations are realized:
- * - reduce the number of points with a relevance filter (less points on a single "line segment").
- * - fill frontiers so that the crossing center will not be found at frontiers.
  */
 vector<Point> CrossingDetector::delaunayInput(const PlaceProfile& profile) const
 {
   PlaceProfile delaunayProfile = profile;
-//  PlaceProfile delaunayProfile = lama_common::simplifiedPlaceProfile(profile, min_relevance_);
+
+#if SIMPLIFY_PROFILE
+  /*
+   * Two extra operations are realized:
+   * - reduce the number of points with a relevance filter (less points on a single "line segment").
+   * - fill frontiers so that the crossing center will not be found at frontiers.
+   */
+  lama_common::simplifyPlaceProfile(delaunayProfileprofile, min_relevance_);
   ROS_DEBUG("%zu relevant points in the PlaceProfile", delaunayProfile.polygon.points.size());
-//  lama_common::closePlaceProfile(delaunayProfile, frontier_width_ / 2);
+  lama_common::closePlaceProfile(delaunayProfile, frontier_width_ / 2);
+#endif
+
   vector<Point> points;
   points.reserve(delaunayProfile.polygon.points.size());
   for (size_t i = 0; i < delaunayProfile.polygon.points.size(); ++i)

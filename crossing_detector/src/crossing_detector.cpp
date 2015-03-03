@@ -1,6 +1,6 @@
 #include <crossing_detector/crossing_detector.h>
 
-/* #define DEBUG_CROSSDETECT */
+ #define DEBUG_CROSSDETECT 
 
 #ifdef DEBUG_CROSSDETECT
 #include <fstream>
@@ -274,9 +274,10 @@ vector<Frontier> CrossingDetector::frontiers(const PlaceProfile& profile, const 
  */
 vector<Point> CrossingDetector::delaunayInput(const PlaceProfile& profile) const
 {
-  PlaceProfile delaunayProfile = lama_common::simplifiedPlaceProfile(profile, min_relevance_);
+  PlaceProfile delaunayProfile = profile;
+//  PlaceProfile delaunayProfile = lama_common::simplifiedPlaceProfile(profile, min_relevance_);
   ROS_DEBUG("%zu relevant points in the PlaceProfile", delaunayProfile.polygon.points.size());
-  lama_common::closePlaceProfile(delaunayProfile, frontier_width_ / 2);
+//  lama_common::closePlaceProfile(delaunayProfile, frontier_width_ / 2);
   vector<Point> points;
   points.reserve(delaunayProfile.polygon.points.size());
   for (size_t i = 0; i < delaunayProfile.polygon.points.size(); ++i)

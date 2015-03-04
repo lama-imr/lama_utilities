@@ -225,12 +225,12 @@ vector<Frontier> CrossingDetector::frontiers_() const
       const double dist_to_frontier_center = std::sqrt(sx * sx + sy * sy);
       const double dot_product_frontier_sx_sy = (b.x - a.x) * sx + (b.y - a.y) * sy;
       const double width = std::sqrt(width2);
-      double frontier_angle_with_sx_sy = max_frontier_angle_;
+      double frontier_angle = max_frontier_angle_;
       if ((width > 0) && (dist_to_frontier_center > 0))
       {
-        frontier_angle_with_sx_sy = M_PI_2 - std::acos(std::abs(dot_product_frontier_sx_sy / width / dist_to_frontier_center));
+        frontier_angle = M_PI_2 - std::acos(std::abs(dot_product_frontier_sx_sy / width / dist_to_frontier_center));
       }
-      if (frontier_angle_with_sx_sy < max_frontier_angle_)
+      if (frontier_angle < max_frontier_angle_)
       {
         frontier.p1.x = a.x;
         frontier.p1.y = a.y;

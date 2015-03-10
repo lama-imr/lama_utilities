@@ -125,7 +125,6 @@ catkin_package(
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
   scripts/explorer.py
-  scripts/graph_transformer.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

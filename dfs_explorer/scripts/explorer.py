@@ -29,8 +29,6 @@ from lama_interfaces.graph_builder import get_directed_graph
 from lama_interfaces.graph_builder import get_directed_graph_index
 from lama_interfaces.graph_builder import get_vertex_from_graph
 
-_max_dissimilarity_for_same = 0.045
-
 
 def normalize_angles(angles):
     def normalize_angle(angle):
@@ -88,9 +86,8 @@ class Edge:
 
 
 class ExplorerNode(object):
-
     def __init__(self):
-        # Node and server initialization.
+        # Node initialization and parameter interface.
         rospy.init_node('dfs_explorer')
         navigating_jockey_name = rospy.get_param('~navigating_jockey_name',
                                                  'navigating_jockey')
@@ -98,6 +95,15 @@ class ExplorerNode(object):
                                                  'localizing_jockey')
         escape_jockey_name = rospy.get_param('~escape_jockey_name',
                                              'nj_escape_jockey')
+        self.crossing_interface_name = rospy.get_param('~crossing_interface',
+                                                       'crossing')
+        self.exit_angles_interface_name = rospy.get_param(
+            '~exit_angles_interface_name',
+            'dfs_explorer_exit_angle')
+        self.dissimilarity_threshold = rospy.get_param(
+            '~dissimilarity_threshold',
+            0.05)
+
         self.initialized = False
 
         # Navigate jockey server.
@@ -122,8 +128,6 @@ class ExplorerNode(object):
             return
 
         # Descriptor getter for Crossing.
-        self.crossing_interface_name = rospy.get_param('~crossing_interface',
-                                                       'crossing')
         crossing_getter_name = self.crossing_interface_name + '_getter'
         self.crossing_getter = service_client(crossing_getter_name,
                                               GetCrossing)
@@ -131,19 +135,12 @@ class ExplorerNode(object):
             return
 
         # Exit angles getter and setter (double).
-        self.exit_angles_interface_name = rospy.get_param(
-            '~exit_angles_interface_name',
-            'dfs_explorer_exit_angle')
         exits_iface = interface_factory(
             self.exit_angles_interface_name,
             'lama_interfaces/GetDouble',
             'lama_interfaces/SetDouble')
         self.exit_angles_getter = exits_iface.getter_service_proxy
         self.exit_angles_setter = exits_iface.setter_service_proxy
-
-        # Exit angle topic advertiser.
-        self.exit_angle_topic_name = rospy.get_param("exit_angle_topic",
-                                                     "~exit_angle")
 
         self.first_crossing_reached = False
         # When leaving a vertex, this is be the next edge to visit.
@@ -263,7 +260,7 @@ class ExplorerNode(object):
             zip(vertices, dissimilarities)))
         vertex_is_new = True
         if (dissimilarities and
-                (min(dissimilarities) < _max_dissimilarity_for_same)):
+            (min(dissimilarities) < self.dissimilarity_threshold)):
             vertex_is_new = False
         if vertex_is_new:
             # Add vertex to map.

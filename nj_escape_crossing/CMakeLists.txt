@@ -7,6 +7,7 @@ project(nj_escape_crossing)
 find_package(catkin REQUIRED COMPONENTS
   angles
   geometry_msgs
+  sensor_msgs
   lama_jockeys
   lama_msgs
   nav_msgs

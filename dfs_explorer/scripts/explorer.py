@@ -31,9 +31,7 @@ from lama_interfaces.graph_builder import get_directed_graph_index
 
 from graph_transformer import GraphTransformer
 
-_max_dissimilarity_for_same = 0.05
-
-
+_max_dissimilarity_for_same = 0.08 
 def normalize_angles(angles):
     def normalize_angle(angle):
         return (angle + pi) % (2 * pi) - pi
@@ -276,6 +274,7 @@ class ExplorerNode(object):
         """
         vertex_come_from = self.last_vertex
         vertices, dissimilarities = self.get_dissimilarity()
+        rospy.loginfo(zip(vertices,dissimilarities));
         vertex_is_new = True
         if (dissimilarities and
             (min(dissimilarities) < _max_dissimilarity_for_same)):

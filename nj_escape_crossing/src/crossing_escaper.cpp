@@ -33,6 +33,18 @@ CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
   private_nh.getParam("exit_angle_interface_name", exit_angle_interface_name_);
   private_nh.getParam("exit_angle_topic_name", exit_angle_topic_name_);
 
+ // Parameters from nj_oa_laser::TwistHandler.
+  private_nh_.getParam("robot_radius", robot_radius);
+  private_nh_.getParam("min_distance", min_distance);
+  private_nh_.getParam("long_distance",long_distance);
+  private_nh_.getParam("turnrate_collide", turnrate_collide);
+  private_nh_.getParam("vel_close_obstacle", vel_close_obstacle);
+  private_nh_.getParam("turnrate_factor", turnrate_factor);
+  private_nh_.getParam("max_linear_velocity", max_linear_velocity);
+  private_nh_.getParam("max_angular_velocity", max_angular_velocity);
+
+
+
   crossing_getter_ = nh_.serviceClient<lama_msgs::GetCrossing>(crossing_interface_name_ + "_getter");
   exit_angle_getter_ = nh_.serviceClient<lama_interfaces::GetDouble>(exit_angle_interface_name_ + "_getter");
 }
@@ -74,6 +86,7 @@ void CrossingEscaper::onTraverse()
 
   twist_publisher_ = private_nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   odometry_subscriber_ = private_nh_.subscribe("odometry", 1, &CrossingEscaper::odometry_callback, this);
+  laser_scan_subscriber_ = private_nh_.subscribe("/syros/laser_laser", 1, &CrossingEscaper::laser_scan_callback, this);
 
   if (!getExitAngle())
   {
@@ -129,7 +142,7 @@ void CrossingEscaper::onTraverse()
     }
 
     // Odometry timeout mechanism.
-    if ((ros::Time::now() - odometry_.header.stamp) > ros::Duration(max_odometry_age_))
+    if (false && (ros::Time::now() - odometry_.header.stamp) > ros::Duration(max_odometry_age_))
     {
       ROS_WARN("No Odometry received within %.3f s, setting Twist to 0 (odometry age: %.3f s)",
           max_odometry_age_, (ros::Time::now() - odometry_.header.stamp).toSec());
@@ -194,6 +207,12 @@ void CrossingEscaper::odometry_callback(const nav_msgs::Odometry& odometry)
 {
   odometry_ = odometry;
   has_odometry_ = true;
+}
+
+void CrossingEscaper::laser_scan_callback(const sensor_msgs::LaserScan& scan)
+{
+   laser_scan_ = scan;
+   has_laser_scan_ = true;
 }
 
 void CrossingEscaper::direction_callback(const std_msgs::Float32& direction)
@@ -355,7 +374,7 @@ bool CrossingEscaper::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::
   const double dx = odometry_.pose.pose.position.x - start_position_.pose.pose.position.x;
   const double dy = odometry_.pose.pose.position.y - start_position_.pose.pose.position.y;
   const double traveled_distance = std::sqrt(dx * dx + dy * dy);
-  if (traveled_distance > distance_to_escape_)
+  if (traveled_distance > 1.5*distance_to_escape_)
   {
     // Goal reached.
     twist = geometry_msgs::Twist();
@@ -396,11 +415,101 @@ bool CrossingEscaper::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::
   twist.linear.x = vx;
   twist.angular.z = wz;
 
-  return false;
+  if ( traveled_distance > 0.5 * distance_to_escape_ && has_laser_scan_) {
+    ROS_DEBUG("obstacle avoidance in escaper");
+    bool collide = false;
+    bool go_straight = true;
+    double sum_distance_front = 0;
+    unsigned int count_distance_front = 0;
+    double sum_y = 0;
+    unsigned int count_y = 0;
+    double sum_y_colliding = 0;
+
+    double x;
+    double y;
+    for (unsigned int i = 0; i < laser_scan_.ranges.size(); ++i)
+    {
+      const double angle = angles::normalize_angle(laser_scan_.angle_min + i * laser_scan_.angle_increment);
+      if ((angle < -M_PI_2) || (angle > M_PI_2))
+      {
+        // Do no consider a beam directed backwards.
+        continue;
+      }
+
+      if ((-M_PI_4 < angle) && (angle < M_PI_4))
+      {
+        sum_distance_front += laser_scan_.ranges[i];
+        count_distance_front++;
+      }
+
+      x = laser_scan_.ranges[i] * std::cos(angle);
+      y = laser_scan_.ranges[i] * std::sin(angle);
+
+      if ((x < min_distance)  && (-robot_radius < y) && (y < robot_radius))
+      {
+        collide = true;
+        sum_y_colliding += y;   
+      } 
+
+      if ((x < long_distance) && (-1.5*robot_radius < y) && (y < 1.5*robot_radius))
+      {
+        go_straight = false;
+      }
+      sum_y += y;
+      count_y++;
+    }
+
+    // Corner detection.
+    const bool force_turn_left = (count_distance_front > 0) &&
+      (sum_distance_front / count_distance_front < force_turn_left_factor * min_distance);
+
+    if (force_turn_left)
+    {
+      twist.angular.z = turnrate_collide;
+      ROS_DEBUG("Mean dist to obstacle within %.3f, force left turn",
+          force_turn_left_factor * min_distance);
+    }
+    else if (collide)
+    { 
+      twist.linear.x = 0;
+      if (sum_y_colliding < 0)
+      { 
+        twist.angular.z = turnrate_collide;
+        ROS_DEBUG("Obstacle on the left, turn right");
+      }
+      else
+      {
+        twist.angular.z = -turnrate_collide;
+        ROS_DEBUG("Obstacle on the right, turn left");
+      }      
+    }
+    else if (go_straight)
+    {
+      twist.linear.x = max_linear_velocity;
+      twist.angular.z = 0;
+      ROS_DEBUG("No obstacle");
+    }
+    else
+    {
+      twist.linear.x = vel_close_obstacle;
+      twist.angular.z = turnrate_factor * sum_y / ((double) count_y);
+      ROS_DEBUG("Obstacle seen within %.3f, %.3f",  long_distance, long_lateral_distance);
+    }
+
+    if (twist.angular.z < -max_angular_velocity)
+    {
+      twist.angular.z = -max_angular_velocity;
+    }
+    else if (twist.angular.z > max_angular_velocity)
+    {
+      twist.angular.z = max_angular_velocity;
+    }
+  }
+return false;
 }
 
 /* Return the relative goal from current robot position and start position
- */
+*/
 geometry_msgs::Point CrossingEscaper::goalFromOdometry()
 {
   geometry_msgs::Point abs_goal;

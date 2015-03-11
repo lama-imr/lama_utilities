@@ -209,6 +209,8 @@ vector<Frontier> CrossingDetector::frontiers_() const
   double min_frontier_width2 = frontier_width_ * frontier_width_;
 
   Frontier frontier;
+  double frontier_angle;
+  bool frontiers_empty = true;
   for(size_t i = 0; i < size; ++i)
   {
     geometry_msgs::Point32 a(place_profile_.polygon.points[i]);
@@ -229,8 +231,9 @@ vector<Frontier> CrossingDetector::frontiers_() const
       if ((width > 0) && (dist_to_frontier_center > 0))
       {
         frontier_angle_with_sx_sy = std::acos(dot_product_frontier_sx_sy / width / dist_to_frontier_center);
+        frontier_angle = std::atan2(sy,sx);
       }
-      if (std::fabs(M_PI_2 - frontier_angle_with_sx_sy) < max_frontier_angle_)
+      if ( frontiers_empty || fabs(frontier_angle - frontier.angle) > 0.4)
       {
         frontier.p1.x = a.x;
         frontier.p1.y = a.y;
@@ -239,6 +242,7 @@ vector<Frontier> CrossingDetector::frontiers_() const
         frontier.width = width;
         frontier.angle = std::atan2(sy, sx);
         frontiers.push_back(frontier);
+        frontiers_empty = false;
       }
     }
     a = b;

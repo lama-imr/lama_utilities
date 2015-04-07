@@ -26,7 +26,7 @@ class MapBuilder
 {
   public:
 
-    MapBuilder(const int width, const int height, const double resolution);
+    MapBuilder(int width, int height, double resolution);
 
     bool saveMap(const std::string& name) const;  //!< Save the map on disk
 
@@ -36,13 +36,13 @@ class MapBuilder
 
   private:
 
-    bool updateMap(const sensor_msgs::LaserScan& scan, const long int dx, const long int dy, const double theta);
-    bool getRayCastToObstacle(const nav_msgs::OccupancyGrid& map, const double angle, const double range, vector<size_t>& raycast);
-    void updatePointOccupancy(const bool occupied, const size_t idx, vector<int8_t>& occupancy, vector<double>& log_odds) const;
+    bool updateMap(const sensor_msgs::LaserScan& scan, long int dx, long int dy, double theta);
+    bool getRayCastToObstacle(const nav_msgs::OccupancyGrid& map, double angle, double range, vector<size_t>& raycast);
+    void updatePointOccupancy(bool occupied, size_t idx, vector<int8_t>& occupancy, vector<double>& log_odds) const;
 
     /** Update occupancy and log odds for a list of a points
     */
-    inline void updatePointsOccupancy(const bool occupied, const vector<size_t>& indexes, vector<int8_t>& occupancy, vector<double>& log_odds)
+    inline void updatePointsOccupancy(bool occupied, const vector<size_t>& indexes, vector<int8_t>& occupancy, vector<double>& log_odds)
     {
       vector<size_t>::const_iterator idx = indexes.begin();
       for (; idx != indexes.end(); ++idx)
@@ -91,13 +91,13 @@ class MapBuilder
  *
  * offset, row and column can be out of the map range.
  */
-inline int offsetFromRowColNoRangeCheck(const int row, const int col, const size_t ncol)
+inline int offsetFromRowColNoRangeCheck(int row, int col, size_t ncol)
 {
   return (row * ncol) + col;
 }
 
 template <typename T>
-void moveAndCopyImage(const int fill, const int dx, const int dy, const unsigned int ncol, std::vector<T>& map);
+void moveAndCopyImage(int fill, int dx, int dy, unsigned int ncol, std::vector<T>& map);
 
 } // namespace local_map
 

@@ -51,14 +51,14 @@ double angleFromQuaternion(const tf::Quaternion& q)
   * moved in the opposite direction, so that what is represented by the pixels
   * is fixed in the frame F.
   *
-  * fill Default fill value
-  * dx pixel displacement in x (rows)
-  * dy pixel displacement in y (columns)
-  * ncol number of column
-  * map image to be moved
+  * @param[in] fill Default fill value
+  * @param[in] dx pixel displacement in x (rows)
+  * @param[in] dy pixel displacement in y (columns)
+  * @param[in] ncol number of column
+  * @param[in,out] map image to be moved
   */
 template <typename T>
-void moveAndCopyImage(const int fill, const int dx, const int dy, const unsigned int ncol, vector<T>& map)
+void moveAndCopyImage(int fill, int dx, int dy, unsigned int ncol, vector<T>& map)
 {
   if (dx == 0 && dy == 0)
   {
@@ -110,13 +110,13 @@ void moveAndCopyImage(const int fill, const int dx, const int dy, const unsigned
 
 /** Update occupancy and log odds for a point
  *
- * occupied[in] true if the point was measured as occupied
- * idx[in] pixel index
- * ncol[in] map width
- * occupancy[in/out] occupancy map to update
- * log_odds[in/out] log odds to update
+ * @param[in] occupied true if the point was measured as occupied
+ * @param[in] idx pixel index
+ * @param[in] ncol map width
+ * @param[in,out] occupancy occupancy map to update
+ * @param[in,out] log_odds log odds to update
  */
-void MapBuilder::updatePointOccupancy(const bool occupied, const size_t idx, vector<int8_t>& occupancy, vector<double>& log_odds) const
+void MapBuilder::updatePointOccupancy(bool occupied, size_t idx, vector<int8_t>& occupancy, vector<double>& log_odds) const
 {
   if (idx >= occupancy.size())
   {
@@ -167,7 +167,7 @@ void MapBuilder::updatePointOccupancy(const bool occupied, const size_t idx, vec
   }
 }
 
-MapBuilder::MapBuilder(const int width, const int height, const double resolution) :
+MapBuilder::MapBuilder(int width, int height, double resolution) :
   angle_resolution_(M_PI / 720),
   p_occupied_when_laser_(0.9),
   p_occupied_when_no_laser_(0.3),
@@ -321,7 +321,7 @@ void MapBuilder::grow(const sensor_msgs::LaserScan& scan)
   tr_broadcaster_.sendTransform(tf::StampedTransform(map_transform, scan.header.stamp, scan.header.frame_id, map_frame_id_));
 }
 
-bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, const long int dx, const long int dy, const double theta)
+bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, long int dx, long int dy, double theta)
 {
   const bool has_moved = (dx != 0 || dy != 0);
   const int ncol = map_.info.width;
@@ -358,14 +358,14 @@ bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, const long int dx
 /** Return the pixel list by ray casting from map origin to map border, first obstacle.
  *
  * Return the pixel list by ray casting from map origin to map border or first obstacle, whichever comes first.
- * Return true if the last point of the pixel list is an obstacle (end of laser beam).
  *
- * map[in] occupancy grid
- * angle[in] laser beam angle
- * range[in] laser beam range
- * raycast[out] list of pixel indexes touched by the laser beam
+ * @param[in] map occupancy grid
+ * @param[in] angle laser beam angle
+ * @param[in] range laser beam range
+ * @param[out] raycast list of pixel indexes touched by the laser beam
+ * @return true if the last point of the pixel list is an obstacle (end of laser beam). 
  */
-bool MapBuilder::getRayCastToObstacle(const nav_msgs::OccupancyGrid& map, const double angle, const double range, vector<size_t>& raycast)
+bool MapBuilder::getRayCastToObstacle(const nav_msgs::OccupancyGrid& map, double angle, double range, vector<size_t>& raycast)
 {
   // Do not consider a 0-length range.
   if (range < 1e-10)

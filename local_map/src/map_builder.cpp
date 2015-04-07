@@ -338,6 +338,10 @@ bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, const long int dx
     const double angle = angles::normalize_angle(scan.angle_min + i * scan.angle_increment + theta);
     vector<size_t> pts;
     const bool obstacle_in_map = getRayCastToObstacle(map_, angle, scan.ranges[i], pts);
+    if (pts.empty())
+    {
+      continue;
+    }
     if (obstacle_in_map)
     {
       // The last point is the point with obstacle.
@@ -363,6 +367,13 @@ bool MapBuilder::updateMap(const sensor_msgs::LaserScan& scan, const long int dx
  */
 bool MapBuilder::getRayCastToObstacle(const nav_msgs::OccupancyGrid& map, const double angle, const double range, vector<size_t>& raycast)
 {
+  // Do not consider a 0-length range.
+  if (range < 1e-10)
+  {
+    raycast.clear();
+    return false;
+  }
+
   const vector<size_t>& ray_to_map_border = ray_caster_.getRayCastToMapBorder(angle,
       map.info.height, map.info.width, 1.1 * angle_resolution_);
   // range in pixel length. The ray length in pixels corresponds to the number

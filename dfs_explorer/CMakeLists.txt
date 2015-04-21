@@ -82,7 +82,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   #  INCLUDE_DIRS include
   #  LIBRARIES dfs_explorer
-  CATKIN_DEPENDS lama_interfaces actionlib rospy
+  CATKIN_DEPENDS actionlib geometry_msgs lama_interfaces rospy
   #  DEPENDS system_lib
   )
 

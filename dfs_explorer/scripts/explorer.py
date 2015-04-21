@@ -2,24 +2,27 @@
 # -*- coding: utf-8 -*-
 
 # Implement a Depth-First Search explorer.
-# Works in combination with lj_laser_heading, nj_laser, and nj_escape_crossing
-# jockeys.
+# Works in combination with
+# a) lj_laser_heading, nj_laser, and nj_escape_crossing
+# or
+# b) lj_costmap, nj_costmap, and nj_escape_crossing.
 
 from math import pi
 
 import rospy
 import actionlib
 from actionlib_msgs.msg import GoalStatus
+from geometry_msgs.msg import Pose
 
+from lama_interfaces.srv import ActOnMap
+from lama_interfaces.srv import ActOnMapRequest
+from lama_interfaces.core_interface import MapAgentInterface
 from lama_jockeys.msg import NavigateAction
 from lama_jockeys.msg import NavigateGoal
 from lama_jockeys.msg import LocalizeAction
 from lama_jockeys.msg import LocalizeGoal
 from lama_msgs.msg import LamaObject
 from lama_msgs.srv import GetCrossing
-from lama_interfaces.srv import ActOnMap
-from lama_interfaces.srv import ActOnMapRequest
-from lama_interfaces.core_interface import MapAgentInterface
 # import lama_interfaces.cleartext_interface_factory as li_cif
 # interface_factory = li_cif.cleartext_interface_factory
 import lama_interfaces.interface_factory as li_if
@@ -97,6 +100,9 @@ class ExplorerNode(object):
                                              'nj_escape_jockey')
         self.crossing_interface_name = rospy.get_param('~crossing_interface',
                                                        'crossing')
+        self.place_profile_interface_name = rospy.get_param(
+            '~place_profile_interface',
+            'place_profile')
         self.exit_angles_interface_name = rospy.get_param(
             '~exit_angles_interface_name',
             'dfs_explorer_exit_angle')
@@ -416,17 +422,8 @@ class ExplorerNode(object):
         rospy.logdebug(msg)
 
         for edge in path:
-            # Escape from crossing center.
-            goal = NavigateGoal()
-            goal.action = goal.TRAVERSE
-            goal.edge = edge
-            rospy.logdebug('escaping along edge {}'.format(goal.edge.id))
-            self.escape.send_goal_and_wait(goal)
-            result = self.navigate.get_result()
-            if not result or (result.final_state != result.DONE):
-                err = 'Escape jockey did not succeed'
-                rospy.logerr(err)
-                return False
+            self.escape_from_crossing(edge)
+
             # Go to next crossing.
             goal = NavigateGoal()
             goal.action = goal.TRAVERSE
@@ -482,13 +479,63 @@ class ExplorerNode(object):
         map_action.object.id = vertex
         map_action.interface_name = self.crossing_interface_name
         response = self.map_agent(map_action)
+        if not response.descriptor_links:
+            rospy.logerr('No Crossing associated with ' +
+                          'vertex {}'.format(vertex.id))
+            return None
+        if len(response.descriptor_links) > 1:
+            rospy.logwarn('More than one Crossing associated with ' +
+                          'vertex {}, taking the first one'.format(vertex.id))
+        return response.descriptor_links[0].descriptor_id
+
+    def get_place_profile_desc_id(self, vertex):
+        """Return the id of the first Crossing associated with a vertex"""
+        map_action = ActOnMapRequest()
+        map_action.action = map_action.GET_DESCRIPTOR_LINKS
+        map_action.object.id = vertex
+        map_action.interface_name = self.place_profile_interface_name
+        response = self.map_agent(map_action)
+        if not response.descriptor_links:
+            rospy.logerr('No PlaceProfile associated with ' +
+                          'vertex {}'.format(vertex.id))
+            return None
+        if len(response.descriptor_links) > 1:
+            rospy.logwarn('More than one PlaceProfile associated with ' +
+                          'vertex {}, taking the first one'.format(vertex.id))
         return response.descriptor_links[0].descriptor_id
 
     def escape_from_crossing(self, edge_to_visit):
         """Escape from crossing along edge_to_visit"""
+        # Get the robot pose relative to the vertex.
+        loc_goal = LocalizeGoal()
+        loc_goal.action = loc_goal.LOCALIZE_IN_VERTEX
+        loc_goal.descriptor_link.descriptor_id = (
+            self.get_place_profile_desc_id(edge_to_visit.references[0]))
+        if not loc_goal.descriptor_link.descriptor_id:
+            rospy.logerr('Database error')
+            return False
+        loc_goal.descriptor_link.interface_name = (
+            self.place_profile_interface_name)
+        self.localize.send_goal_and_wait(loc_goal)
+        loc_result = self.localize.get_result()
+        if not loc_result or (loc_result.state != loc_result.DONE):
+            err = 'Localize jockey, LOCALIZE_IN_VERTEX did not succeed'
+            rospy.logerr(err)
+            return False
+        pose = Pose()
+        pose.position.x = loc_result.fdata[0]
+        pose.position.y = loc_result.fdata[1]
+        pose.position.z = loc_result.fdata[2]
+        pose.orientation.x = loc_result.fdata[3]
+        pose.orientation.y = loc_result.fdata[4]
+        pose.orientation.z = loc_result.fdata[5]
+        pose.orientation.w = loc_result.fdata[6]
+
+        rospy.loginfo('Pose: {}'.format(loc_result.fdata)) # DEBUG
         nav_goal = NavigateGoal()
         nav_goal.action = nav_goal.TRAVERSE
         nav_goal.edge = edge_to_visit
+        nav_goal.relative_edge_start = pose
         rospy.logdebug('Escaping from crossing along edge {}'.format(
             edge_to_visit.id))
         self.escape.send_goal_and_wait(nav_goal)

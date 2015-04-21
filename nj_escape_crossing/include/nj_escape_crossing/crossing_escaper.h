@@ -32,15 +32,20 @@
  * - none
  *
  * Parameters:
- * - kp_v, Float, 0.05, proportional gain for the linear velocity (s^-1).
- * - kp_w, Float, 0.2, proportional gain for the angular velocity (s^-1).
- * - min_linear_velocity, Float, 0.020, minimum set linear velocity (m.s^-1)
- * - min_angular_velocity, Float, 0.1, minimum set angular velocity (rad.s^-1).
- * - escape_distance, Float, 0.0, distance to travel from crossing center (m). If set to 0, the radius
- *     value in the crossing descriptor will be used.
- * - crossing_interface_name, String, "crossing", name of the map interface for Crossing
- * - exit_angle_interface_name, String "exit_angle", name of the map interface for exit angle
- * - exit_angle_topic_name, String, "exit_angle", name of the optional topic for exit angle (or direction).
+ * - ~/kp_v, Float, 0.05, proportional gain for the linear velocity (s^-1).
+ * - ~/kp_w, Float, 0.2, proportional gain for the angular velocity (s^-1).
+ * - ~/min_linear_velocity, Float, 0.020, minimum set linear velocity (m.s^-1)
+ * - ~/min_angular_velocity, Float, 0.1, minimum set angular velocity (rad.s^-1).
+ * - ~/escape_distance, Float, 0.0, distance to travel from crossing center
+ *   (m). If set to 0, the radius value in the crossing descriptor will be used.
+ * - ~/distance_reached, Float, 0.1, distance when considering reached target
+ *     when going to the start vertex (m).
+ * - ~/max_angle_turn_only, Float, 1,0, if dtheta is greater than this, only turn, do
+ *     not go forward (rad).
+ * - ~/crossing_interface_name, String, "crossing", name of the map interface for Crossing
+ * - ~/exit_angle_interface_name, String "exit_angle", name of the map interface for exit angle
+ * - ~/exit_angle_topic_name, String, "exit_angle", name of the optional topic
+ *     for exit angle (or direction).
  */
 
 #ifndef _NJ_ESCAPE_CROSSING_CROSSING_ESCAPER_H_
@@ -49,13 +54,13 @@
 #include <cmath>
 #include <string>
 
-#include <ros/ros.h>
-#include <tf/transform_datatypes.h>  // for getYaw()
 #include <angles/angles.h>  // for shortest_angular_distance().
-#include <std_msgs/Float32.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
+#include <ros/ros.h>
+#include <std_msgs/Float32.h>
+#include <tf/transform_datatypes.h>  // for getYaw()
 
 #include <lama_interfaces/GetDouble.h>
 #include <lama_jockeys/navigating_jockey.h>
@@ -80,12 +85,14 @@ class CrossingEscaper : public lama_jockeys::NavigatingJockey
 
   private:
 
+    bool getDistanceToEscape();
     bool getCrossing();
-    bool retrieveCrossingFromMap(const int32_t descriptor_id);
-    bool getExitAngle();
-    bool turnToAngle(const double direction, geometry_msgs::Twist& twist);
+    bool retrieveCrossingFromMap(int32_t descriptor_id);
+    void getExitDirection();
+    bool getExitAngleFromMap();
+    bool turnToAngle(double direction, geometry_msgs::Twist& twist);
     bool goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twist& twist) const;
-    geometry_msgs::Point goalFromOdometry();
+    geometry_msgs::Point goalFromOdometry(double dx, double dy);
 
     // Subscribers and publishers.
     ros::Subscriber odometry_subscriber_;
@@ -99,11 +106,14 @@ class CrossingEscaper : public lama_jockeys::NavigatingJockey
     double min_linear_velocity_;  //!< Minimum linear set velocity (m.s^-1)
     double min_angular_velocity_;  //!< Minimum angular set velocity (rad.s^-1).
     double escape_distance_;  //!< Distance to travel from crossing center (m).
+    double distance_reached_;  //!< Distance when considering reached target when
+                               //!< going to the start vertex (m).
     double max_angle_turn_only_;  //!< If dtheta is greater than this, only turn, do not go forward (rad).
     double max_odometry_age_;  //!< If Odometry is not received withing this time, set null Twist (s).
     std::string exit_angle_topic_name_;  //!< Name of the optional topic for exit angle (or direction).
 
     // Internals.
+    bool start_reached_;
     bool angle_reached_;
     bool goal_reached_;
     bool has_odometry_;

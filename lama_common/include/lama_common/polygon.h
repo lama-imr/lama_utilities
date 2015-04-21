@@ -58,18 +58,21 @@ vector<double> getLengths(const vector<T> &pts)
  *
  * Resample the given polygon of 2D or 3D points. The third coordinate of 3D points is ignored.
  * T must have a constructor T(double, double).
- * numOfSamples > 0
+ *
+ * @param[in] polygon Polygon to be resampled.
+ * @param[in] sample_count Number of points in the returned polygon.
+ * @param[out] delta Average distance between two consecutive points in the output polygon.
  */
 template<typename T>
-vector<T> resamplePolygon(const vector<T>& polygon, const int numOfSamples, double& delta)
+vector<T> resamplePolygon(const vector<T>& polygon, unsigned int sample_count, double& delta)
 {
   vector<double> lengths(getLengths(polygon));
   const double polygonLength = std::accumulate(lengths.begin(), lengths.end(), 0.0);
-  const double dl = polygonLength / (double)numOfSamples;
+  const double dl = polygonLength / (double)sample_count;
   delta = dl;
 
   vector<T> result;
-  result.reserve(numOfSamples);
+  result.reserve(sample_count);
 
   int last = 0;
   const int size = polygon.size();
@@ -101,11 +104,13 @@ vector<T> resamplePolygon(const vector<T>& polygon, const int numOfSamples, doub
  *
  * Specialization for geometry_msgs::Point32 that doesn't have a constructor T(double, double).
  *
- * numOfSamples > 0
+ * @param[in] polygon Polygon to be resampled.
+ * @param[in] sample_count Number of points in the returned polygon.
+ * @param[out] delta Average distance between two consecutive points in the output polygon.
  */
 // inline is necessary here because of linker error for multiple definition.
 template <>
-inline vector<Point32> resamplePolygon<Point32>(const vector<Point32>& polygon, const int numOfSamples, double& delta)
+inline vector<Point32> resamplePolygon<Point32>(const vector<Point32>& polygon, unsigned int sample_count, double& delta)
 {
   vector<Point2> points;
   points.reserve(polygon.size());
@@ -114,10 +119,9 @@ inline vector<Point32> resamplePolygon<Point32>(const vector<Point32>& polygon, 
     points.push_back(Point2(polygon[i]));
   }
 
-  vector<Point2> resampledPoints = resamplePolygon(points, numOfSamples, delta);
+  vector<Point2> resampledPoints = resamplePolygon(points, sample_count, delta);
 
   vector<Point32> resampledGPoints;
-  vector<Point32>::iterator it_gpoint;
   resampledGPoints.reserve(resampledPoints.size());
   for (size_t i = 0; i < resampledPoints.size(); ++i)
   {

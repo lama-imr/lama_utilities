@@ -10,9 +10,11 @@ CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
   min_linear_velocity_(0),
   min_angular_velocity_(0),
   escape_distance_(escape_distance),
+  distance_reached_(0.1),
   max_angle_turn_only_(1.0),
   max_odometry_age_(0.1),
   exit_angle_topic_name_("exit_angle"),
+  start_reached_(false),
   angle_reached_(false),
   goal_reached_(false),
   has_odometry_(false),
@@ -27,88 +29,46 @@ CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
   private_nh.getParam("min_linear_velocity", min_linear_velocity_);
   private_nh.getParam("min_angular_velocity", min_angular_velocity_);
   private_nh.getParam("escape_distance", escape_distance_);
+  private_nh.getParam("distance_reached", distance_reached_);
   private_nh.getParam("max_angle_turn_only", max_angle_turn_only_);
   private_nh.getParam("max_odometry_age", max_odometry_age_);
   private_nh.getParam("crossing_interface_name", crossing_interface_name_);
   private_nh.getParam("exit_angle_interface_name", exit_angle_interface_name_);
-  private_nh.getParam("exit_angle_topic_name", exit_angle_topic_name_);
+  private_nh.getParam("exit_angle_topic", exit_angle_topic_name_);
 
   crossing_getter_ = nh_.serviceClient<lama_msgs::GetCrossing>(crossing_interface_name_ + "_getter");
   exit_angle_getter_ = nh_.serviceClient<lama_interfaces::GetDouble>(exit_angle_interface_name_ + "_getter");
 }
 
-/* First orient the robot, then travel at least "distance_to_escape_".
+/** Go to start vertex, orient, go far.
+ *
+ * First go to the start vertex of the edge to traverse, then orient the robot,
+ * then travel at least "distance_to_escape_".
  */
 void CrossingEscaper::onTraverse()
 {
   // TODO: Add a mechanism to stop before distance_to_escape_ if
   // the robot sees only 2 crossing exits on a certain distance.
   
-  ROS_DEBUG("%s: received action TRAVERSE", jockey_name_.c_str());
+  ROS_DEBUG_STREAM(jockey_name_ << ": received action TRAVERSE");
   
-  if (escape_distance_ == 0)
+  if (!getDistanceToEscape())
   {
-    // escape_distance_ not set, try to get escape distance from crossing_.
-    if (!getCrossing())
-    {
-      ROS_ERROR("%s: escape_distance not set and no Crossing found, aborting...",
-          jockey_name_.c_str());
-      server_.setAborted();
-    }
-    if (crossing_.radius == 0)
-    {
-      // crossing_.radius set to 0, don't need to travel very far.
-      ROS_WARN("Crossing descriptor to be used as escape distance but radius is 0, DONE");
-      result_.final_state = lama_jockeys::NavigateResult::DONE;
-      result_.completion_time = ros::Duration(0);
-      server_.setSucceeded(result_);
-      return;
-    }
-    distance_to_escape_ = crossing_.radius;
+    server_.setAborted();
+    return;
   }
-  else
+  else if (distance_to_escape_ < 1e-10)
   {
-    distance_to_escape_ = escape_distance_;
+    result_.final_state = lama_jockeys::NavigateResult::DONE;
+    result_.completion_time = ros::Duration(0.0);
+    server_.setSucceeded(result_);
+    return;
   }
-  ROS_DEBUG("Distance to escape: %.3f m", distance_to_escape_);
 
   twist_publisher_ = private_nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   odometry_subscriber_ = private_nh_.subscribe("odometry", 1, &CrossingEscaper::odometry_callback, this);
 
-  if (!getExitAngle())
-  {
-    // No exit angle descriptor available, get the travel direction from topic exit_angle_topic_name_.
-    ros::Subscriber direction_subscriber = private_nh_.subscribe(exit_angle_topic_name_, 1,
-        &CrossingEscaper::direction_callback, this);
-
-    // Wait for odometry (for the start position) and exit_angle data.
-    ros::Duration(0.2).sleep();
-    ros::spinOnce();
-    while (!(has_odometry_ && has_direction_))
-    {
-      ros::spinOnce();
-      ROS_WARN_STREAM_THROTTLE(5, "Waiting for odometry on topic " << odometry_subscriber_.getTopic() <<
-          " and exit_angle on topic " << direction_subscriber.getTopic());
-      ros::Duration(0.01).sleep();
-    }
-    has_odometry_ = false;
-    has_direction_ = false;
-    // Do not allow update of direction_ because we can't handle it.
-    // shutdown is not necessary because direction_subscriber goes out of scope.
-  }
-  else
-  {
-    // Wait for odometry data (no exit_angle topic necessary).
-    ros::Duration(0.2).sleep();
-    ros::spinOnce();
-    while (!has_odometry_)
-    {
-      ros::spinOnce();
-      ROS_WARN_STREAM_THROTTLE(5, "Waiting for odometry on topic " << odometry_subscriber_.getTopic());
-      ros::Duration(0.01).sleep();
-    }
-    has_odometry_ = false;
-  }
+  getExitDirection();
 
   start_position_ = odometry_;
   feedback_.completion = 0.01;
@@ -137,13 +97,26 @@ void CrossingEscaper::onTraverse()
       continue;
     }
 
-    if (!angle_reached_)
+    if (!start_reached_)
+    {
+      geometry_msgs::Point goal = goalFromOdometry(
+          goal_.relative_edge_start.position.x,
+          goal_.relative_edge_start.position.y);
+      start_reached_ = goToGoal(goal, twist);
+      twist_publisher_.publish(twist);
+      // Reset the odometry
+      if (start_reached_)
+      {
+        start_position_ = odometry_;
+      }
+    }
+    else if (!angle_reached_)
     {
       angle_reached_ = turnToAngle(direction_, twist);
       twist_publisher_.publish(twist);
       if (angle_reached_)
       {
-        ROS_DEBUG("%s: angle reached", jockey_name_.c_str());
+        ROS_DEBUG_STREAM(jockey_name_ << ": angle reached");
         last_dtheta_ = 0;
         feedback_.completion = 0.25;
         server_.publishFeedback(feedback_);
@@ -151,7 +124,9 @@ void CrossingEscaper::onTraverse()
     }
     else if (!goal_reached_)
     {
-      geometry_msgs::Point goal = goalFromOdometry();
+      geometry_msgs::Point goal = goalFromOdometry(
+          (distance_to_escape_ + distance_reached_) * std::cos(direction_),
+          (distance_to_escape_ + distance_reached_) * std::sin(direction_));
       goal_reached_ = goToGoal(goal, twist);
       twist_publisher_.publish(twist);
     }
@@ -180,10 +155,10 @@ void CrossingEscaper::onTraverse()
 void CrossingEscaper::onStop()
 {
   twist_publisher_.publish(geometry_msgs::Twist());
-  twist_publisher_.shutdown();
   result_.final_state = lama_jockeys::NavigateResult::DONE;
   result_.completion_time = ros::Duration(0);
   server_.setSucceeded(result_);
+  start_reached_ = false;
   angle_reached_ = false;
   goal_reached_ = false;
   has_odometry_ = false;
@@ -200,6 +175,40 @@ void CrossingEscaper::direction_callback(const std_msgs::Float32& direction)
 {
   direction_ = direction.data;
   has_direction_ = true;
+}
+
+/** Get the distance to escape (sets distance_to_escape_).
+ *
+ * Its value is taken from, in order:
+ * - the escape_distance parameter,
+ * - the radius of the crossing associated with the requested vertex, in the
+ *   case that escape_distance_ is zero.
+ */
+bool CrossingEscaper::getDistanceToEscape()
+{
+  if (escape_distance_ < 1e-10)
+  {
+    // escape_distance_ not set, try to get escape distance from crossing_.
+    if (!getCrossing())
+    {
+      ROS_ERROR_STREAM(jockey_name_ <<
+          ": escape_distance not set and no Crossing found, aborting...");
+      return false;
+    }
+    if (crossing_.radius == 0)
+    {
+      // crossing_.radius set to 0, don't need to travel very far.
+      ROS_WARN("Crossing descriptor to be used as escape distance but radius is 0, DONE");
+      return true;
+    }
+    distance_to_escape_ = crossing_.radius;
+  }
+  else
+  {
+    distance_to_escape_ = escape_distance_;
+  }
+  ROS_DEBUG("Distance to escape: %.3f m", distance_to_escape_);
+  return true;
 }
 
 /* Set crossing_ to the descriptor found in the databse from information in goal.
@@ -273,11 +282,69 @@ bool CrossingEscaper::retrieveCrossingFromMap(const int32_t descriptor_id)
   return true;
 }
 
-/* Set direction_ to the exit angle descriptor associated with goal_.edge
+/** Retrieve the direction in which to exit and wait for odometry.
  *
- * Return false if no such descriptor was found, true otherwise.
+ * The odometry gives the start position.
+ *
+ * In order:
+ * - The exit_angle descriptor associated with the vertex.
+ * - the value from topic exit_angle_topic_name_, if no exit_angle descriptor
+ *   is available.
  */
-bool CrossingEscaper::getExitAngle()
+void CrossingEscaper::getExitDirection()
+{
+  if (!getExitAngleFromMap())
+  {
+    // No exit angle descriptor available, get the travel direction from topic exit_angle_topic_name_.
+    ros::Subscriber direction_subscriber = private_nh_.subscribe(exit_angle_topic_name_, 1,
+        &CrossingEscaper::direction_callback, this);
+
+    // Wait for odometry (for the start position) and exit_angle data.
+    ros::Duration(0.2).sleep();
+    ros::spinOnce();
+    ros::Duration(0.1).sleep();
+    while (!(has_odometry_ && has_direction_))
+    {
+      ros::spinOnce();
+      ROS_WARN_STREAM_THROTTLE(5, "Waiting for odometry on topic " << odometry_subscriber_.getTopic() <<
+          " and exit_angle on topic " << direction_subscriber.getTopic());
+      ros::Duration(0.01).sleep();
+    }
+    has_odometry_ = false;
+    has_direction_ = false;
+    // Do not allow update of direction_ because we can't handle it.
+    // shutdown is not necessary because direction_subscriber goes out of scope.
+  }
+  else
+  {
+    // Wait for odometry data (no exit_angle topic necessary).
+    // TODO simplify with ROS_WARN_STREAM_DELAYED_THROTTLE (as of rosconsole v. 1.11.11).
+    ros::Duration(0.2).sleep();
+    ros::spinOnce();
+    ros::Duration(0.1).sleep();
+    while (!has_odometry_)
+    {
+      ros::spinOnce();
+      ROS_WARN_STREAM_THROTTLE(5, "Waiting for odometry on topic " << odometry_subscriber_.getTopic());
+      ros::Duration(0.01).sleep();
+    }
+    has_odometry_ = false;
+  }
+  
+  // Correct the direction with data from goal_.relative_edge_start.
+  ROS_INFO("relative_edge_start.orientation: %.3f, %.3f, %.3f, %.3f",
+      goal_.relative_edge_start.orientation.x,
+      goal_.relative_edge_start.orientation.y,
+      goal_.relative_edge_start.orientation.z,
+      goal_.relative_edge_start.orientation.w); // DEBUG
+  direction_ += tf::getYaw(goal_.relative_edge_start.orientation);
+}
+
+/** Set direction_ to the exit angle descriptor associated with goal_.edge
+ *
+ * @return false if no such descriptor was found, true otherwise.
+ */
+bool CrossingEscaper::getExitAngleFromMap()
 {
   if (goal_.edge.id == 0)
   {
@@ -314,15 +381,16 @@ bool CrossingEscaper::getExitAngle()
   return true;
 }
 
-/* GoToGoal behavior for pure rotation
+/** GoToGoal behavior for pure rotation
  *
- * direction[in] direction the robot should have at the end (in odometry_ frame).
- * twist[out] set velocity.
+ * @param[in] direction direction the robot should have at the end (in odometry_ frame).
+ * @param[out] twist set velocity.
+ * @return true if the goal is reached.
  */
-bool CrossingEscaper::turnToAngle(const double direction, geometry_msgs::Twist& twist)
+bool CrossingEscaper::turnToAngle(double direction, geometry_msgs::Twist& twist)
 {
   const double yaw_now= tf::getYaw(odometry_.pose.pose.orientation);
-  const double dtheta = angles::shortest_angular_distance(yaw_now, direction_);
+  const double dtheta = angles::shortest_angular_distance(yaw_now, direction);
   ROS_DEBUG("dtheta to goal: %.3f", dtheta);
 
   double wz = kp_w_ * dtheta;
@@ -340,30 +408,28 @@ bool CrossingEscaper::turnToAngle(const double direction, geometry_msgs::Twist& 
   twist.angular.z = wz;
 
   // The goal (0) is reached is the sign of dtheta changes.
-  bool angle_reached = (dtheta * last_dtheta_ < -1e-10) && std::abs(dtheta < M_PI_2);
+  bool angle_reached = (dtheta * last_dtheta_ < -1e-10) && (dtheta < M_PI_2);
   last_dtheta_ = dtheta;
   return angle_reached;
 }
 
-/* GoToGoal behavior
+/** GoToGoal behavior
  *
- * goal[in] relative goal.
- * twist[out] set velocity.
+ * @param[in] goal relative goal.
+ * @param[out] twist set velocity.
+ * @return true if the goal is reached.
  */
 bool CrossingEscaper::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twist& twist) const
 {
-  const double dx = odometry_.pose.pose.position.x - start_position_.pose.pose.position.x;
-  const double dy = odometry_.pose.pose.position.y - start_position_.pose.pose.position.y;
-  const double traveled_distance = std::sqrt(dx * dx + dy * dy);
-  if (traveled_distance > distance_to_escape_)
+  ROS_DEBUG("goal: (%.3f, %.3f)", goal.x, goal.y);
+  double distance = std::sqrt(goal.x * goal.x + goal.y * goal.y);
+
+  if (distance < distance_reached_)
   {
     // Goal reached.
     twist = geometry_msgs::Twist();
     return true;
   }
-
-  ROS_DEBUG("goal: (%.3f, %.3f)", goal.x, goal.y);
-  double distance = std::sqrt(goal.x * goal.x + goal.y * goal.y);
 
   double dtheta = std::atan2(goal.y, goal.x);
 
@@ -399,13 +465,16 @@ bool CrossingEscaper::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::
   return false;
 }
 
-/* Return the relative goal from current robot position and start position
+/** Return the relative goal from current robot position and start position
+ *
+ * @param[in] dx relative goal, at start.
+ * @param[in] dy relative goal, at start.
  */
-geometry_msgs::Point CrossingEscaper::goalFromOdometry()
+geometry_msgs::Point CrossingEscaper::goalFromOdometry(double dx, double dy)
 {
   geometry_msgs::Point abs_goal;
-  abs_goal.x = start_position_.pose.pose.position.x + distance_to_escape_ * std::cos(direction_);
-  abs_goal.y = start_position_.pose.pose.position.y + distance_to_escape_ * std::sin(direction_);
+  abs_goal.x = start_position_.pose.pose.position.x + dx;
+  abs_goal.y = start_position_.pose.pose.position.y + dy;
 
   geometry_msgs::Point rel_goal_abs_frame;
   rel_goal_abs_frame.x = abs_goal.x - odometry_.pose.pose.position.x;

@@ -489,7 +489,12 @@ class ExplorerNode(object):
         return response.descriptor_links[0].descriptor_id
 
     def get_place_profile_desc_id(self, vertex):
-        """Return the id of the first Crossing associated with a vertex"""
+        """Return the id of the first PlaceProfile associated with a vertex
+
+        Parameters
+        ----------
+        - vertex: int, id of a vertex
+        """
         map_action = ActOnMapRequest()
         map_action.action = map_action.GET_DESCRIPTOR_LINKS
         map_action.object.id = vertex
@@ -497,20 +502,20 @@ class ExplorerNode(object):
         response = self.map_agent(map_action)
         if not response.descriptor_links:
             rospy.logerr('No PlaceProfile associated with ' +
-                          'vertex {}'.format(vertex.id))
+                         'vertex {}'.format(vertex))
             return None
         if len(response.descriptor_links) > 1:
             rospy.logwarn('More than one PlaceProfile associated with ' +
-                          'vertex {}, taking the first one'.format(vertex.id))
+                          'vertex {}, taking the first one'.format(vertex))
         return response.descriptor_links[0].descriptor_id
 
-    def escape_from_crossing(self, edge_to_visit):
-        """Escape from crossing along edge_to_visit"""
+    def escape_from_crossing(self, edge_to_traverse):
+        """Escape from crossing along edge_to_traverse (LamaObject)"""
         # Get the robot pose relative to the vertex.
         loc_goal = LocalizeGoal()
         loc_goal.action = loc_goal.LOCALIZE_IN_VERTEX
         loc_goal.descriptor_link.descriptor_id = (
-            self.get_place_profile_desc_id(edge_to_visit.references[0]))
+            self.get_place_profile_desc_id(edge_to_traverse.references[0]))
         if not loc_goal.descriptor_link.descriptor_id:
             rospy.logerr('Database error')
             return False
@@ -534,10 +539,10 @@ class ExplorerNode(object):
         rospy.loginfo('Pose: {}'.format(loc_result.fdata)) # DEBUG
         nav_goal = NavigateGoal()
         nav_goal.action = nav_goal.TRAVERSE
-        nav_goal.edge = edge_to_visit
+        nav_goal.edge = edge_to_traverse
         nav_goal.relative_edge_start = pose
         rospy.logdebug('Escaping from crossing along edge {}'.format(
-            edge_to_visit.id))
+            edge_to_traverse.id))
         self.escape.send_goal_and_wait(nav_goal)
         escape_result = self.escape.get_result()
         if ((not escape_result) or

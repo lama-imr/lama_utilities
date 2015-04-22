@@ -480,8 +480,9 @@ class ExplorerNode(object):
         map_action.interface_name = self.crossing_interface_name
         response = self.map_agent(map_action)
         if not response.descriptor_links:
-            rospy.logerr('No Crossing associated with ' +
-                          'vertex {}'.format(vertex.id))
+            rospy.logerr('No Crossing (interface {}) associated with ' +
+                         'vertex {}'.format(
+                             self.crossing_interface_name, vertex.id))
             return None
         if len(response.descriptor_links) > 1:
             rospy.logwarn('More than one Crossing associated with ' +
@@ -501,8 +502,9 @@ class ExplorerNode(object):
         map_action.interface_name = self.place_profile_interface_name
         response = self.map_agent(map_action)
         if not response.descriptor_links:
-            rospy.logerr('No PlaceProfile associated with ' +
-                         'vertex {}'.format(vertex))
+            rospy.logerr('No PlaceProfile (interface {}) associated with ' +
+                         'vertex {}'.format(
+                             self.place_profile_interface_name, vertex))
             return None
         if len(response.descriptor_links) > 1:
             rospy.logwarn('More than one PlaceProfile associated with ' +

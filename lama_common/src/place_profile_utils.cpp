@@ -1,53 +1,11 @@
 #include <lama_common/place_profile_utils.h>
 
-#include <iostream> // DEBUG
-
 namespace lama_common
 {
 
-/** A pair (index, angle) constructed from a Point32, to get the permutation used for sorting.
-*/
-struct AngularPoint
-{
-  AngularPoint(Point32 point, int32_t index_) :
-    angle(std::atan2(point.y, point.x)),
-    index(index_)
-  {
-  }
-
-  double angle;
-  int32_t index;
-
-  bool operator<(const AngularPoint& other) const {return angle < other.angle;}
-};
-
-/** Checks if the elements in range [first, last) are sorted in ascending order
-  *
-  * is_sorted is in STL since C++11.
-  * copied from http://en.cppreference.com/w/cpp/algorithm/is_sorted and
-  * http://en.cppreference.com/w/cpp/algorithm/is_sorted_until
-  */
-template<class ForwardIt>
-  inline bool is_sorted(ForwardIt first, ForwardIt last)
-  {
-    if (first != last)
-    {
-      ForwardIt next = first;
-      while (++next != last)
-      {
-	if (*next < *first)
-	{
-	  return false;
-	}
-	first = next;
-      }
-    }
-    return true;
-  }
-
 /** Remove out-of-bound exclude_segments and doubles in exclude_segments.
 */
-inline void normalizeExcludeSegments(PlaceProfile& profile)
+void normalizeExcludeSegments(PlaceProfile& profile)
 {
   if (profile.exclude_segments.empty())
   {
@@ -62,14 +20,14 @@ inline void normalizeExcludeSegments(PlaceProfile& profile)
       // Check for doubles in exclude_segments.
       if (profile.exclude_segments[i] == profile.exclude_segments[i + 1])
       {
-	need_erase = true;
-	break;
+        need_erase = true;
+        break;
       }
       // Check for out-of-bound elements.
       if ((profile.exclude_segments[i] < 0) || (profile.exclude_segments[i] >= profile.exclude_segments.size()))
       {
-	need_erase = true;
-	break;
+        need_erase = true;
+        break;
       }
     }
     need_erase |= (profile.exclude_segments.back() < 0);
@@ -98,8 +56,8 @@ inline void normalizeExcludeSegments(PlaceProfile& profile)
       std::vector<int>::iterator next = s + 1;
       if (*s == *next)
       {
-	s = profile.exclude_segments.erase(s);
-	continue;
+        s = profile.exclude_segments.erase(s);
+        continue;
       }
     }
     ++s;
@@ -108,7 +66,7 @@ inline void normalizeExcludeSegments(PlaceProfile& profile)
 
 /** Return true if points are in counterclockwise order
 */
-inline bool pointOrder(const vector<AngularPoint>& angular_points)
+inline bool pointInCCWOrder(const vector<AngularPoint>& angular_points)
 {
   double sum_angle_increments = 0;
   for (size_t i = 0; i < std::min((int)angular_points.size() - 1, 3); ++i)
@@ -125,35 +83,31 @@ inline bool pointOrder(const vector<AngularPoint>& angular_points)
 /** Change point order in place so that point angles are sorted.
  *
  * Angles within [-pi,pi[ will be sorted from smallest to greatest (i.e.
- * counterclock-wise), optionally.
+ * counterclock-wise), optionally. The considered angle is from the center of
+ * mass to the point.
  * invalid exclude_segments will be removed.
  * exclude_segments will be sorted from smallest index to greatest.
  * exclude_segments will contain no doubles.
  *
  * The algorithm is not robust against non-simple polygons.
  *
- * profile[out] PlaceProfile
- * sort[in] If true, the polygon points will be sorted according to their angle.
+ * @param[in] profile PlaceProfile
+ * @param[in] sort If true, the polygon points will be sorted according to their angle.
  *   If false, the output PlaceProfile is not guaranteed to be normalized.
  *   Defaults to true.
  */
-void normalizePlaceProfile(PlaceProfile& profile, const bool sort)
+void normalizePlaceProfile(PlaceProfile& profile, bool sort)
 {
   if (sort)
   {
-    vector<AngularPoint> angular_points;
+    vector<AngularPoint> angular_points = toAngularPoints(profile);
     size_t point_count = profile.polygon.points.size();
-    angular_points.reserve(point_count);
-    for (size_t i = 0; i < point_count; ++i)
-    {
-      angular_points.push_back(AngularPoint(profile.polygon.points[i], i));
-    }
 
     if (!is_sorted(angular_points.begin(), angular_points.end()))
     {
       // If points are clock-wise, exclude_segments needs to be changed because
       // after with clock-wise direction means before with counterclock-wise direction.
-      const bool counterclockwise = pointOrder(angular_points);
+      const bool counterclockwise = pointInCCWOrder(angular_points);
 
       // TODO: Improve sort performance.
       // Appart from the position of the step from +pi to -pi (CCW) which can be in
@@ -164,29 +118,29 @@ void normalizePlaceProfile(PlaceProfile& profile, const bool sort)
       PlaceProfile old_profile = profile;
       for (size_t i = 0; i < point_count; ++i)
       {
-	profile.polygon.points[i] = old_profile.polygon.points[angular_points[i].index];
+        profile.polygon.points[i] = old_profile.polygon.points[angular_points[i].index];
       }
 
       vector<int32_t> inverse_permutation;
       if (!profile.exclude_segments.empty())
       {
-	inverse_permutation.resize(point_count);
-	for (size_t i = 0; i < point_count; ++i)
-	{
-	  inverse_permutation[angular_points[i].index] = i;
-	}
+        inverse_permutation.resize(point_count);
+        for (size_t i = 0; i < point_count; ++i)
+        {
+          inverse_permutation[angular_points[i].index] = i;
+        }
       }
       if (!counterclockwise)
       {
-	// v[i] = v[i]+1, does the trick to get the correct renumbering.
-	for (size_t i = 0; i < old_profile.exclude_segments.size(); ++i)
-	{
-	  old_profile.exclude_segments[i] = (old_profile.exclude_segments[i] + 1) % point_count;
-	}
+        // v[i] = v[i]+1, does the trick to get the correct renumbering.
+        for (size_t i = 0; i < old_profile.exclude_segments.size(); ++i)
+        {
+          old_profile.exclude_segments[i] = (old_profile.exclude_segments[i] + 1) % point_count;
+        }
       }
       for (size_t i = 0; i < profile.exclude_segments.size(); ++i)
       {
-	profile.exclude_segments[i] = inverse_permutation[old_profile.exclude_segments[i]];
+        profile.exclude_segments[i] = inverse_permutation[old_profile.exclude_segments[i]];
       }
     }
   }
@@ -201,7 +155,7 @@ void normalizePlaceProfile(PlaceProfile& profile, const bool sort)
  * profile[in] PlaceProfile
  * sort[in] if true, the polygon points will be sorted according to their angle.
  */
-PlaceProfile normalizedPlaceProfile(const PlaceProfile& profile, const bool sort)
+PlaceProfile normalizedPlaceProfile(const PlaceProfile& profile, bool sort)
 {
   PlaceProfile new_profile = profile;
   normalizePlaceProfile(new_profile, sort);
@@ -212,7 +166,7 @@ PlaceProfile normalizedPlaceProfile(const PlaceProfile& profile, const bool sort
  *
  * Holes can be an excluded segment or not.
  */
-bool isClosed(const PlaceProfile& profile, const double max_frontier_width)
+bool isClosed(const PlaceProfile& profile, double max_frontier_width)
 {
   const size_t size = profile.polygon.points.size();
   const double width2 = max_frontier_width * max_frontier_width;
@@ -243,7 +197,7 @@ bool isClosed(const PlaceProfile& profile, const double max_frontier_width)
  * profile[out] PlaceProfile
  * max_frontier_width[in] maximum frontier width
  */
-void closePlaceProfile(PlaceProfile& profile, const double max_frontier_width)
+void closePlaceProfile(PlaceProfile& profile, double max_frontier_width)
 {
   if (isClosed(profile, max_frontier_width))
   {
@@ -275,9 +229,9 @@ void closePlaceProfile(PlaceProfile& profile, const double max_frontier_width)
       const double uy = dy / norm;
       for (double s = 0; s <= norm; s += max_frontier_width) 
       {
-	point.x = a.x + s * ux;
-	point.y = a.y + s * uy;
-	profile.polygon.points.push_back(point);
+        point.x = a.x + s * ux;
+        point.y = a.y + s * uy;
+        profile.polygon.points.push_back(point);
       }
     }
     else
@@ -296,7 +250,7 @@ void closePlaceProfile(PlaceProfile& profile, const double max_frontier_width)
  * profile[in] PlaceProfile
  * max_frontier_width[in] maximum frontier width
  */
-PlaceProfile closedPlaceProfile(const PlaceProfile& profile, const double max_frontier_width)
+PlaceProfile closedPlaceProfile(const PlaceProfile& profile, double max_frontier_width)
 {
   if (isClosed(profile, max_frontier_width))
   {
@@ -328,9 +282,9 @@ PlaceProfile closedPlaceProfile(const PlaceProfile& profile, const double max_fr
       const double uy = dy / norm;
       for (double s = 0; s <= norm; s += max_frontier_width) 
       {
-	point.x = a.x + s * ux;
-	point.y = a.y + s * uy;
-	new_profile.polygon.points.push_back(point);
+        point.x = a.x + s * ux;
+        point.y = a.y + s * uy;
+        new_profile.polygon.points.push_back(point);
       }
     }
     else
@@ -346,7 +300,7 @@ struct IndexedDouble
 {
   size_t index;
   double value;
-  IndexedDouble(const size_t i, const double v) : index(i), value(v) {}
+  IndexedDouble(size_t i, double v) : index(i), value(v) {}
 
   bool operator<(const IndexedDouble& other) {return value < other.value;}
 };
@@ -405,7 +359,7 @@ double getRelevance(const std::list<IndexedDouble>& l, std::list<IndexedDouble>:
  * end[in] index of point after the last point to consider.
  * min_relevance[in] relevance threshold, points with relevance smaller than this are removed.
  */
-vector<Point32> simplifyPath(const vector<Point32>& points, const size_t begin, const size_t end, const double min_relevance)
+vector<Point32> simplifyPath(const vector<Point32>& points, size_t begin, size_t end, double min_relevance)
 {
   if(begin >= points.size())
   {
@@ -489,7 +443,7 @@ vector<Point32> simplifyPath(const vector<Point32>& points, const size_t begin, 
       relevance = getRelevance(relevances, pred, points);
       if (relevance >= 0)
       {
-	pred->value = relevance;
+        pred->value = relevance;
       }
     }
     if (succ != relevances.begin())
@@ -498,7 +452,7 @@ vector<Point32> simplifyPath(const vector<Point32>& points, const size_t begin, 
       relevance = getRelevance(relevances, succ, points);
       if (relevance >= 0)
       {
-	succ->value = relevance;
+        succ->value = relevance;
       }
     }
   } while (true);
@@ -520,7 +474,7 @@ vector<Point32> simplifyPath(const vector<Point32>& points, const size_t begin, 
  * profile[in] PlaceProfile
  * min_relevance[in] relevance threshold, points with relevance smaller than this are removed.
  */
-void simplifyPlaceProfile(PlaceProfile& profile, const double min_relevance)
+void simplifyPlaceProfile(PlaceProfile& profile, double min_relevance)
 {
   // Note: we do not simplify the segment between the last point and the first one.
 
@@ -568,7 +522,7 @@ void simplifyPlaceProfile(PlaceProfile& profile, const double min_relevance)
  * profile[in] PlaceProfile
  * min_relevance[in] relevance threshold, points with relevance smaller than this are removed.
  */
-PlaceProfile simplifiedPlaceProfile(const PlaceProfile& profile, const double min_relevance)
+PlaceProfile simplifiedPlaceProfile(const PlaceProfile& profile, double min_relevance)
 {
   PlaceProfile new_profile = profile;
   simplifyPlaceProfile(new_profile, min_relevance);
@@ -580,7 +534,7 @@ PlaceProfile simplifiedPlaceProfile(const PlaceProfile& profile, const double mi
  * profile[out] PlaceProfile
  * max_distance[in] range cutoff
  */
-void curtailPlaceProfile(PlaceProfile& profile, const double max_distance)
+void curtailPlaceProfile(PlaceProfile& profile, double max_distance)
 {
   const size_t size = profile.polygon.points.size();
   const double dist2 = max_distance * max_distance;
@@ -588,7 +542,7 @@ void curtailPlaceProfile(PlaceProfile& profile, const double max_distance)
   for (size_t i = 0; i < size; ++i)
   {
     if ((profile.polygon.points[i].x * profile.polygon.points[i].x +
-	  profile.polygon.points[i].y * profile.polygon.points[i].y) < dist2)
+          profile.polygon.points[i].y * profile.polygon.points[i].y) < dist2)
     {
       in_range[i] = true;
     }
@@ -630,7 +584,7 @@ void curtailPlaceProfile(PlaceProfile& profile, const double max_distance)
  * profile[in] PlaceProfile
  * max_distance[in] range cutoff
  */
-PlaceProfile curtailedPlaceProfile(const PlaceProfile& profile, const double max_distance)
+PlaceProfile curtailedPlaceProfile(const PlaceProfile& profile, double max_distance)
 {
   PlaceProfile new_profile = profile;
   curtailPlaceProfile(new_profile, max_distance);

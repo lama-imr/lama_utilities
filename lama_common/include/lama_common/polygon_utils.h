@@ -1,5 +1,6 @@
-#ifndef _LAMA_COMMON_POLYGON_H_
-#define _LAMA_COMMON_POLYGON_H_
+#pragma once
+#ifndef LAMA_COMMON_POLYGON_UTILS_H
+#define LAMA_COMMON_POLYGON_UTILS_H
 
 #include <vector>
 #include <numeric>
@@ -9,6 +10,7 @@
 #include <sensor_msgs/LaserScan.h>
 
 #include <lama_common/point.h>
+#include <lama_common/is_sorted.h>
 
 namespace lama_common
 {
@@ -173,6 +175,16 @@ inline geometry_msgs::Polygon scanToPolygon(const sensor_msgs::LaserScan& scan)
   return polygon;
 }
 
+void centerPolygon(geometry_msgs::Polygon& polygon);
+void centerPolygon(geometry_msgs::Polygon& polygon, double& dx, double& dy);
+geometry_msgs::Polygon centeredPolygon(const geometry_msgs::Polygon& polygon);
+geometry_msgs::Polygon centeredPolygon(const geometry_msgs::Polygon& polygon, double& dx, double& dy);
+
+bool normalizePolygon(geometry_msgs::Polygon& poly);
+geometry_msgs::Polygon normalizedPolygon(const geometry_msgs::Polygon& poly, bool& normalized);
+
+bool isClosed(const geometry_msgs::Polygon& poly, double max_frontier_width);
+
 } // namespace lama_common
 
-#endif // _LAMA_COMMON_POLYGON_H_
+#endif // LAMA_COMMON_POLYGON_UTILS_H

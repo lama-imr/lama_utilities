@@ -91,8 +91,9 @@ catkin_package(
   LIBRARIES
   crossing_utils
   crossing_visualization
-  place_profile_utils
-  place_profile_conversions
+  lama_common_place_profile_utils
+  lama_common_place_profile_conversions
+  lama_common_polygon_utils
 
   CATKIN_DEPENDS
   angles
@@ -120,8 +121,9 @@ include_directories(
 ## Declare a cpp library
 add_library(crossing_utils src/crossing_utils.cpp)
 add_library(crossing_visualization src/crossing_visualization.cpp)
-add_library(place_profile_utils src/place_profile_utils.cpp)
-add_library(place_profile_conversions src/place_profile_conversions.cpp)
+add_library(lama_common_place_profile_utils src/place_profile_utils.cpp)
+add_library(lama_common_place_profile_conversions src/place_profile_conversions.cpp)
+add_library(lama_common_polygon_utils src/polygon_utils.cpp)
 
 ## Declare a cpp executable
 # add_executable(lama_common_node src/lama_common_node.cpp)
@@ -133,8 +135,9 @@ add_library(place_profile_conversions src/place_profile_conversions.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(crossing_utils ${catkin_LIBRARIES})
 target_link_libraries(crossing_visualization ${catkin_LIBRARIES})
-target_link_libraries(place_profile_utils ${catkin_LIBRARIES})
-target_link_libraries(place_profile_conversions ${catkin_LIBRARIES})
+target_link_libraries(lama_common_place_profile_utils ${catkin_LIBRARIES})
+target_link_libraries(lama_common_place_profile_conversions ${catkin_LIBRARIES})
+target_link_libraries(lama_common_polygon_utils ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -154,8 +157,9 @@ target_link_libraries(place_profile_conversions ${catkin_LIBRARIES})
 install(TARGETS
   crossing_utils
   crossing_visualization
-  place_profile_utils
-  place_profile_conversions
+  lama_common_place_profile_utils
+  lama_common_place_profile_conversions
+  lama_common_polygon_utils
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -182,7 +186,11 @@ install(DIRECTORY include/${PROJECT_NAME}/
 if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(${PROJECT_NAME}-test test/utest.cpp WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
   if(TARGET ${PROJECT_NAME}-test)
-    target_link_libraries(${PROJECT_NAME}-test place_profile_utils place_profile_conversions ${catkin_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME}-test
+      lama_common_place_profile_utils
+      lama_common_place_profile_conversions
+      lama_common_polygon_utils
+      ${catkin_LIBRARIES})
   endif()
 
 ## Add folders to be run by python nosetests

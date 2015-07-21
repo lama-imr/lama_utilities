@@ -3,20 +3,29 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 #include <gtest/gtest.h>
+#include <geometry_msgs/Point32.h>
+#include <geometry_msgs/Polygon.h>
+#include <geometry_msgs/Pose.h>
 
+#include <lama_common/angular_point.h>
 #include <lama_common/place_profile_utils.h>
 #include <lama_common/place_profile_conversions.h>
+#include <lama_common/polygon_utils.h>
 
 #define SAVE_FILES 0
 
-namespace lama_common {
+namespace lama_common
+{
 
+using std::vector;
 using sensor_msgs::LaserScan;
 using lama_msgs::PlaceProfile;
+using geometry_msgs::Point32;
 
-testing::AssertionResult pointEqual(Point32 a, Point32 b)
+testing::AssertionResult pointEqual(const Point32& a, const Point32& b)
 {
   if (a.x == b.x && a.y == b.y)
   {
@@ -29,7 +38,7 @@ testing::AssertionResult pointEqual(Point32 a, Point32 b)
   }
 }
 
-testing::AssertionResult pointsEqual(vector<Point32> a, vector<Point32> b)
+testing::AssertionResult pointsEqual(const vector<Point32>& a, const vector<Point32>& b)
 {
   if (a.size() != b.size())
   {
@@ -47,13 +56,81 @@ testing::AssertionResult pointsEqual(vector<Point32> a, vector<Point32> b)
   return testing::AssertionSuccess();
 }
 
-testing::AssertionResult profileIsClosed(const PlaceProfile& profile, const double max_frontier_width)
+testing::AssertionResult polygonEqual(const geometry_msgs::Polygon& a, const geometry_msgs::Polygon& b)
+{
+  return pointsEqual(a.points, b.points);
+}
+
+testing::AssertionResult pointClose(const Point32& a, const Point32& b, double tolerance)
+{
+  if ((std::abs(a.x - b.x) < tolerance) && (std::abs(a.y - b.y) < tolerance))
+  {
+    return testing::AssertionSuccess();
+  }
+  else
+  {
+    return testing::AssertionFailure() << "(" << a.x << ", " << a.y <<
+      ") is not close to (" << b.x << ", " << b.y << "): delta is (" <<
+      std::abs(a.x - b.x) << ", " << std::abs(a.y - b.y) << ")";
+  }
+}
+
+testing::AssertionResult pointsClose(const vector<Point32>& a, const vector<Point32>& b, double tolerance)
+{
+  if (a.size() != b.size())
+  {
+    return testing::AssertionFailure() << "a.size() == " << a.size() <<
+      " != b.size() == " << b.size();
+  }
+  for (size_t i = 0; i < a.size(); ++i)
+  {
+    testing::AssertionResult res = pointClose(a[i], b[i], tolerance);
+    if (!res)
+    {
+      return testing::AssertionFailure() << "Point " << i << ": (" << a[i].x << ", " << a[i].y <<
+        ") is not close to (" << b[i].x << ", " << b[i].y << "): delta is (" <<
+        std::abs(a[i].x - b[i].x) << ", " << std::abs(a[i].y - b[i].y) << ")";
+    }
+  }
+  return testing::AssertionSuccess();
+}
+
+testing::AssertionResult polygonClose(const geometry_msgs::Polygon& a, const geometry_msgs::Polygon& b, double tolerance)
+{
+  return pointsClose(a.points, b.points, tolerance);
+}
+
+testing::AssertionResult profileIsClosed(const PlaceProfile& profile, double max_frontier_width)
 {
   if (isClosed(profile, max_frontier_width))
   {
     return testing::AssertionSuccess();
   }
   return testing::AssertionFailure() << "Profile is not closed";
+}
+
+/** Same points but the angle jump is shifted
+ */
+PlaceProfile shift_profile_index(const PlaceProfile& profile, size_t shift)
+{
+  const size_t n = profile.polygon.points.size();
+  PlaceProfile new_profile;
+  new_profile.polygon.points.reserve(n);
+  for (size_t i = 0; i < n; ++i)
+  {
+    new_profile.polygon.points.push_back(profile.polygon.points[(i + shift) % n]);
+  }
+  return new_profile;
+}
+
+void translate_profile(PlaceProfile& profile, double dx, double dy)
+{
+  vector<Point32>::iterator pt = profile.polygon.points.begin();
+  for (; pt != profile.polygon.points.end(); ++pt)
+  {
+    pt->x += dx;
+    pt->y += dy;
+  }
 }
 
 /* 1 point
@@ -196,7 +273,7 @@ PlaceProfile profile_circle_ccw()
   return profile;
 }
 
-/* Exact same points as profile_circle_ccw but clock-wise
+/** Exact same points as profile_circle_ccw but clock-wise
  */
 PlaceProfile profile_circle_cw()
 {
@@ -244,7 +321,7 @@ PlaceProfile profile_circle_growing()
   return profile;
 }
 
-PlaceProfile loadFromFile(std::string filename)
+PlaceProfile loadFromFile(const std::string& filename)
 {
   PlaceProfile profile;
   std::ifstream fin(filename.c_str());
@@ -261,13 +338,13 @@ PlaceProfile loadFromFile(std::string filename)
     {
       profile.polygon.points.push_back(point);
     }
-  } while (!fin.eof());
+  } while (!fin.eof() && !fin.fail());
   return profile;
 }
 
 #if SAVE_FILES
 
-void saveToFile(std::string filename, PlaceProfile profile)
+void saveToFile(const std::string& filename, const PlaceProfile& profile)
 {
   std::ofstream fout(filename.c_str());
   if (!fout.is_open())
@@ -282,6 +359,41 @@ void saveToFile(std::string filename, PlaceProfile profile)
   }
 }
 #endif
+
+/** A strict copy of ../src/polygon_utils.cpp::normalizablePolygon.
+ */
+static bool normalizablePolygon(const vector<AngularPoint>& angular_points)
+{
+  unsigned int count_plus = 0;
+  unsigned int count_minus = 0;
+  for (size_t i = 0; i < angular_points.size(); ++i)
+  {
+    const double this_angle = angular_points[i].angle;
+    const double next_angle = angular_points[(i + 1) % angular_points.size()].angle;
+    if (this_angle == next_angle)
+    {
+      return false;
+    }
+    if (this_angle < next_angle)
+    {
+      count_plus++;
+    }
+    else
+    {
+      count_minus++;
+    }
+    if (count_plus > 1 && count_minus > 1)
+    {
+      /* DEBUG */
+      std::ofstream ofs("/tmp/normalizable.txt", std::ios_base::out);
+      ofs << "count_plus: " << count_plus << "; count_minus: " << count_minus << std::endl; // DEBUG
+      ofs.close();
+      /* DEBUG */
+      return false;
+    }
+  }
+  return true;
+}
 
 /* LaserScan with 4 points starting from 0, CCW
  */
@@ -337,7 +449,40 @@ inline double distance(Point32 point)
   return std::sqrt(point.x * point.x + point.y * point.y);
 }
 
-TEST(TestSuite, TestNormalizedPlaceProfile)
+TEST(TestSuite, testCenterPolygon)
+{
+  geometry_msgs::Polygon poly;
+  const double side = 1.0;
+  // poly must be centered about its center of mass.
+  Point32 point;
+  point.x = side;
+  point.y = side;
+  poly.points.push_back(point);
+  point.x = -side;
+  point.y = side;
+  poly.points.push_back(point);
+  point.x = -side;
+  point.y = -side;
+  poly.points.push_back(point);
+  point.x = side;
+  point.y = -side;
+  poly.points.push_back(point);
+  geometry_msgs::Polygon mod_poly = poly;
+
+  const double dx = 6.0;
+  const double dy = 7.0;
+  vector<geometry_msgs::Point32>::iterator pt;
+  for (pt = mod_poly.points.begin(); pt != mod_poly.points.end(); ++pt)
+  {
+    pt->x += dx;
+    pt->y += dy;
+  }
+
+  centerPolygon(mod_poly);
+  EXPECT_TRUE(polygonClose(poly, mod_poly, 1e-6));
+}
+
+TEST(TestSuite, testNormalizePlaceProfile)
 {
   PlaceProfile profile;
   PlaceProfile mod_profile;
@@ -347,12 +492,8 @@ TEST(TestSuite, TestNormalizedPlaceProfile)
   mod_profile = profile_circle_cw();
   normalizePlaceProfile(mod_profile);
 
-  ASSERT_EQ(profile.polygon.points.size(), mod_profile.polygon.points.size());
   ASSERT_EQ(profile.exclude_segments.size(), mod_profile.exclude_segments.size());
-  for (size_t i = 0; i < profile.polygon.points.size(); ++i)
-  {
-    EXPECT_TRUE(pointEqual(profile.polygon.points[i], mod_profile.polygon.points[i]));
-  }
+  EXPECT_TRUE(polygonEqual(profile.polygon, mod_profile.polygon));
 
   // exclude_segments minimization and sorting.
   mod_profile = profile;
@@ -394,9 +535,60 @@ TEST(TestSuite, TestNormalizedPlaceProfile)
   ASSERT_EQ(2, mod_profile.exclude_segments.size());
   EXPECT_EQ(36, mod_profile.exclude_segments[0]);
   EXPECT_EQ(37, mod_profile.exclude_segments[1]);
+
+  // Rotated profile.
+  const size_t shift = 5;
+  profile = profile_circle_ccw();
+  profile.polygon.points[0].x *= 2;
+  profile.polygon.points[0].y *= 2;
+  mod_profile = shift_profile_index(profile, shift);
+  normalizePlaceProfile(mod_profile);
+  EXPECT_TRUE(polygonEqual(profile.polygon, mod_profile.polygon));
 }
 
-TEST(TestSuite, TestClosePlaceProfile)
+TEST(TestSuite, testNormalizablePolygon)
+{
+  PlaceProfile profile;
+  vector<AngularPoint> angular_points;
+
+  profile = profile_circle_ccw();
+  angular_points = toAngularPoints(profile);
+  EXPECT_TRUE(normalizablePolygon(angular_points));
+
+  profile = profile_circle_ccw();
+  translate_profile(profile, 0.5, 0.6);
+  angular_points = toAngularPoints(profile);
+  EXPECT_TRUE(normalizablePolygon(angular_points));
+
+  profile = profile_circle_ccw();
+  translate_profile(profile, 5.0, 6.0);
+  angular_points = toAngularPoints(profile);
+  EXPECT_FALSE(normalizablePolygon(angular_points));
+}
+
+TEST(TestSuite, testNormalizePolygon)
+{
+  PlaceProfile profile;
+  PlaceProfile mod_profile;
+
+  // From CW to CCW.
+  profile = profile_circle_ccw();
+  mod_profile = profile_circle_cw();
+  normalizePolygon(mod_profile.polygon);
+
+  EXPECT_TRUE(polygonEqual(profile.polygon, mod_profile.polygon));
+
+  // Rotated profile.
+  const size_t shift = 5;
+  profile = profile_circle_ccw();
+  profile.polygon.points[0].x *= 2;
+  profile.polygon.points[0].y *= 2;
+  mod_profile = shift_profile_index(profile, shift);
+  normalizePolygon(mod_profile.polygon);
+  EXPECT_TRUE(polygonEqual(profile.polygon, mod_profile.polygon));
+}
+
+TEST(TestSuite, testClosePlaceProfile)
 {
   PlaceProfile profile;
 
@@ -418,7 +610,7 @@ TEST(TestSuite, TestClosePlaceProfile)
   EXPECT_GE(profile.polygon.points.size(), old_profile.polygon.points.size());
 }
 
-TEST(TestSuite, TestClosedPlaceProfile)
+TEST(TestSuite, testClosedPlaceProfile)
 {
   PlaceProfile old_profile;
 
@@ -435,7 +627,7 @@ TEST(TestSuite, TestClosedPlaceProfile)
   EXPECT_GE(profile.polygon.points.size(), old_profile.polygon.points.size());
 }
 
-TEST(TestSuite, TestSimplifyPath)
+TEST(TestSuite, testSimplifyPath)
 {
   // Note: simplifyPath does not know about excluded segments.
   
@@ -582,7 +774,7 @@ TEST(TestSuite, TestSimplifyPath)
   EXPECT_TRUE(pointEqual(profile.polygon.points[5], filtered_points[3]));
 }
 
-TEST(TestSuite, TestSimplifyPlaceProfile)
+TEST(TestSuite, testSimplifyPlaceProfile)
 {
   PlaceProfile profile;
   PlaceProfile old_profile;
@@ -642,7 +834,7 @@ TEST(TestSuite, TestSimplifyPlaceProfile)
   EXPECT_EQ(old_profile.exclude_segments, profile.exclude_segments);
 }
 
-TEST(TestSuite, TestRealDataSimplify)
+TEST(TestSuite, testRealDataSimplify)
 {
   PlaceProfile profile;
   PlaceProfile out_profile_1;
@@ -667,7 +859,7 @@ TEST(TestSuite, TestRealDataSimplify)
 #endif
 }
 
-TEST(TestSuite, TestCurtailPlaceProfile)
+TEST(TestSuite, testCurtailPlaceProfile)
 {
   PlaceProfile profile = profile_circle_growing();
   PlaceProfile mod_profile;
@@ -725,7 +917,7 @@ TEST(TestSuite, TestCurtailPlaceProfile)
   EXPECT_EQ(5, mod_profile.exclude_segments[1]);
 }
 
-TEST(TestSuite, TestLaserScanToPlaceProfile)
+TEST(TestSuite, testLaserScanToPlaceProfile)
 {
   LaserScan scan;
   PlaceProfile profile;

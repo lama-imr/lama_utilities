@@ -61,7 +61,7 @@ PlaceProfile loadFromString(std::stringstream& sstream)
   return profile;
 }
 
-void saveToFile(std::string filename, PlaceProfile profile)
+void saveToFile(const std::string& filename, const PlaceProfile& profile)
 {
   std::ofstream fout(filename.c_str());
   if (!fout.is_open())
@@ -121,7 +121,7 @@ std::vector<geometry_msgs::Point32> interpolate(const geometry_msgs::Point32& a,
   return points;
 }
 
-/* 
+/** 
  * Profile:
  * P3 ++++++++++++++++++++++ P2
  *    +

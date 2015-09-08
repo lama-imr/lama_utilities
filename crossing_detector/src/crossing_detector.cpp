@@ -158,9 +158,9 @@ Crossing CrossingDetector::crossingDescriptor(const PlaceProfile& profile, const
       const double circle_radius = std::sqrt((c[0] - p.x()) * (c[0] - p.x()) + (c[1] - p.y()) * (c[1] - p.y()));
       if (circle_radius > crossing.radius)
       {
-	crossing.center.x = c[0];
-	crossing.center.y = c[1];
-	crossing.radius = circle_radius;
+        crossing.center.x = c[0];
+        crossing.center.y = c[1];
+        crossing.radius = circle_radius;
       }
     }
   }

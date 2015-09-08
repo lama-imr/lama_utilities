@@ -68,9 +68,8 @@ def service_client(service_name, service_type):
 
 
 class Edge:
-
     def __init__(self, id_, preceeding):
-        """An edge with link to its predecessor
+        """An edge with reference to its predecessor
 
         Parameters
         ----------
@@ -159,10 +158,7 @@ class ExplorerNode(object):
         self.initialized = True
 
     def move_to_crossing(self):
-        """Move the robot to the first crossing
-        Move the robot to the first crossing so that we can have a descriptor
-        list to start with with the DFS algorithm.
-        """
+        """Move the robot to the next encountered crossing"""
         rospy.logdebug('moving to crossing')
         nav_goal = NavigateGoal()
         nav_goal.action = nav_goal.TRAVERSE
@@ -192,6 +188,9 @@ class ExplorerNode(object):
         5. Let the navigating jockey move to the next crossing.
         6. Repeat from 1. indefinitely.
         """
+        if not self.initialized:
+            rospy.logerr('instance not initialized')
+            raise Exception('instance not initialized')
         if not self.first_crossing_reached:
             rospy.logerr('Go to first crossing first')
             raise Exception('Go to first crossing first')

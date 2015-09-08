@@ -1,6 +1,7 @@
 #include <map_ray_caster/map_ray_caster.h>
 
-namespace map_ray_caster {
+namespace map_ray_caster
+{
 
 MapRayCaster::MapRayCaster(const int occupied_threshold) :
   occupied_threshold_(occupied_threshold)

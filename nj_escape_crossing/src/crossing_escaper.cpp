@@ -332,11 +332,7 @@ void CrossingEscaper::getExitDirection()
   }
   
   // Correct the direction with data from goal_.relative_edge_start.
-  ROS_INFO("relative_edge_start.orientation: %.3f, %.3f, %.3f, %.3f",
-      goal_.relative_edge_start.orientation.x,
-      goal_.relative_edge_start.orientation.y,
-      goal_.relative_edge_start.orientation.z,
-      goal_.relative_edge_start.orientation.w); // DEBUG
+  /* ROS_INFO("relative_edge_start.orientation: %.3f deg", tf::getYaw(goal_.relative_edge_start.orientation) * 180 / M_PI); // DEBUG */
   direction_ += tf::getYaw(goal_.relative_edge_start.orientation);
 }
 

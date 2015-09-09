@@ -66,7 +66,7 @@ void CrossingEscaper::onTraverse()
   }
 
   twist_publisher_ = private_nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);
-  odometry_subscriber_ = private_nh_.subscribe("odometry", 1, &CrossingEscaper::odometry_callback, this);
+  odometry_subscriber_ = private_nh_.subscribe("odom", 1, &CrossingEscaper::odometry_callback, this);
 
   getExitDirection();
 

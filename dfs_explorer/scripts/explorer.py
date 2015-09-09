@@ -195,7 +195,7 @@ class ExplorerNode(object):
             rospy.logerr('Go to first crossing first')
             raise Exception('Go to first crossing first')
 
-        while True:
+        while not rospy.is_shutdown():
             # 1. Get a new vertex descriptor (robot should be at crossing
             #    center).
             rospy.logdebug('getting descriptor')

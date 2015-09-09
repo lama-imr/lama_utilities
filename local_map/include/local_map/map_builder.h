@@ -1,6 +1,7 @@
 #ifndef _LOCAL_MAP_MAP_BUILDER_H_
 #define _LOCAL_MAP_MAP_BUILDER_H_
 
+#include <cmath> // For std::exp.
 #include <exception>
 #include <string>
 #include <vector>

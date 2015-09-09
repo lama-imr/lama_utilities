@@ -10,6 +10,11 @@
 namespace local_map
 {
 
+const double g_default_p_occupied_when_laser = 0.9;
+const double g_default_p_occupied_when_no_laser = 0.3;
+const double g_default_large_log_odds = 100;
+const double g_default_max_log_odds_for_belief = 20;
+
 /** Return the name of the tf frame that has no parent.
  */
 std::string getWorldFrame(const tf::Transformer& tf_transformer, const std::string& child)
@@ -86,21 +91,21 @@ void moveAndCopyImage(int fill, int dx, int dy, unsigned int ncol, vector<T>& ma
   }
   for (int new_row = row_start; new_row != row_end; new_row += row_increment)
   {
-    const size_t new_idx_start = offsetFromRowColNoRangeCheck(new_row, col_start, ncol);
+    const int new_idx_start = offsetFromRowColNoRangeCheck(new_row, col_start, ncol);
     const int row = new_row + dy;  // row in old map, can be outside old map
     int idx = offsetFromRowColNoRangeCheck(row, col_start + dx, ncol);
     const int min_idx = std::max(0, offsetFromRowColNoRangeCheck(row, 0, ncol));
-    const int max_idx = std::min((int) map.size() - 1, offsetFromRowColNoRangeCheck(row, ncol - 1, ncol));
-    const size_t new_idx_end = new_idx_start + col_steps;
-    for (int new_idx = new_idx_start; new_idx != new_idx_end; )
+    const int max_idx = std::min(static_cast<int>(map.size()) - 1, offsetFromRowColNoRangeCheck(row, ncol - 1, ncol));
+    const int new_idx_end = new_idx_start + col_steps;
+    for (int new_idx = new_idx_start; new_idx != new_idx_end;)
     {
       if (min_idx <= idx && idx <= max_idx)
       {
-	map[new_idx] = map[idx];
+        map[new_idx] = map[idx];
       }
       else
       {
-	map[new_idx] = fill;
+        map[new_idx] = fill;
       }
       new_idx += col_increment;
       idx += col_increment;
@@ -163,16 +168,16 @@ void MapBuilder::updatePointOccupancy(bool occupied, size_t idx, vector<int8_t>&
   }
   else
   {
-    occupancy[idx] = (int8_t) lround((1 - 1 / (1 + std::exp(log_odds[idx]))) * 100);
+    occupancy[idx] = static_cast<int8_t>(lround((1 - 1 / (1 + std::exp(log_odds[idx]))) * 100));
   }
 }
 
 MapBuilder::MapBuilder(int width, int height, double resolution) :
   angle_resolution_(M_PI / 720),
-  p_occupied_when_laser_(0.9),
-  p_occupied_when_no_laser_(0.3),
-  large_log_odds_(100),
-  max_log_odds_for_belief_(20),
+  p_occupied_when_laser_(g_default_p_occupied_when_laser),
+  p_occupied_when_no_laser_(g_default_p_occupied_when_no_laser),
+  large_log_odds_(g_default_large_log_odds),
+  max_log_odds_for_belief_(g_default_max_log_odds_for_belief),
   has_frame_id_(false)
 {
   map_frame_id_ = ros::this_node::getName() + "/local_map";
@@ -180,8 +185,8 @@ MapBuilder::MapBuilder(int width, int height, double resolution) :
   map_.info.width = width;
   map_.info.height = height;
   map_.info.resolution = resolution;
-  map_.info.origin.position.x = -((double) width) / 2 * resolution;
-  map_.info.origin.position.y = -((double) height) / 2 * resolution;
+  map_.info.origin.position.x = -static_cast<double>(width) / 2 * resolution;
+  map_.info.origin.position.y = -static_cast<double>(height) / 2 * resolution;
   map_.info.origin.orientation.w = 1.0;
   map_.data.assign(width * height, -1);  // Fill with "unknown" occupancy.
   // log_odds = log(occupancy / (1 - occupancy); prefill with
@@ -193,30 +198,36 @@ MapBuilder::MapBuilder(int width, int height, double resolution) :
   private_nh.getParam("p_occupied_when_laser", p_occupied_when_laser_);
   if (p_occupied_when_laser_ <=0 || p_occupied_when_laser_ >= 1)
   {
-    ROS_ERROR_STREAM("Parameter "<< private_nh.getNamespace() << "/p_occupied_when_laser must be within ]0, 1[, setting to default");
-    p_occupied_when_laser_ = 0.9;
+    ROS_ERROR_STREAM("Parameter "<< private_nh.getNamespace() <<
+        "/p_occupied_when_laser must be within ]0, 1[, setting to default (" <<
+        g_default_p_occupied_when_laser << ")");
+    p_occupied_when_laser_ = g_default_p_occupied_when_laser;
   }
   private_nh.getParam("p_occupied_when_no_laser", p_occupied_when_no_laser_);
   if (p_occupied_when_no_laser_ <=0 || p_occupied_when_no_laser_ >= 1)
   {
-    ROS_ERROR_STREAM("Parameter "<< private_nh.getNamespace() << "/p_occupied_when_no_laser must be within ]0, 1[, setting to default");
-    p_occupied_when_no_laser_ = 0.3;
+    ROS_ERROR_STREAM("Parameter "<< private_nh.getNamespace() <<
+        "/p_occupied_when_no_laser must be within ]0, 1[, setting to default (" <<
+        g_default_p_occupied_when_no_laser << ")");
+    p_occupied_when_no_laser_ = g_default_p_occupied_when_no_laser;
   }
   private_nh.getParam("large_log_odds", large_log_odds_);
   if (large_log_odds_ <=0)
   {
-    ROS_ERROR_STREAM("Parameter "<< private_nh.getNamespace() << "/large_log_odds must be positive, setting to default");
-    large_log_odds_ = 100;
+    ROS_ERROR_STREAM("Parameter "<< private_nh.getNamespace() << "/large_log_odds must be positive, setting to default (" <<
+        g_default_large_log_odds << ")");
+    large_log_odds_ = g_default_large_log_odds;
   }
   private_nh.getParam("max_log_odds_for_belief", max_log_odds_for_belief_);
   try
   {
-    exp(max_log_odds_for_belief_);
+    std::exp(max_log_odds_for_belief_);
   }
   catch (std::exception)
   {
-    ROS_ERROR_STREAM("Parameter "<< private_nh.getNamespace() << "/max_log_odds_for_belief too large, setting to default");
-    p_occupied_when_no_laser_ = 20;
+    ROS_ERROR_STREAM("Parameter "<< private_nh.getNamespace() << "/max_log_odds_for_belief too large, setting to default (" <<
+        g_default_max_log_odds_for_belief << ")");
+    max_log_odds_for_belief_ = g_default_max_log_odds_for_belief;
   }
 
 
@@ -401,13 +412,13 @@ bool MapBuilder::getRayCastToObstacle(const nav_msgs::OccupancyGrid& map, double
 
 bool MapBuilder::saveMap(const std::string& name) const
 {
-  const ros::Time time = ros::Time::now();
-  const int sec = time.sec;
-  const int nsec = time.nsec;
-
   std::string filename;
   if (name.empty())
   {
+    const ros::Time time = ros::Time::now();
+    const int sec = time.sec;
+    const int nsec = time.nsec;
+
     std::stringstream sname;
     sname << "map_";
     sname << std::setw(5) << std::setfill('0') << sec;
@@ -429,9 +440,9 @@ bool MapBuilder::saveMap(const std::string& name) const
     return false;
   }
 
-  for (uint i = 0; i < map_.data.size(); ++i)
+  for (size_t i = 0; i < map_.data.size(); ++i)
   {
-    ofs << (int) map_.data[i];
+    ofs << static_cast<int>(map_.data[i]);
     if ((i % map_.info.width) == (map_.info.width - 1))
     {
       ofs << "\n";

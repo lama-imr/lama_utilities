@@ -113,65 +113,6 @@ void moveAndCopyImage(int fill, int dx, int dy, unsigned int ncol, vector<T>& ma
   }
 }
 
-/** Update occupancy and log odds for a point
- *
- * @param[in] occupied true if the point was measured as occupied
- * @param[in] idx pixel index
- * @param[in] ncol map width
- * @param[in,out] occupancy occupancy map to update
- * @param[in,out] log_odds log odds to update
- */
-void MapBuilder::updatePointOccupancy(bool occupied, size_t idx, vector<int8_t>& occupancy, vector<double>& log_odds) const
-{
-  if (idx >= occupancy.size())
-  {
-    return;
-  }
-
-  if (occupancy.size() != log_odds.size())
-  {
-    ROS_ERROR("occupancy and count do not have the same number of elements");
-    return;
-  }
-
-  // Update log_odds.
-  double p;  // Probability of being occupied knowing current measurement.
-  if (occupied)
-  {
-    p = p_occupied_when_laser_;
-  }
-  else
-  {
-    p = p_occupied_when_no_laser_;
-  }
-  // Original formula: Table 4.2, "Probabilistics robotics", Thrun et al., 2005:
-  // log_odds[idx] = log_odds[idx] +
-  //     std::log(p * (1 - p_occupancy) / (1 - p) / p_occupancy);
-  // With p_occupancy = 0.5, this simplifies to:
-  log_odds[idx] += std::log(p / (1 - p));
-  if (log_odds[idx] < -large_log_odds_)
-  {
-    log_odds[idx] = -large_log_odds_;
-  }
-  else if(log_odds[idx] > large_log_odds_)
-  {
-    log_odds[idx] = large_log_odds_;
-  }
-  // Update occupancy.
-  if (log_odds[idx] < -max_log_odds_for_belief_)
-  {
-    occupancy[idx] = 0;
-  }
-  else if (log_odds[idx] > max_log_odds_for_belief_)
-  {
-    occupancy[idx] = 100;
-  }
-  else
-  {
-    occupancy[idx] = static_cast<int8_t>(lround((1 - 1 / (1 + std::exp(log_odds[idx]))) * 100));
-  }
-}
-
 MapBuilder::MapBuilder(int width, int height, double resolution) :
   angle_resolution_(M_PI / 720),
   p_occupied_when_laser_(g_default_p_occupied_when_laser),
@@ -237,6 +178,65 @@ MapBuilder::MapBuilder(int width, int height, double resolution) :
   for (double a = angle_start; a <= angle_end; a += angle_resolution_)
   {
     ray_caster_.getRayCastToMapBorder(a, height, width, 0.9 * angle_resolution_);
+  }
+}
+
+/** Update occupancy and log odds for a point
+ *
+ * @param[in] occupied true if the point was measured as occupied
+ * @param[in] idx pixel index
+ * @param[in] ncol map width
+ * @param[in,out] occupancy occupancy map to update
+ * @param[in,out] log_odds log odds to update
+ */
+void MapBuilder::updatePointOccupancy(bool occupied, size_t idx, vector<int8_t>& occupancy, vector<double>& log_odds) const
+{
+  if (idx >= occupancy.size())
+  {
+    return;
+  }
+
+  if (occupancy.size() != log_odds.size())
+  {
+    ROS_ERROR("occupancy and count do not have the same number of elements");
+    return;
+  }
+
+  // Update log_odds.
+  double p;  // Probability of being occupied knowing current measurement.
+  if (occupied)
+  {
+    p = p_occupied_when_laser_;
+  }
+  else
+  {
+    p = p_occupied_when_no_laser_;
+  }
+  // Original formula: Table 4.2, "Probabilistics robotics", Thrun et al., 2005:
+  // log_odds[idx] = log_odds[idx] +
+  //     std::log(p * (1 - p_occupancy) / (1 - p) / p_occupancy);
+  // With p_occupancy = 0.5, this simplifies to:
+  log_odds[idx] += std::log(p / (1 - p));
+  if (log_odds[idx] < -large_log_odds_)
+  {
+    log_odds[idx] = -large_log_odds_;
+  }
+  else if(log_odds[idx] > large_log_odds_)
+  {
+    log_odds[idx] = large_log_odds_;
+  }
+  // Update occupancy.
+  if (log_odds[idx] < -max_log_odds_for_belief_)
+  {
+    occupancy[idx] = 0;
+  }
+  else if (log_odds[idx] > max_log_odds_for_belief_)
+  {
+    occupancy[idx] = 100;
+  }
+  else
+  {
+    occupancy[idx] = static_cast<int8_t>(lround((1 - 1 / (1 + std::exp(log_odds[idx]))) * 100));
   }
 }
 

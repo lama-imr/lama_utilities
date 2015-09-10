@@ -38,9 +38,11 @@ class CrossingGoer
     double ki_v_;  //!< Integral gain for the linear velocity (s^-2).
     double ki_w_;  //!< Integral gain for the angular velocity (s^-2).
     double min_linear_velocity_;  //!< Minimum linear set velocity (m.s^-1), used if the integral gain is 0.
-    double max_linear_velocity_;  //!< Maximum linear set velocity (m.s^-1).
-    double min_angular_velocity_;  //!< Minimum angular set velocity (m.s^-1), used if the integral gain is 0.
-    double max_angular_velocity_;  //!< Maximum angular set velocity (m.s^-1).
+    double max_linear_velocity_;  //!< Maximum linear set velocity (m.s^-1). If
+                                  //!< set to 0, the velocity is not throttled.
+    double min_angular_velocity_;  //!< Minimum angular set velocity (rad.s^-1), used if the integral gain is 0.
+    double max_angular_velocity_;  //!< maximum angular set velocity (rad.s^-1).
+                                   //!< if set to 0, the angular velocity is not throttled.
     double reach_distance_;  //!< Goal is reached if closer than this (m).
     double dtheta_force_left_;  //!< If the goal is behind the robot, force the robot to turn left if the goal angle
                                 //!< is within [pi - dtheta_force_left_, pi], even if the angle difference would tell

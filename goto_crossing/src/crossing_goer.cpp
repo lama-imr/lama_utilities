@@ -225,7 +225,7 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
   }
 
   // velocity throttle.
-  if (std::abs(max_linear_velocity_) > 1e-10)
+  if (max_linear_velocity_ > 1e-10)
   {
     // Only throttle if max_linear_velocity_ is set.
     if (vx > max_linear_velocity_)
@@ -233,14 +233,14 @@ bool CrossingGoer::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twi
       vx = max_linear_velocity_;
     }
   }
-  if (std::abs(max_angular_velocity_) > 1e-10)
+  if (max_angular_velocity_ > 1e-10)
   {
     // Only throttle if max_angular_velocity_ is set.
-    if (wz > max_linear_velocity_)
+    if (wz > max_angular_velocity_)
     {
       wz = max_angular_velocity_;
     }
-    if (wz < -max_angular_velocity_)
+    else if (wz < -max_angular_velocity_)
     {
       wz = -max_angular_velocity_;
     }

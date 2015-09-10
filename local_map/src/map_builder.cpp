@@ -1,4 +1,4 @@
-/* Defines a class with a local occupancy grid
+/** Defines a class with a local occupancy grid
 */
 
 #include <cmath>
@@ -31,37 +31,37 @@ std::string getWorldFrame(const tf::Transformer& tf_transformer, const std::stri
 }
 
 /** Return the angle from a quaternion representing a rotation around the z-axis
-  *
-  * The quaternion in ROS is q = (x, y, z, w), so that
-  * q = (ux * sin(a/2), uy * sin(a/2), uz * sin(a/2), cos(a/2)),
-  *   where a is the rotation angle and (ux, uy, uz) is the unit vector of the
-  *   rotation axis.
-  * For a rotation around z, we have q = (cos(a/2), 0, 0, sin(a/2)). Thus
-  * a = 2 * atan2(z, w).
-  */
+ *
+ * The quaternion in ROS is q = (x, y, z, w), so that
+ * q = (ux * sin(a/2), uy * sin(a/2), uz * sin(a/2), cos(a/2)),
+ *   where a is the rotation angle and (ux, uy, uz) is the unit vector of the
+ *   rotation axis.
+ * For a rotation around z, we have q = (cos(a/2), 0, 0, sin(a/2)). Thus
+ * a = 2 * atan2(z, w).
+ */
 double angleFromQuaternion(const tf::Quaternion& q)
 {
   if (std::fabs(q.x()) > 1e-5 || std::fabs(q.y()) > 1e-5)
   {
     tf::Vector3 axis = q.getAxis();
     ROS_WARN("Laser frame rotation is not around the z-axis (axis = [%f, %f, %f], just pretending it is",
-	axis.x(), axis.y(), axis.z());
+        axis.x(), axis.y(), axis.z());
   }
   return 2 * std::atan2(q.z(), q.w());
 }
 
 /** In-place move an image represented as a 1D array
-  *
-  * The origin of the image moves relativelty to a frame F. All pixels must be
-  * moved in the opposite direction, so that what is represented by the pixels
-  * is fixed in the frame F.
-  *
-  * @param[in] fill Default fill value
-  * @param[in] dx pixel displacement in x (rows)
-  * @param[in] dy pixel displacement in y (columns)
-  * @param[in] ncol number of column
-  * @param[in,out] map image to be moved
-  */
+ *
+ * The origin of the image moves relativelty to a frame F. All pixels must be
+ * moved in the opposite direction, so that what is represented by the pixels
+ * is fixed in the frame F.
+ *
+ * @param[in] fill Default fill value
+ * @param[in] dx pixel displacement in x (rows)
+ * @param[in] dy pixel displacement in y (columns)
+ * @param[in] ncol number of column
+ * @param[in,out] map image to be moved
+ */
 template <typename T>
 void moveAndCopyImage(int fill, int dx, int dy, unsigned int ncol, vector<T>& map)
 {
@@ -284,7 +284,7 @@ void MapBuilder::grow(const sensor_msgs::LaserScan& scan)
     map_transform.setOrigin(tf::Vector3(0.0, 0.0, 0.0));
     map_transform.setRotation(tf::Quaternion(1, 0, 0, 0));
     tr_broadcaster_.sendTransform(tf::StampedTransform(map_transform,
-	  scan.header.stamp, scan.header.frame_id, map_frame_id_));
+          scan.header.stamp, scan.header.frame_id, map_frame_id_));
   }
 
   // Get the displacement.

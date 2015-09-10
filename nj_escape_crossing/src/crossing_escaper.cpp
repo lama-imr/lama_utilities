@@ -5,10 +5,12 @@ namespace nj_escape_crossing
 
 CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
   lama_jockeys::NavigatingJockey(name),
-  kp_v_(0.05),
+  kp_v_(0.1),
   kp_w_(0.2),
   min_linear_velocity_(0),
+  max_linear_velocity_(0),
   min_angular_velocity_(0),
+  max_angular_velocity_(0),
   escape_distance_(escape_distance),
   distance_reached_(0.1),
   max_angle_turn_only_(1.0),
@@ -27,7 +29,9 @@ CrossingEscaper::CrossingEscaper(std::string name, double escape_distance) :
   private_nh.getParam("kp_v", kp_v_);
   private_nh.getParam("kp_w", kp_w_);
   private_nh.getParam("min_linear_velocity", min_linear_velocity_);
+  private_nh.getParam("max_linear_velocity", max_linear_velocity_);
   private_nh.getParam("min_angular_velocity", min_angular_velocity_);
+  private_nh.getParam("max_angular_velocity", max_angular_velocity_);
   private_nh.getParam("escape_distance", escape_distance_);
   private_nh.getParam("distance_reached", distance_reached_);
   private_nh.getParam("max_angle_turn_only", max_angle_turn_only_);
@@ -415,8 +419,17 @@ bool CrossingEscaper::turnToAngle(double direction, geometry_msgs::Twist& twist)
  * @param[out] twist set velocity.
  * @return true if the goal is reached.
  */
-bool CrossingEscaper::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twist& twist) const
+bool CrossingEscaper::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twist& twist)
 {
+  // TODO: change parameters to dynamic_reconfigure.
+  ros::NodeHandle private_nh("~");
+  private_nh.getParamCached("kp_v", kp_v_);
+  private_nh.getParamCached("kp_w", kp_w_);
+  private_nh.getParamCached("min_linear_velocity", min_linear_velocity_);
+  private_nh.getParamCached("max_linear_velocity", max_linear_velocity_);
+  private_nh.getParamCached("min_angular_velocity", min_angular_velocity_);
+  private_nh.getParamCached("max_angular_velocity", max_angular_velocity_);
+
   ROS_DEBUG("goal: (%.3f, %.3f)", goal.x, goal.y);
   double distance = std::sqrt(goal.x * goal.x + goal.y * goal.y);
 
@@ -453,6 +466,29 @@ bool CrossingEscaper::goToGoal(const geometry_msgs::Point& goal, geometry_msgs::
   {
     wz = -min_angular_velocity_;
   }
+
+  // velocity throttle.
+  if (max_linear_velocity_ > 1e-10)
+  {
+    // Only throttle if max_linear_velocity_ is set.
+    if (vx > max_linear_velocity_)
+    {
+      vx = max_linear_velocity_;
+    }
+  }
+  if (max_angular_velocity_ > 1e-10)
+  {
+    // Only throttle if max_angular_velocity_ is set.
+    if (wz > max_angular_velocity_)
+    {
+      wz = max_angular_velocity_;
+    }
+    else if (wz < -max_angular_velocity_)
+    {
+      wz = -max_angular_velocity_;
+    }
+  }
+
   ROS_DEBUG("Distance to goal: %f, dtheta to goal: %f, vx: %f, wz: %f", distance, dtheta, vx, wz);
 
   twist.linear.x = vx;

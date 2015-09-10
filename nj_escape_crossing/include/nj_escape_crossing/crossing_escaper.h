@@ -48,8 +48,8 @@
  *     for exit angle (or direction).
  */
 
-#ifndef _NJ_ESCAPE_CROSSING_CROSSING_ESCAPER_H_
-#define _NJ_ESCAPE_CROSSING_CROSSING_ESCAPER_H_
+#ifndef NJ_ESCAPE_CROSSING_CROSSING_ESCAPER_H
+#define NJ_ESCAPE_CROSSING_CROSSING_ESCAPER_H
 
 #include <cmath>
 #include <string>
@@ -91,7 +91,7 @@ class CrossingEscaper : public lama_jockeys::NavigatingJockey
     void getExitDirection();
     bool getExitAngleFromMap();
     bool turnToAngle(double direction, geometry_msgs::Twist& twist);
-    bool goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twist& twist) const;
+    bool goToGoal(const geometry_msgs::Point& goal, geometry_msgs::Twist& twist);
     geometry_msgs::Point goalFromOdometry(double dx, double dy);
 
     // Subscribers and publishers.
@@ -104,7 +104,11 @@ class CrossingEscaper : public lama_jockeys::NavigatingJockey
     double kp_v_;  //!< Proportional gain for the linear velocity (s^-1).
     double kp_w_;  //!< Proportional gain for the angular velocity (s^-1).
     double min_linear_velocity_;  //!< Minimum linear set velocity (m.s^-1)
+    double max_linear_velocity_;  //!< Maximum linear set velocity (m.s^-1). If
+                                  //!< set to 0, the velocity is not throttled.
     double min_angular_velocity_;  //!< Minimum angular set velocity (rad.s^-1).
+    double max_angular_velocity_;  //!< maximum angular set velocity (rad.s^-1).
+                                   //!< if set to 0, the angular velocity is not throttled.
     double escape_distance_;  //!< Distance to travel from crossing center (m).
     double distance_reached_;  //!< Distance when considering reached target when
                                //!< going to the start vertex (m).
@@ -130,4 +134,4 @@ class CrossingEscaper : public lama_jockeys::NavigatingJockey
 
 } // namespace nj_escape_crossing
 
-#endif //  _NJ_ESCAPE_CROSSING_CROSSING_ESCAPER_H_
+#endif //  NJ_ESCAPE_CROSSING_CROSSING_ESCAPER_H

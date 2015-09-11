@@ -270,6 +270,8 @@ class ExplorerNode(object):
         if vertex_is_new:
             # Add vertex to map.
             response = self.map_agent(action=ActOnMapRequest.PUSH_VERTEX)
+            if not response:
+                rospy.logerr('Database error')
             new_vertex = response.objects[0]
             current_vertex_id = new_vertex.id
             rospy.logdebug('new vertex {}'.format(current_vertex_id))
@@ -537,7 +539,15 @@ class ExplorerNode(object):
         pose.orientation.z = loc_result.fdata[5]
         pose.orientation.w = loc_result.fdata[6]
 
-        rospy.loginfo('Pose: {}'.format(loc_result.fdata)) # DEBUG
+        from tf import transformations # DEBUG
+        rospy.loginfo('Pose: (x, z, theta) = ({}, {}, {})'.format(
+            pose.position.x,
+            pose.position.y,
+            transformations.euler_from_quaternion((
+                pose.orientation.x,
+                pose.orientation.y,
+                pose.orientation.z,
+                pose.orientation.w))[2])) # DEBUG
         nav_goal = NavigateGoal()
         nav_goal.action = nav_goal.TRAVERSE
         nav_goal.edge = edge_to_traverse

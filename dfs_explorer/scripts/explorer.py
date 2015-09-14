@@ -14,9 +14,8 @@ import actionlib
 from actionlib_msgs.msg import GoalStatus
 from geometry_msgs.msg import Pose
 
-from lama_interfaces.srv import ActOnMap
 from lama_interfaces.srv import ActOnMapRequest
-from lama_interfaces.core_interface import MapAgentInterface
+from lama_interfaces.core_interface import MapAgent
 from lama_jockeys.msg import NavigateAction
 from lama_jockeys.msg import NavigateGoal
 from lama_jockeys.msg import LocalizeAction
@@ -126,11 +125,12 @@ class ExplorerNode(object):
         if not self.escape:
             return
 
-        # Map agent server.
-        iface = MapAgentInterface(start=False)
-        self.map_agent = service_client(iface.action_service_name, ActOnMap)
-        if not self.map_agent:
+        # Map agent client.
+        self.map_agent = MapAgent(timeout=5)
+        if not self.map_agent.wait_for_service():
             return
+        # We know the service is ready, don't wait any more.
+        self.map_agent.timeout = None
 
         # Descriptor getter for Crossing.
         crossing_getter_name = self.crossing_interface_name + '_getter'
@@ -269,7 +269,7 @@ class ExplorerNode(object):
             vertex_is_new = False
         if vertex_is_new:
             # Add vertex to map.
-            response = self.map_agent(action=ActOnMapRequest.PUSH_VERTEX)
+            response = self.map_agent.proxy(action=ActOnMapRequest.PUSH_VERTEX)
             if not response:
                 rospy.logerr('Database error')
             new_vertex = response.objects[0]
@@ -282,7 +282,7 @@ class ExplorerNode(object):
             for link in descriptor_links:
                 map_action.descriptor_id = link.descriptor_id
                 map_action.interface_name = link.interface_name
-                self.map_agent(map_action)
+                self.map_agent.proxy(map_action)
                 if link.interface_name == self.crossing_interface_name:
                     current_crossing_id = link.descriptor_id
             # Get the exit_angles from the map.
@@ -339,7 +339,7 @@ class ExplorerNode(object):
         map_action.object.type = map_action.object.EDGE
         map_action.object.references[0] = v0
         map_action.object.references[1] = v1
-        edge_response = self.map_agent(map_action)
+        edge_response = self.map_agent.proxy(map_action)
         if not edge_response.objects:
             rospy.logerr('Database error')
             return
@@ -358,7 +358,7 @@ class ExplorerNode(object):
         map_action.object.id = edge_id
         map_action.descriptor_id = desc_response.id
         map_action.interface_name = self.exit_angles_interface_name
-        self.map_agent(map_action)
+        self.map_agent.proxy(map_action)
         rospy.logdebug('descriptor assigned')
 
     def change_edge_end(self, edge_id, v1):
@@ -367,7 +367,7 @@ class ExplorerNode(object):
         map_action.action = map_action.PUSH_EDGE
         map_action.object.id = edge_id
         map_action.object.references[1] = v1
-        edge_response = self.map_agent(map_action)
+        edge_response = self.map_agent.proxy(map_action)
         if not edge_response.objects:
             rospy.logerr('Database error')
             return
@@ -479,7 +479,7 @@ class ExplorerNode(object):
         map_action.action = map_action.GET_DESCRIPTOR_LINKS
         map_action.object.id = vertex
         map_action.interface_name = self.crossing_interface_name
-        response = self.map_agent(map_action)
+        response = self.map_agent.proxy(map_action)
         if not response.descriptor_links:
             rospy.logerr('No Crossing (interface {}) associated with ' +
                          'vertex {}'.format(
@@ -501,7 +501,7 @@ class ExplorerNode(object):
         map_action.action = map_action.GET_DESCRIPTOR_LINKS
         map_action.object.id = vertex
         map_action.interface_name = self.place_profile_interface_name
-        response = self.map_agent(map_action)
+        response = self.map_agent.proxy(map_action)
         if not response.descriptor_links:
             rospy.logerr('No PlaceProfile (interface {}) associated with ' +
                          'vertex {}'.format(

@@ -15,21 +15,18 @@ from actionlib_msgs.msg import GoalStatus
 from geometry_msgs.msg import Pose
 
 from lama_interfaces.srv import ActOnMapRequest
-from lama_interfaces.core_interface import MapAgent
+from lama_interfaces.map_agent import MapAgent
 from lama_jockeys.msg import NavigateAction
 from lama_jockeys.msg import NavigateGoal
 from lama_jockeys.msg import LocalizeAction
 from lama_jockeys.msg import LocalizeGoal
 from lama_msgs.msg import LamaObject
 from lama_msgs.srv import GetCrossing
-# import lama_interfaces.cleartext_interface_factory as li_cif
-# interface_factory = li_cif.cleartext_interface_factory
-import lama_interfaces.interface_factory as li_if
-interface_factory = li_if.interface_factory
 from lama_interfaces.graph_builder import get_edges_with_vertices
 from lama_interfaces.graph_builder import get_directed_graph
 from lama_interfaces.graph_builder import get_directed_graph_index
 from lama_interfaces.graph_builder import get_vertex_from_graph
+from lama_interfaces.interface_factory import interface_factory
 
 
 def normalize_angles(angles):
@@ -228,8 +225,8 @@ class ExplorerNode(object):
         """Get the descriptors from the current crossing center
 
         The robot is assumed to be at a crossing center.
-        Get the descriptors (i.e. write them into the database).
-        Push the vertex if not already existent.
+        Get the descriptors (i.e. have them written into the database).
+        Push the vertex if not already existing.
         Assign the descriptors to this vertex.
 
         Parameters
@@ -282,7 +279,9 @@ class ExplorerNode(object):
             for link in descriptor_links:
                 map_action.descriptor_id = link.descriptor_id
                 map_action.interface_name = link.interface_name
-                self.map_agent.proxy(map_action)
+                response = self.map_agent.proxy(map_action)
+                if not response:
+                    rospy.logerr('Database error')
                 if link.interface_name == self.crossing_interface_name:
                     current_crossing_id = link.descriptor_id
             # Get the exit_angles from the map.
@@ -411,7 +410,7 @@ class ExplorerNode(object):
             return
         path = self.find_path(current_vertex, target_vertex)
         if None in path:
-            err = 'No path from {} to {}'.format(current_vertex,
+            err = 'no path from {} to {}'.format(current_vertex,
                                                  target_vertex)
             rospy.logfatal(err)
             return False
@@ -539,15 +538,6 @@ class ExplorerNode(object):
         pose.orientation.z = loc_result.fdata[5]
         pose.orientation.w = loc_result.fdata[6]
 
-        from tf import transformations # DEBUG
-        rospy.loginfo('Pose: (x, z, theta) = ({}, {}, {})'.format(
-            pose.position.x,
-            pose.position.y,
-            transformations.euler_from_quaternion((
-                pose.orientation.x,
-                pose.orientation.y,
-                pose.orientation.z,
-                pose.orientation.w))[2])) # DEBUG
         nav_goal = NavigateGoal()
         nav_goal.action = nav_goal.TRAVERSE
         nav_goal.edge = edge_to_traverse
@@ -561,6 +551,7 @@ class ExplorerNode(object):
             err = 'Escape jockey did not succeed'
             rospy.logerr(err)
             raise Exception(err)
+        return True
 
 node = ExplorerNode()
 if node.initialized:

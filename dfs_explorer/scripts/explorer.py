@@ -258,8 +258,9 @@ class ExplorerNode(object):
           new.
         """
         vertices, dissimilarities = self.get_dissimilarity()
-        rospy.logdebug('vertices, dissimilarities: {}'.format(
-            zip(vertices, dissimilarities)))
+        if vertices:
+            rospy.logdebug('vertices, dissimilarities: {}'.format(
+                zip(vertices, dissimilarities)))
         vertex_is_new = True
         if (dissimilarities and
             (min(dissimilarities) < self.dissimilarity_threshold)):
@@ -347,10 +348,13 @@ class ExplorerNode(object):
         # Add descriptor.
         rospy.logdebug('adding descriptor')
         desc_response = self.exit_angles_setter(exit_angle)
+        if not desc_response:
+            rospy.logerror('Error on call to {}'.format(self.exit_angles_setter.resolved_name))
+            return
         rospy.logdebug('descriptor {} added, angle: {}'.format(desc_response.id,
                                                                exit_angle))
         # Assign descriptor.
-        rospy.logdebug('assigining exit_angle descriptor {} to edge {}'.format(
+        rospy.logdebug('assigning exit_angle descriptor {} to edge {}'.format(
             desc_response.id, edge_id))
         map_action = ActOnMapRequest()
         map_action.action = map_action.ASSIGN_DESCRIPTOR_EDGE

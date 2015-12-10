@@ -93,7 +93,7 @@ include_directories(
 )
 
 ## Declare a cpp library
-add_library(crossing_goer src/crossing_goer.cpp)
+add_library(crossing_goer src/crossing_goer.cpp src/crossing_goer_snd.cpp)
 
 ## Declare a cpp executable
 add_executable(goto_crossing src/goto_crossing_node.cpp)

@@ -1,13 +1,11 @@
 #include <crossing_detector/crossing_detector.h>
 
-/* #define DEBUG_CROSSDETECT */ 
+ #define DEBUG_CROSSDETECT 
 
 #ifdef DEBUG_CROSSDETECT
 #include <fstream>
 #include <cassert>
 #endif
-
-#define SIMPLIFY_PROFILE 0
 
 namespace crossing_detector
 {
@@ -211,6 +209,8 @@ vector<Frontier> CrossingDetector::frontiers_() const
   double min_frontier_width2 = frontier_width_ * frontier_width_;
 
   Frontier frontier;
+  double frontier_angle;
+  bool frontiers_empty = true;
   for(size_t i = 0; i < size; ++i)
   {
     geometry_msgs::Point32 a(place_profile_.polygon.points[i]);
@@ -227,12 +227,13 @@ vector<Frontier> CrossingDetector::frontiers_() const
       const double dist_to_frontier_center = std::sqrt(sx * sx + sy * sy);
       const double dot_product_frontier_sx_sy = (b.x - a.x) * sx + (b.y - a.y) * sy;
       const double width = std::sqrt(width2);
-      double frontier_angle = max_frontier_angle_;
+      double frontier_angle_with_sx_sy = max_frontier_angle_;
       if ((width > 0) && (dist_to_frontier_center > 0))
       {
-        frontier_angle = M_PI_2 - std::acos(std::abs(dot_product_frontier_sx_sy / width / dist_to_frontier_center));
+        frontier_angle_with_sx_sy = std::acos(dot_product_frontier_sx_sy / width / dist_to_frontier_center);
+        frontier_angle = std::atan2(sy,sx);
       }
-      if (frontier_angle < max_frontier_angle_)
+      if ( frontiers_empty || fabs(frontier_angle - frontier.angle) > 0.4)
       {
         frontier.p1.x = a.x;
         frontier.p1.y = a.y;
@@ -241,6 +242,7 @@ vector<Frontier> CrossingDetector::frontiers_() const
         frontier.width = width;
         frontier.angle = std::atan2(sy, sx);
         frontiers.push_back(frontier);
+        frontiers_empty = false;
       }
     }
     a = b;
@@ -270,22 +272,16 @@ vector<Frontier> CrossingDetector::frontiers(const PlaceProfile& profile, const 
 
 /** Return a list of points suited for Delaunay
  *
+ * Two operations are realized:
+ * - reduce the number of points with a relevance filter (less points on a single "line segment").
+ * - fill frontiers so that the crossing center will not be found at frontiers.
  */
 vector<Point> CrossingDetector::delaunayInput(const PlaceProfile& profile) const
 {
   PlaceProfile delaunayProfile = profile;
-
-#if SIMPLIFY_PROFILE
-  /*
-   * Two extra operations are realized:
-   * - reduce the number of points with a relevance filter (less points on a single "line segment").
-   * - fill frontiers so that the crossing center will not be found at frontiers.
-   */
-  lama_common::simplifyPlaceProfile(delaunayProfileprofile, min_relevance_);
+//  PlaceProfile delaunayProfile = lama_common::simplifiedPlaceProfile(profile, min_relevance_);
   ROS_DEBUG("%zu relevant points in the PlaceProfile", delaunayProfile.polygon.points.size());
-  lama_common::closePlaceProfile(delaunayProfile, frontier_width_ / 2);
-#endif
-
+//  lama_common::closePlaceProfile(delaunayProfile, frontier_width_ / 2);
   vector<Point> points;
   points.reserve(delaunayProfile.polygon.points.size());
   for (size_t i = 0; i < delaunayProfile.polygon.points.size(); ++i)
